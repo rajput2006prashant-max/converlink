@@ -54,7 +54,7 @@ function App() {
 
       {/* Admin authentication */}
       <Route path="/admin-login" element={<AdminLogin />} />
-      <Route path="/forgot-password" element={<AdminForget />} />
+      <Route path="/forget-password" element={<AdminForget />} />
       <Route path="/register" element={<AdminRegister />} />
 
       {/* Admin layout and dashboard */}

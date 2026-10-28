@@ -1,9 +1,74 @@
-import React, { Fragment } from "react";
-import { Link } from "react-router-dom";
-import { FaUser,FaEnvelope,FaPhone ,FaLock  } from "react-icons/fa";
-import { IoIosLogIn } from "react-icons/io";
+
+import React, { Fragment, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function UserRegister() {
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: ""
+  });
+
+  const [error, setError] = useState("");
+
+  // Input values update karna
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  // Registration form submit
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Password aur Confirm Password match nahi karte!");
+      return;
+    }
+
+    const users = JSON.parse(
+      localStorage.getItem("users") || "[]"
+    );
+
+    const email = formData.email.trim().toLowerCase();
+
+    const alreadyRegistered = users.some(
+      (user) => user.email.toLowerCase() === email
+    );
+
+    if (alreadyRegistered) {
+      setError("Ye email pehle se registered hai!");
+      return;
+    }
+
+    const newUser = {
+      name: formData.name.trim(),
+      email: email,
+      password: formData.password
+    };
+
+    users.push(newUser);
+
+    localStorage.setItem("users", JSON.stringify(users));
+
+    alert("User Registration Successful!");
+
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: ""
+    });
+
+    navigate("/user-login");
+  };
+
   return (
     <Fragment>
       <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">
@@ -14,139 +79,152 @@ function UserRegister() {
           <div className="row g-0">
             {/* Left Section */}
             <div className="col-md-5 bg-primary text-white d-flex flex-column justify-content-center p-4 p-lg-5">
-              <IoIosLogIn  size={50}/>
-              <h1 className="fw-bold mb-3">Join Converlink!</h1>
+              <h1 className="fw-bold mb-3">User Registration</h1>
 
               <p className="fs-5">
-                Create your account and connect with us.
+                Welcome to Converlink Engineering.
               </p>
 
               <p className="text-white-50">
-                Explore our services and get in touch with our team for your
-                electrical, maintenance, installation, and interior design needs.
+                Register your account to access company services
+                and manage your enquiries.
               </p>
 
               <div className="mt-4">
-                <span className="badge bg-white text-primary rounded-pill p-3">
-                  Simple. Secure. Smart.
+                <span className="badge bg-white text-dark rounded-pill p-3">
+                  Secure User Access
                 </span>
               </div>
 
               <div className="mt-5">
-                <h5 className="fw-bold">Our Services</h5>
-                <p className="mb-2">Electrical Work</p>
-                <p className="mb-2">Maintenance & Installation</p>
-                <p className="mb-0">Interior Designing</p>
+                <p className="fw-semibold">User Benefits</p>
+                <ul className="list-unstyled text-white-50">
+                  <li className="mb-2">✓ Explore company services</li>
+                  <li className="mb-2">✓ Submit enquiries</li>
+                  <li>✓ Connect with our team</li>
+                </ul>
               </div>
             </div>
 
             {/* Right Section */}
             <div className="col-md-7 p-4 p-lg-5">
-              <h2 className="fw-bold text-dark mb-2">Create Account</h2>
+              <h2 className="fw-bold text-dark mb-2">
+                Create User Account
+              </h2>
 
               <p className="text-secondary mb-4">
-                Please fill in your details to register.
+                Enter your details to register.
               </p>
 
-              <form>
-                <div className="input-group mb-3">
-              <span className="input-group-text bg-light">
-                <FaUser />
-              </span>
-              <input
-                type="text"
-                className="form-control form-control-lg"
-                placeholder="Enter your full name"
-                autoComplete="name"
-                required
-              />
-            </div>
+              {error && (
+                <div className="alert alert-danger" role="alert">
+                  {error}
+                </div>
+              )}
 
-                <div className="input-group mb-3">
-              <span className="input-group-text bg-light">
-                <FaEnvelope />
-              </span>
-              <input
-                type="email"
-                className="form-control form-control-lg"
-                placeholder="Enter your email"
-                autoComplete="email"
-                required
-              />
-            </div>
+              <form onSubmit={handleSubmit}>
+                {/* Full Name */}
+                <div className="mb-3">
+                  <label htmlFor="userName" className="form-label fw-semibold">
+                    Full Name
+                  </label>
 
-                <div className="input-group mb-3">
-              <span className="input-group-text bg-light">
-                <FaPhone />
-              </span>
-              <input
-                type="tel"
-                className="form-control form-control-lg"
-                placeholder="Enter your mobile number"
-                autoComplete="tel"
-                required
-              />
-            </div>
-
-                 <div className="input-group mb-3">
-              <span className="input-group-text bg-light">
-                <FaLock />
-              </span>
-              <input
-                type="password"
-                className="form-control form-control-lg"
-                placeholder="Create a password"
-                autoComplete="new-password"
-                required
-              />
-            </div>
-
-                 <div className="input-group mb-3">
-              <span className="input-group-text bg-light">
-                <FaLock />
-              </span>
-              <input
-                type="password"
-                className="form-control form-control-lg"
-                placeholder="Confirm your password"
-                autoComplete="new-password"
-                required
-              />
-            </div>
-
-                <div className="form-check mb-4">
                   <input
-                    type="checkbox"
-                    id="terms"
-                    className="form-check-input"
+                    type="text"
+                    id="userName"
+                    name="name"
+                    className="form-control form-control-lg rounded-3"
+                    placeholder="Enter your name"
+                    autoComplete="name"
+                    value={formData.name}
+                    onChange={handleChange}
                     required
                   />
-                  <label className="form-check-label" htmlFor="terms">
-                    I agree to the Terms and Conditions.
+                </div>
+
+                {/* Email */}
+                <div className="mb-3">
+                  <label htmlFor="userEmail" className="form-label fw-semibold">
+                    Email Address
                   </label>
+
+                  <input
+                    type="email"
+                    id="userEmail"
+                    name="email"
+                    className="form-control form-control-lg rounded-3"
+                    placeholder="Enter your email"
+                    autoComplete="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Password */}
+                <div className="mb-3">
+                  <label htmlFor="userPassword" className="form-label fw-semibold">
+                    Password
+                  </label>
+
+                  <input
+                    type="password"
+                    id="userPassword"
+                    name="password"
+                    className="form-control form-control-lg rounded-3"
+                    placeholder="Create password (minimum 6 characters)"
+                    autoComplete="new-password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    minLength={6}
+                    required
+                  />
+                </div>
+
+                {/* Confirm Password */}
+                <div className="mb-4">
+                  <label htmlFor="confirmPassword" className="form-label fw-semibold">
+                    Confirm Password
+                  </label>
+
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    className="form-control form-control-lg rounded-3"
+                    placeholder="Confirm your password"
+                    autoComplete="new-password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    minLength={6}
+                    required
+                  />
                 </div>
 
                 <button
                   type="submit"
                   className="btn btn-primary btn-lg w-100 rounded-3 fw-semibold"
                 >
-                  Create Account
+                  Register User
                 </button>
               </form>
 
               <p className="text-center text-secondary mt-4 mb-0">
-                Already have an account?{" "}
+                Already registered?{" "}
                 <Link
                   to="/user-login"
                   className="text-primary fw-semibold text-decoration-none"
                 >
-                  Login
+                  User Login
                 </Link>
               </p>
 
               <div className="text-center mt-3">
-                <Link to="/" className="text-secondary text-decoration-none">
-                  Back to Home
+                <Link
+                  to="/"
+                  className="text-secondary text-decoration-none small"
+                >
+                  ← Back to Home
                 </Link>
               </div>
             </div>
