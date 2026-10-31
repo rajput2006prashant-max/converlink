@@ -54,7 +54,22 @@ function Sidebar() {
           <i className="bi bi-envelope me-2"></i> Contact
         </Link>
 
-        
+<Link to="/landing" className="nav-link text-white">
+          <i className="bi bi-envelope me-2"></i> Dashboard
+        </Link>
+
+  
+             <Link to="profile" className="nav-link text-white">
+          <i className="bi bi-envelope me-2"></i> My Profile
+        </Link>
+
+        <Link to="setting" className="nav-link text-white">
+          <i className="bi bi-envelope me-2"></i> Setitings
+        </Link>  
+
+  <Link to="/" className="nav-link text-white">
+          <i className="bi bi-envelope me-2"></i>Logout
+        </Link>
 
       </nav>
 

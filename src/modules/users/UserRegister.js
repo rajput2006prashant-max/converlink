@@ -1,6 +1,8 @@
 
 import React, { Fragment, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function UserRegister() {
   const navigate = useNavigate();
@@ -9,7 +11,7 @@ function UserRegister() {
     name: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
   const [error, setError] = useState("");
@@ -18,7 +20,7 @@ function UserRegister() {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -27,50 +29,96 @@ function UserRegister() {
     e.preventDefault();
     setError("");
 
+    // Password check
     if (formData.password !== formData.confirmPassword) {
       setError("Password aur Confirm Password match nahi karte!");
+
+      toast.error("Passwords do not match!", {
+        theme: "colored",
+        autoClose: 2500,
+        position: "top-right",
+      });
+
       return;
     }
 
-    const users = JSON.parse(
-      localStorage.getItem("users") || "[]"
-    );
+    // Registered users get karna
+    let users = [];
+
+    try {
+      users = JSON.parse(localStorage.getItem("users") || "[]");
+
+      if (!Array.isArray(users)) {
+        users = [];
+      }
+    } catch (error) {
+      toast.error("Unable to read registered users!", {
+        theme: "colored",
+        autoClose: 2500,
+      });
+      return;
+    }
 
     const email = formData.email.trim().toLowerCase();
 
+    // Existing email check
     const alreadyRegistered = users.some(
-      (user) => user.email.toLowerCase() === email
+      (user) => user.email?.toLowerCase() === email
     );
 
     if (alreadyRegistered) {
       setError("Ye email pehle se registered hai!");
+
+      toast.warning("This email is already registered!", {
+        theme: "colored",
+        autoClose: 2500,
+        position: "top-right",
+      });
+
       return;
     }
 
+    // New user create karna
     const newUser = {
       name: formData.name.trim(),
       email: email,
-      password: formData.password
+      password: formData.password,
     };
 
     users.push(newUser);
 
-    localStorage.setItem("users", JSON.stringify(users));
+    try {
+      localStorage.setItem("users", JSON.stringify(users));
+    } catch (error) {
+      toast.error("Registration failed. Please try again!", {
+        theme: "colored",
+        autoClose: 2500,
+      });
+      return;
+    }
 
-    alert("User Registration Successful!");
-
+    // Form reset
     setFormData({
       name: "",
       email: "",
       password: "",
-      confirmPassword: ""
+      confirmPassword: "",
     });
 
-    navigate("/user-login");
+    // Success toast
+    toast.success("Registration successful! Please login.", {
+      theme: "colored",
+      autoClose: 1800,
+      position: "top-right",
+      onClose: () => navigate("/user-login"),
+    });
   };
 
   return (
     <Fragment>
+      {/* Toast Container */}
+      <ToastContainer />
+
       <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">
         <div
           className="card border-0 shadow-lg rounded-4 overflow-hidden w-100"

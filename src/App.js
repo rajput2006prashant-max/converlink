@@ -26,14 +26,18 @@ import AdminSearch from "./modules/admin/auth/AdminSearch";
 
 // User pages
 import UserLogin from "./modules/users/UserLogin";
+import ProtectedRoute from "./modules/users/ProtectedRoute";
 import UserRegister from "./modules/users/UserRegister";
 import UserForget from "./modules/users/UserForget";
 
+
 import Landingpage from "./modules/users/Userdashboard/Landingpage";
-import Mainpage from "./modules/users/Userdashboard/Mainpage";
+
 import Homepage from "./modules/users/Userdashboard/Homepage";
 import Aboutpage from "./modules/users/Userdashboard/Aboutpage";
 import Servicespage from "./modules/users/Userdashboard/Servicepage";
+import ServiceDetails from "./modules/users/Userdashboard/ServiceDetails";
+
 import Projectpage from "./modules/users/Userdashboard/Projectpage";
 import Enquiriespage from "./modules/users/Userdashboard/Enquiriespage";
 import Contactpage from "./modules/users/Userdashboard/Contactpage";
@@ -78,30 +82,38 @@ function App() {
 
 
       {/* User authentication */}
-      <Route path="/user-login" element={<UserLogin />} />
-      <Route path="/user-forgot" element={<UserForget />} />
-      <Route path="/user-register" element={<UserRegister />} />
+      
+{/* User authentication - public pages */}
+<Route path="/user-login" element={<UserLogin />} />
+<Route path="/user-forgot" element={<UserForget />} />
+<Route path="/user-register" element={<UserRegister />} />
 
-      {/* User layout and pages */}
-      <Route path="/landing" element={<Landingpage />}>
-        <Route index element={<Mainpage />} />
-        <Route path="dashboard" element={<Dashboardpage />} />
-        <Route path="home" element={<Homepage />} />
-        <Route path="about" element={<Aboutpage />} />
-        <Route path="services" element={<Servicespage />} />
-        <Route path="project" element={<Projectpage />} />
-        <Route path="enquiries" element={<Enquiriespage />} />
-        <Route path="contact" element={<Contactpage />} />
-        <Route path="profile" element={<Profilepage />} />
-        <Route path="setting" element={<Settingpage />} />
-        <Route path="notification" element={<Notificationpage />} />
-        <Route path="message" element={<Messagepage />} />
-        <Route path="*" element={<Errorpage />} />
-      </Route>
+{/* User layout and pages - protected */}
+<Route element={<ProtectedRoute />}>
+  <Route path="/landing" element={<Landingpage />}>
+    <Route index element={<Dashboardpage />} />
 
-      {/* Invalid URL */}
-      <Route path="*" element={<Errorpage />} />
-    </Routes>
+    <Route path="home" element={<Homepage />} />
+    <Route path="about" element={<Aboutpage />} />
+    <Route path="services" element={<Servicespage />} />
+    <Route path="service/:id" element={<ServiceDetails />} />
+
+    <Route path="project" element={<Projectpage />} />
+    <Route path="enquiries" element={<Enquiriespage />} />
+    <Route path="contact" element={<Contactpage />} />
+    <Route path="profile" element={<Profilepage />} />
+    <Route path="setting" element={<Settingpage />} />
+    <Route path="notification" element={<Notificationpage />} />
+    <Route path="message" element={<Messagepage />} />
+
+    <Route path="*" element={<Errorpage />} />
+  </Route>
+</Route>
+
+{/* Invalid URL */}
+<Route path="*" element={<Errorpage />}/>
+</Routes>
+
   );
 }
 

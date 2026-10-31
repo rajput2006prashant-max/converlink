@@ -2,6 +2,8 @@
 import React, { Fragment, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function UserLogin() {
   const navigate = useNavigate();
@@ -10,45 +12,76 @@ function UserLogin() {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm();
 
   const myform = (data) => {
     setLoginError("");
 
-    // Registration se saved users get karo
-    const users = JSON.parse(
-      localStorage.getItem("users") || "[]"
-    );
+    // Step 1: Registered users ko LocalStorage se get karo
+    let users = [];
 
-    // Email aur password match karo
+    try {
+      const storedUsers = localStorage.getItem("users");
+      users = storedUsers ? JSON.parse(storedUsers) : [];
+
+      if (!Array.isArray(users)) {
+        users = [];
+      }
+    } catch (error) {
+      users = [];
+    }
+
+    // Step 2: Email aur password match karo
     const user = users.find(
       (item) =>
+        item.email &&
         item.email.toLowerCase() === data.email.trim().toLowerCase() &&
         item.password === data.pass
     );
 
+    // Step 3: Agar login galat hai
     if (!user) {
-      setLoginError("Invalid email ya password!");
+      setLoginError("Invalid email or password!");
+
+      toast.error("Email or password is incorrect!", {
+        theme: "colored",
+        autoClose: 2500,
+        position: "top-right",
+      });
+
       return;
     }
 
-    // Current logged-in user save karo
+    // Step 4: Successful login status save karo
+    localStorage.setItem("isLoggedIn", "true");
+
     localStorage.setItem(
       "loggedInUser",
       JSON.stringify({
-        name: user.name,
-        email: user.email
+        name: user.name || "User",
+        email: user.email,
       })
     );
 
-    alert("Login Successful!");
-    navigate("/landing");
+    // Step 5: Success message
+    toast.success("Login successful! Welcome back.", {
+      theme: "colored",
+      autoClose: 1000,
+      position: "top-right",
+    });
+
+    // Step 6: Ek second baad landing page par jao
+    setTimeout(() => {
+      navigate("/landing", { replace: true });
+    }, 1000);
   };
 
   return (
     <Fragment>
       <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">
+        <ToastContainer />
+
         <div
           className="card border-0 shadow-lg rounded-4 overflow-hidden w-100"
           style={{ maxWidth: "900px" }}
@@ -57,7 +90,6 @@ function UserLogin() {
             {/* Left Section */}
             <div className="col-md-6 bg-primary text-white d-flex flex-column justify-content-center p-4 p-lg-5">
               <h1 className="fw-bold mb-3">Welcome Back!</h1>
-
               <p className="fs-5">
                 Sign in to continue your journey with us.
               </p>
@@ -72,7 +104,6 @@ function UserLogin() {
             {/* Right Section */}
             <div className="col-md-6 p-4 p-lg-5">
               <h2 className="fw-bold text-dark mb-2">User Login</h2>
-
               <p className="text-secondary mb-4">
                 Please enter your account details
               </p>
@@ -97,7 +128,7 @@ function UserLogin() {
                     placeholder="Enter email"
                     autoComplete="email"
                     {...register("email", {
-                      required: "Email is required"
+                      required: "Email is required",
                     })}
                   />
 
@@ -124,8 +155,8 @@ function UserLogin() {
                       required: "Password is required",
                       minLength: {
                         value: 6,
-                        message: "Minimum 6 characters required"
-                      }
+                        message: "Minimum 6 characters required",
+                      },
                     })}
                   />
 
@@ -144,7 +175,6 @@ function UserLogin() {
                       className="form-check-input"
                       id="remember"
                     />
-
                     <label className="form-check-label" htmlFor="remember">
                       Remember me
                     </label>
