@@ -7175,3 +7175,30 @@
 .fix{
   position: fixed;
 }
+
+
+
+
+.sidebar-link {
+  display: block;
+  padding: 8px 15px;
+  margin: 3px 0;
+  color: #dbeafe;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.sidebar-link:hover {
+  background-color: #087FC4;
+  color: white;
+}
+
+.btn-toggle {
+  color: white !important;
+}
+
+.btn-toggle:hover {
+  background-color: #087FC4;
+  color: white !important;
+}

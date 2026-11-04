@@ -12,6 +12,7 @@ import {
   FaArrowRight,
   FaCheckCircle
 } from "react-icons/fa";
+import Footerpage from "./modules/shares/Footerpage";
 
 
 function Welcome() {
@@ -208,7 +209,7 @@ function Welcome() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer
       <footer className="welcome-footer">
         <div className="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
           <Link to="/" className="footer-brand">
@@ -225,8 +226,8 @@ function Welcome() {
             Quality Work. Trusted Solutions.
           </span>
         </div>
-      </footer>
-
+      </footer> */}
+      <Footerpage></Footerpage>
     </div>
   );
 }
