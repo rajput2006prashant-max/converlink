@@ -1,122 +1,142 @@
 
 import React, { Fragment, useState } from "react";
+import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function UserForgot() {
+
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [verifiedEmail, setVerifiedEmail] = useState("");
+  const [verifiedUser, setVerifiedUser] = useState(null);
 
-  const handleEmailSubmit = (e) => {
+  // Verify Email Function
+  const handleEmailSubmit = async (e) => {
+
     e.preventDefault();
 
-    let users = [];
-
     try {
-      users = JSON.parse(localStorage.getItem("users") || "[]");
 
-      if (!Array.isArray(users)) {
-        users = [];
+      // Get Users From JSON Server
+      const response = await axios.get(
+        "http://localhost:8700/user"
+      );
+
+      const users = response.data;
+
+      // Find User By Email
+      const user = users.find(
+        (item) =>
+          item.email &&
+          item.email.trim().toLowerCase() ===
+            email.trim().toLowerCase()
+      );
+
+      if (!user) {
+
+        toast.error("This email is not registered!", {
+          autoClose: 2500,
+          position: "top-right",
+        });
+
+        return;
       }
-    } catch {
-      toast.error("Unable to read registered users!", {
-        theme: "colored",
-        autoClose: 2500,
-      });
-      return;
-    }
 
-    const user = users.find(
-      (item) =>
-        item.email &&
-        item.email.toLowerCase() === email.trim().toLowerCase()
-    );
+      // Save Verified User
+      setVerifiedUser(user);
 
-    if (!user) {
-      toast.error("Is email se koi registered account nahi mila.", {
-        theme: "colored",
+      toast.success("Email verified! Set your new password.", {
         autoClose: 2500,
         position: "top-right",
       });
-      return;
+
+    } catch (error) {
+
+      console.log(error);
+
+      toast.error("JSON Server is not running!", {
+        autoClose: 2500,
+      });
+
     }
 
-    setVerifiedEmail(user.email);
-
-    toast.success("Email verified! Ab naya password set karein.", {
-      theme: "colored",
-      autoClose: 2500,
-      position: "top-right",
-    });
   };
 
-  const handlePasswordReset = (e) => {
+  // Reset Password Function
+  const handlePasswordReset = async (e) => {
+
     e.preventDefault();
 
     if (newPassword.length < 6) {
-      toast.error("Password kam se kam 6 characters ka hona chahiye.", {
-        theme: "colored",
-        autoClose: 2500,
-      });
+
+      toast.error("Password must be at least 6 characters!");
+
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("Password aur Confirm Password match nahi karte.", {
-        theme: "colored",
-        autoClose: 2500,
-      });
+
+      toast.error("Password and Confirm Password do not match!");
+
       return;
     }
 
     try {
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
 
-      const updatedUsers = users.map((user) =>
-        user.email.toLowerCase() === verifiedEmail.toLowerCase()
-          ? { ...user, password: newPassword }
-          : user
+      // Update Password In JSON Server
+      await axios.patch(
+        `http://localhost:8700/user/${verifiedUser.id}`,
+        {
+          pass: newPassword,
+        }
       );
 
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-
       toast.success("Password reset successful! Please login.", {
-        theme: "colored",
         autoClose: 1800,
         position: "top-right",
-        onClose: () => navigate("/user-login", { replace: true }),
+        onClose: () => {
+          navigate("/user-login", { replace: true });
+        },
       });
 
-      setVerifiedEmail("");
+      setVerifiedUser(null);
       setEmail("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch {
-      toast.error("Password reset nahi ho saka. Dobara try karein.", {
-        theme: "colored",
-        autoClose: 2500,
-      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      toast.error("Password reset failed. Please try again!");
+
     }
+
   };
 
   return (
+
     <Fragment>
+
       <ToastContainer />
 
       <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">
+
         <div
           className="card border-0 shadow-lg rounded-4 overflow-hidden w-100"
           style={{ maxWidth: "900px" }}
         >
+
           <div className="row g-0">
+
             {/* Left Section */}
             <div className="col-md-5 bg-primary text-white d-flex flex-column justify-content-center p-4 p-lg-5">
+
               <FaLock size={60} />
 
               <h1 className="fw-bold mb-3 mt-3">
@@ -133,15 +153,20 @@ function UserForgot() {
               </p>
 
               <div className="mt-4">
+
                 <span className="badge bg-white text-primary rounded-pill p-3">
                   Simple. Secure. Smart.
                 </span>
+
               </div>
+
             </div>
 
             {/* Right Section */}
             <div className="col-md-7 p-4 p-lg-5">
+
               <div className="text-center mb-4">
+
                 <div
                   className="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
                   style={{ width: "75px", height: "75px" }}
@@ -156,15 +181,23 @@ function UserForgot() {
                 <p className="text-secondary">
                   Verify your registered email to continue.
                 </p>
+
               </div>
 
-              {!verifiedEmail ? (
+              {!verifiedUser ? (
+
+                /* Email Verification Form */
                 <form onSubmit={handleEmailSubmit}>
-                  <label htmlFor="email" className="form-label fw-semibold">
+
+                  <label
+                    htmlFor="email"
+                    className="form-label fw-semibold"
+                  >
                     Registered Email
                   </label>
 
                   <div className="input-group mb-3">
+
                     <span className="input-group-text bg-light">
                       <FaEnvelope />
                     </span>
@@ -179,6 +212,7 @@ function UserForgot() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                     />
+
                   </div>
 
                   <button
@@ -187,10 +221,20 @@ function UserForgot() {
                   >
                     Verify Email
                   </button>
+
                 </form>
+
               ) : (
+
+                /* Password Reset Form */
                 <form onSubmit={handlePasswordReset}>
+
+                  <div className="alert alert-success">
+                    Email Verified: {verifiedUser.email}
+                  </div>
+
                   <div className="mb-3">
+
                     <label
                       htmlFor="newPassword"
                       className="form-label fw-semibold"
@@ -209,9 +253,11 @@ function UserForgot() {
                       autoComplete="new-password"
                       required
                     />
+
                   </div>
 
                   <div className="mb-3">
+
                     <label
                       htmlFor="confirmPassword"
                       className="form-label fw-semibold"
@@ -230,6 +276,7 @@ function UserForgot() {
                       autoComplete="new-password"
                       required
                     />
+
                   </div>
 
                   <button
@@ -238,32 +285,45 @@ function UserForgot() {
                   >
                     Reset Password
                   </button>
+
                 </form>
+
               )}
 
               <div className="text-center mt-4">
+
                 <Link
                   to="/user-login"
                   className="text-primary text-decoration-none fw-semibold"
                 >
                   ← Back to User Login
                 </Link>
+
               </div>
 
               <div className="text-center mt-3">
+
                 <Link
                   to="/"
                   className="text-secondary text-decoration-none small"
                 >
                   Back to Home
                 </Link>
+
               </div>
+
             </div>
+
           </div>
+
         </div>
+
       </div>
+
     </Fragment>
+
   );
+
 }
 
 export default UserForgot;

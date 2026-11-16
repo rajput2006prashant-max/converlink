@@ -61,22 +61,22 @@ function Footerpage() {
 
             <ul className="list-unstyled">
               <li className="mb-2">
-                <Link to="home" className="footer-link">
+                <Link to="/landing/home" className="footer-link">
                   <FaArrowRight className="me-2" /> Home
                 </Link>
               </li>
               <li className="mb-2">
-                <Link to="services" className="footer-link">
+                <Link to="/landing/services" className="footer-link">
                   <FaArrowRight className="me-2" /> Services
                 </Link>
               </li>
               <li className="mb-2">
-                <Link to="project" className="footer-link">
+                <Link to="/landing/project" className="footer-link">
                   <FaArrowRight className="me-2" /> Projects
                 </Link>
               </li>
               <li className="mb-2">
-                <Link to="contact" className="footer-link">
+                <Link to="/landing/contact" className="footer-link">
                   <FaArrowRight className="me-2" /> Contact
                 </Link>
               </li>

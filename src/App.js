@@ -1,5 +1,5 @@
-
 import { Routes, Route } from "react-router-dom";
+import { ProjectProvider } from "./Context/ProjectContext";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
@@ -12,7 +12,7 @@ import AdminLogin from "./modules/admin/auth/AdminLogin";
 import AdminForget from "./modules/admin/auth/AdminForget";
 import AdminRegister from "./modules/admin/auth/AdminRegister";
 import AdminLandingpage from "./modules/admin/auth/AdminLandingpage";
-import ManageServices from './modules/admin/auth/ManageServices';
+import ManageServices from "./modules/admin/auth/ManageServices";
 import AdminDashboardpage from "./modules/admin/auth/AdminDashboardpage";
 import ManageProject from "./modules/admin/auth/ManageProject";
 import Enquiries from "./modules/admin/auth/Enquiries";
@@ -23,13 +23,11 @@ import Message from "./modules/admin/auth/Message";
 import Notification from "./modules/admin/auth/Notification";
 import AdminSearch from "./modules/admin/auth/AdminSearch";
 
-
 // User pages
 import UserLogin from "./modules/users/UserLogin";
 import ProtectedRoute from "./modules/users/ProtectedRoute";
 import UserRegister from "./modules/users/UserRegister";
 import UserForget from "./modules/users/UserForget";
-
 
 import Landingpage from "./modules/users/Userdashboard/Landingpage";
 
@@ -46,12 +44,19 @@ import Settingpage from "./modules/users/Userdashboard/Settingpage";
 import Notificationpage from "./modules/users/Userdashboard/Notificationpage";
 import Messagepage from "./modules/users/Userdashboard/Messagepage";
 import Dashboardpage from "./modules/users/Userdashboard/Dashboard";
-
+import Mainbranch from "./modules/users/Userdashboard/Branchs/MainBranch";
+import TotalProject from "./modules/users/Userdashboard/Order/TotalProject";
+import PendingOrder from "./modules/users/Userdashboard/Order/PendingOrders";
+import NewEnquiry from "./modules/users/Userdashboard/Order/NewEnuiry";
+import InProgress from "./modules/users/Userdashboard/Order/InProgress";
+import CompletedProject from "./modules/users/Userdashboard/Order/CompletedProject";
+import CancelledProject from "./modules/users/Userdashboard/Order/CancelledProject";
 // Shared page
 import Errorpage from "./modules/shares/Errorpage";
 
 function App() {
   return (
+    <ProjectProvider>
     <Routes>
       {/* Welcome */}
       <Route path="/" element={<Welcome />} />
@@ -62,58 +67,60 @@ function App() {
       <Route path="/register" element={<AdminRegister />} />
 
       {/* Admin layout and dashboard */}
-<Route path="/adminlandingpage" element={<AdminLandingpage/>}>
+      <Route path="/adminlandingpage" element={<AdminLandingpage />}>
+        <Route index element={<AdminDashboardpage />} />
+        <Route path="ManageServices" element={<ManageServices />} />
+        <Route path="ManageProject" element={<ManageProject />} />
+        <Route path="Enquiries" element={<Enquiries />} />
+        <Route path="ManageUser" element={<ManageUser />} />
+        <Route path="MyProfile" element={<MyProfile />} />
+        <Route path="Settings" element={<Settings />} />
+        <Route path="Message" element={<Message />} />
+        <Route path="Notification" element={<Notification />} />
+        <Route path="AdminSearch" element={<AdminSearch />} />
 
-<Route index element={<AdminDashboardpage/>}/>
-<Route path="ManageServices" element={<ManageServices/>}/>
-<Route path="ManageProject" element={<ManageProject/>}/>
-<Route path="Enquiries"  element={<Enquiries/>}/>
-<Route path="ManageUser" element={<ManageUser/>}/>
-<Route path="MyProfile" element={<MyProfile/>}/>
-<Route path="Settings" element={<Settings/>}/>
-<Route path="Message" element={<Message/>}/>
-<Route path="Notification" element={<Notification/>}/>
-<Route path="AdminSearch" element={<AdminSearch/>}/>
-
-<Route path="*" element={<Errorpage />} />
-</Route>
-
-
-
+        <Route path="*" element={<Errorpage />} />
+      </Route>
 
       {/* User authentication */}
-      
-{/* User authentication - public pages */}
-<Route path="/user-login" element={<UserLogin />} />
-<Route path="/user-forgot" element={<UserForget />} />
-<Route path="/user-register" element={<UserRegister />} />
 
-{/* User layout and pages - protected */}
-<Route element={<ProtectedRoute />}>
-  <Route path="/landing" element={<Landingpage />}>
-    <Route index element={<Dashboardpage />} />
+      {/* User authentication - public pages */}
+      <Route path="/user-login" element={<UserLogin />} />
+      <Route path="/user-forgot" element={<UserForget />} />
+      <Route path="/user-register" element={<UserRegister />} />
 
-    <Route path="home" element={<Homepage />} />
-    <Route path="about" element={<Aboutpage />} />
-    <Route path="services" element={<Servicespage />} />
-    <Route path="service/:id" element={<ServiceDetails />} />
+      {/* User layout and pages - protected */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/landing" element={<Landingpage />}>
+          <Route index element={<Dashboardpage />} />
 
-    <Route path="project" element={<Projectpage />} />
-    <Route path="enquiries" element={<Enquiriespage />} />
-    <Route path="contact" element={<Contactpage />} />
-    <Route path="profile" element={<Profilepage />} />
-    <Route path="setting" element={<Settingpage />} />
-    <Route path="notification" element={<Notificationpage />} />
-    <Route path="message" element={<Messagepage />} />
+          <Route path="home" element={<Homepage />} />
+          <Route path="about" element={<Aboutpage />} />
+          <Route path="services" element={<Servicespage />} />
+          <Route path="service/:id" element={<ServiceDetails />} />
 
-    <Route path="*" element={<Errorpage />} />
-  </Route>
-</Route>
+          <Route path="project" element={<Projectpage />} />
+          <Route path="enquiries" element={<Enquiriespage />} />
+          <Route path="contact" element={<Contactpage />} />
+          <Route path="profile" element={<Profilepage />} />
+          <Route path="setting" element={<Settingpage />} />
+          <Route path="notification" element={<Notificationpage />} />
+          <Route path="message" element={<Messagepage />} />
+          <Route path="props" element={<Mainbranch />} />
+          <Route path="totalproject" element={<TotalProject />}/>
+             <Route path="pendingorders" element={<PendingOrder/>}/>
+             <Route path="newenquiry" element={<NewEnquiry/>} />
+             <Route path="inprogress" element={<InProgress/>}/>
+             <Route path="completedproject" element={<CompletedProject/>}/>
+<Route path="cancelledproject" element={<CancelledProject/>}/>
+          <Route path="*" element={<Errorpage />} />
+        </Route>
+      </Route>
 
-{/* Invalid URL */}
-<Route path="*" element={<Errorpage />}/>
-</Routes>
-
+      {/* Invalid URL */}
+      <Route path="*" element={<Errorpage />} />
+    </Routes>
+    </ProjectProvider>
   );
 }
 

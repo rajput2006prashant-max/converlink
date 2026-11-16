@@ -1,12 +1,13 @@
 
 import React, { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import axios from "axios";
+
 import serviceData from "../Userdashboard/ServiceData";
 
 function ServiceDetails() {
   const { id } = useParams();
 
-  // URL ke ID se selected service find karna
   const service = serviceData.find(
     (item) => String(item.id) === id
   );
@@ -19,6 +20,7 @@ function ServiceDetails() {
   });
 
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Service-wise gallery images
   const galleryImages = {
@@ -48,7 +50,7 @@ function ServiceDetails() {
     ],
   };
 
-  // Demo FAQs
+  // FAQs
   const faqs = [
     {
       question: `What is included in ${service?.title}?`,
@@ -71,7 +73,7 @@ function ServiceDetails() {
     },
   ];
 
-  // Sample customer reviews (demo content)
+  // Customer reviews (demo content)
   const reviews = [
     {
       name: "Amit Sharma",
@@ -104,40 +106,49 @@ function ServiceDetails() {
     });
   };
 
-  // Enquiry submit
-  const handleSubmit = (e) => {
+  // Enquiry submit to JSON Server
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!service) return;
+
+    setLoading(true);
+    setSuccess("");
+
     const newEnquiry = {
-      ...formData,
+      clientName: formData.name,
+      email: formData.email,
+      mobile: formData.mobile,
       serviceId: service.id,
-      serviceName: service.title,
+      service: service.title,
+      message: formData.message,
+      date: new Date().toLocaleDateString("en-IN"),
       enquiryDate: new Date().toISOString(),
+      status: "New",
     };
 
-    let oldEnquiries = [];
-
     try {
-      oldEnquiries = JSON.parse(
-        localStorage.getItem("converlink_user_enquiries") || "[]"
+      const response = await axios.post(
+        "http://localhost:8700/NewEnuiry",
+        newEnquiry
       );
-    } catch {
-      oldEnquiries = [];
+
+      console.log("Enquiry Saved:", response.data);
+
+      setSuccess("Your enquiry has been submitted successfully!");
+
+      setFormData({
+        name: "",
+        email: "",
+        mobile: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error("Enquiry Error:", error);
+      setSuccess("Enquiry submit nahi hui. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    localStorage.setItem(
-      "converlink_user_enquiries",
-      JSON.stringify([...oldEnquiries, newEnquiry])
-    );
-
-    setSuccess("Your enquiry has been submitted successfully!");
-
-    setFormData({
-      name: "",
-      email: "",
-      mobile: "",
-      message: "",
-    });
   };
 
   // Service not found
@@ -158,7 +169,7 @@ function ServiceDetails() {
   const images = galleryImages[service.id] || [service.image];
 
   const relatedServices = serviceData.filter(
-    (item) => item.id !== service.id
+    (item) => String(item.id) !== String(service.id)
   );
 
   return (
@@ -177,7 +188,6 @@ function ServiceDetails() {
         <div className="container py-5">
           <div className="row">
             <div className="col-lg-8">
-
               <Link
                 to="/landing/services"
                 className="text-white text-decoration-none"
@@ -209,14 +219,10 @@ function ServiceDetails() {
                   Get a Free Quote →
                 </a>
 
-                <a
-                  href="#about"
-                  className="btn btn-outline-light btn-lg"
-                >
+                <a href="#about" className="btn btn-outline-light btn-lg">
                   Explore Service
                 </a>
               </div>
-
             </div>
           </div>
         </div>
@@ -225,7 +231,6 @@ function ServiceDetails() {
       {/* SERVICE HIGHLIGHTS */}
       <section className="container py-4">
         <div className="row g-3 text-center">
-
           {[
             { icon: "✓", title: "Quality Focused", text: "Attention to detail" },
             { icon: "⚙", title: "Professional Work", text: "Planned solutions" },
@@ -239,14 +244,12 @@ function ServiceDetails() {
               </div>
             </div>
           ))}
-
         </div>
       </section>
 
       {/* ABOUT SERVICE */}
       <section id="about" className="container py-5">
         <div className="row align-items-center g-5">
-
           <div className="col-lg-6">
             <img
               src={service.image}
@@ -293,14 +296,12 @@ function ServiceDetails() {
               Pricing: <span className="text-primary">{service.price}</span>
             </h5>
           </div>
-
         </div>
       </section>
 
       {/* WORK INCLUDED */}
       <section className="py-5 bg-white">
         <div className="container">
-
           <div className="text-center mb-5">
             <p className="text-primary fw-bold">OUR EXPERTISE</p>
             <h2 className="fw-bold">What We Offer</h2>
@@ -322,7 +323,6 @@ function ServiceDetails() {
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
@@ -356,7 +356,6 @@ function ServiceDetails() {
       {/* WORKING PROCESS */}
       <section className="py-5 text-white" style={{ background: "#102D4F" }}>
         <div className="container">
-
           <div className="text-center mb-5">
             <p className="text-info fw-bold">HOW WE WORK</p>
             <h2 className="fw-bold">Our Working Process</h2>
@@ -382,7 +381,6 @@ function ServiceDetails() {
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
@@ -424,7 +422,6 @@ function ServiceDetails() {
       {/* FAQ */}
       <section className="py-5 bg-white">
         <div className="container">
-
           <div className="text-center mb-5">
             <p className="text-primary fw-bold">HAVE QUESTIONS?</p>
             <h2 className="fw-bold">Frequently Asked Questions</h2>
@@ -462,7 +459,6 @@ function ServiceDetails() {
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
@@ -477,7 +473,6 @@ function ServiceDetails() {
           {relatedServices.map((item) => (
             <div className="col-md-6 col-lg-4" key={item.id}>
               <div className="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
-
                 <img
                   src={item.image}
                   alt={item.title}
@@ -503,7 +498,6 @@ function ServiceDetails() {
                     View Details →
                   </Link>
                 </div>
-
               </div>
             </div>
           ))}
@@ -518,11 +512,9 @@ function ServiceDetails() {
       >
         <div className="container">
           <div className="row justify-content-center">
-
             <div className="col-lg-9">
               <div className="bg-white shadow-lg rounded-4 overflow-hidden">
                 <div className="row g-0">
-
                   <div
                     className="col-lg-5 text-white p-4 p-md-5 d-flex flex-column justify-content-center"
                     style={{ backgroundColor: "#102D4F" }}
@@ -537,9 +529,7 @@ function ServiceDetails() {
                       and send us an enquiry.
                     </p>
 
-                    <h5 className="mt-3">
-                      Selected Service
-                    </h5>
+                    <h5 className="mt-3">Selected Service</h5>
 
                     <p className="text-info fw-semibold mb-0">
                       {service.title}
@@ -547,20 +537,25 @@ function ServiceDetails() {
                   </div>
 
                   <div className="col-lg-7 p-4 p-md-5">
-
                     <h3 className="fw-bold mb-2">Send an Enquiry</h3>
                     <p className="text-secondary">
                       Fill in your details below.
                     </p>
 
                     {success && (
-                      <div className="alert alert-success" role="alert">
+                      <div
+                        className={`alert ${
+                          success.includes("successfully")
+                            ? "alert-success"
+                            : "alert-danger"
+                        }`}
+                        role="alert"
+                      >
                         {success}
                       </div>
                     )}
 
                     <form onSubmit={handleSubmit}>
-
                       <div className="mb-3">
                         <label className="form-label fw-semibold">
                           Full Name
@@ -626,25 +621,29 @@ function ServiceDetails() {
                       <button
                         type="submit"
                         className="btn btn-primary btn-lg w-100"
+                        disabled={loading}
                       >
-                        Submit Enquiry →
+                        {loading ? "Submitting..." : "Submit Enquiry →"}
                       </button>
-
                     </form>
                   </div>
-
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </section>
 
       {/* BOTTOM CTA */}
-      <section className="py-5 text-center text-white" style={{ background: "#102D4F" }}>
+      <section
+        className="py-5 text-center text-white"
+        style={{ background: "#102D4F" }}
+      >
         <div className="container">
-          <h2 className="fw-bold">Let's Build Something Great Together</h2>
+          <h2 className="fw-bold">
+            Let's Build Something Great Together
+          </h2>
+
           <p className="text-light mt-3">
             Connect with Converlink Engineering for your next project.
           </p>
@@ -654,7 +653,6 @@ function ServiceDetails() {
           </a>
         </div>
       </section>
-
     </div>
   );
 }

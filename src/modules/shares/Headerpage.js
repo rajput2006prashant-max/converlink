@@ -64,7 +64,7 @@ function Headerpage() {
 
             {/* Notifications */}
             <Link
-              to="notification"
+              to="/landing/notification"
               className="position-relative text-white"
               title="Notifications"
             >
@@ -82,7 +82,7 @@ function Headerpage() {
 
             {/* Messages */}
             <Link
-              to="message"
+              to="/landing/message"
               className="position-relative text-white"
               title="Messages"
             >
@@ -112,7 +112,7 @@ function Headerpage() {
 
                 {/* User Login */}
                 <li>
-                  <Link className="dropdown-item py-2" to="/user-login">
+                  <Link className="dropdown-item py-2" to="/landing/user-login">
                     <FaUserCircle className="me-2 text-primary" />
                     User Login
                   </Link>
@@ -126,7 +126,7 @@ function Headerpage() {
 
                 {/* Profile */}
                 <li>
-                  <Link className="dropdown-item py-2" to="profile">
+                  <Link className="dropdown-item py-2" to="/landing/profile">
                     My Profile
                   </Link>
                 </li>
@@ -139,7 +139,7 @@ function Headerpage() {
 
                 {/* Settings */}
                 <li>
-                  <Link className="dropdown-item py-2" to="setting">
+                  <Link className="dropdown-item py-2" to="/landing/setting">
                     Settings
                   </Link>
                 </li>

@@ -13,6 +13,7 @@ import {
   FaCheckCircle
 } from "react-icons/fa";
 import Footerpage from "./modules/shares/Footerpage";
+import Headerpage from "./modules/shares/Headerpage";
 
 
 function Welcome() {
@@ -46,51 +47,7 @@ function Welcome() {
   return (
     <div className="welcome-page">
 
-      {/* Navbar */}
-      <nav className="navbar navbar-expand-lg welcome-navbar">
-        <div className="container">
-          <Link to="/" className="navbar-brand welcome-brand">
-            <FaBuilding className="brand-icon" />
-            <span>
-              CONVERLINK
-              <small>ENGINEERING PVT. LTD.</small>
-            </span>
-          </Link>
-
-          {/* Login Dropdown */}
-          <div className="dropdown">
-            <button
-              className="btn login-dropdown dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <FaUser className="me-2" />
-              Login
-            </button>
-
-            <ul className="dropdown-menu dropdown-menu-end shadow border-0">
-              <li>
-                <Link className="dropdown-item py-3" to="/user-login">
-                  <FaUser className="me-2 text-primary" />
-                  User Login
-                </Link>
-              </li>
-
-              <li>
-                <Link className="dropdown-item py-3" to="/admin-login">
-                  <FaUserShield className="me-2 text-primary" />
-                  Admin Login
-                </Link>
-              </li>
-
-              <li><hr className="dropdown-divider" /></li>
-
-            
-            </ul>
-          </div>
-        </div>
-      </nav>
+     <Headerpage />
 
       {/* Hero Section */}
       <section className="welcome-hero">

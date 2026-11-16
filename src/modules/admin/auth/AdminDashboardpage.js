@@ -1,220 +1,257 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
-import {
-  FaTools,
-  FaProjectDiagram,
-  FaEnvelope,
-  FaUsers,
-  FaBolt,
-  FaWrench,
-  FaPlug,
-  FaPaintRoller,
-  FaArrowRight,
-  FaClock
-} from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { MdDelete } from "react-icons/md";
+import { FaEdit } from "react-icons/fa";
+import { FaListOl } from "react-icons/fa";
+
 
 
 function AdminDashboardpage() {
-  const stats = [
-    {
-      title: "Total Services",
-      count: "04",
-      icon: <FaTools />,
-      color: "#168aad"
-    },
-    {
-      title: "Total Projects",
-      count: "12",
-      icon: <FaProjectDiagram />,
-      color: "#7c5ce7"
-    },
-    {
-      title: "New Enquiries",
-      count: "08",
-      icon: <FaEnvelope />,
-      color: "#e89b25"
-    },
-    {
-      title: "Total Users",
-      count: "25",
-      icon: <FaUsers />,
-      color: "#20a477"
-    }
-  ];
 
-  const services = [
-    {
-      title: "Electrical Work",
-      icon: <FaBolt />,
-      description: "Electrical installation and repair"
-    },
-    {
-      title: "Maintenance",
-      icon: <FaWrench />,
-      description: "Regular maintenance solutions"
-    },
-    {
-      title: "Installation",
-      icon: <FaPlug />,
-      description: "Professional installation work"
-    },
-    {
-      title: "Interior Designing",
-      icon: <FaPaintRoller />,
-      description: "Modern interior design services"
+    const [admin, updateadmin] = useState([])
+    const getadmin = () => {
+        axios.get("http://localhost:8700/admin").then((d) => {
+            console.log(d);
+            updateadmin(d.data);
+        })
     }
-  ];
+
+    useEffect(() => {
+        getadmin();
+    }, [])
+
+
+
+
+      const [user, updateuser] = useState([])
+    const getuser = () => {
+        axios.get("http://localhost:8700/user").then((d) => {
+            console.log(d);
+            updateuser(d.data);
+        })
+    }
+
+    useEffect(() => {
+        getuser();
+    }, [])
+
+     const [NewEnuiry, updateNewEnuiryt] = useState([])
+    const getNewEnuiry = () => {
+        axios.get("http://localhost:8700/NewEnuiry").then((d) => {
+            console.log(d);
+            updateNewEnuiryt(d.data);
+        })
+    }
+
+    useEffect(() => {
+        getNewEnuiry();
+    }, [])
 
   return (
-    <div className="admin-dashboard container-fluid">
+    <div className="container-fluid mt-3">
 
-      {/* Heading */}
-      <div className="dashboard-heading">
-        <div>
-          <span className="dashboard-eyebrow">CONVERLINK ENGINEERING</span>
-          <h2>Admin Dashboard</h2>
-          <p>Welcome back! Here's your company overview.</p>
-        </div>
+      {/* Dashboard Cards and Right Side Cards */}
+      <div className="row">
 
-        <span className="dashboard-status">
-          <span className="status-dot"></span>
-          Admin Panel
-        </span>
-      </div>
+        {/* Left Side Cards */}
+        <div className="col-md-9">
+          <div className="row">
 
-      {/* Statistics */}
-      <div className="row g-3 g-xl-4 dashboard-stats">
-        {stats.map((item) => (
-          <div className="col-12 col-sm-6 col-xl-3" key={item.title}>
-            <div className="dashboard-stat-card">
-              <div
-                className="stat-icon"
-                style={{
-                  color: item.color,
-                  backgroundColor: `${item.color}18`
-                }}
-              >
-                {item.icon}
-              </div>
-
-              <div className="stat-content">
-                <p>{item.title}</p>
-                <h3>{item.count}</h3>
-                <small>Company overview</small>
-              </div>
-
-              <div className="stat-arrow">
-                <FaArrowRight />
+            <div className="col-md-4">
+              <div className="card text-bg-primary mb-3 shadow">
+                <div className="card-body">
+                  <h5 className="card-title">Total Admins</h5>
+                  <p className="card-text h1">{admin.length}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Services */}
-      <section className="dashboard-panel">
-        <div className="panel-heading">
-          <div>
-            <h4>Our Services</h4>
-            <p>Services offered by Converlink Engineering</p>
-          </div>
-
-          <Link
-            to="/adminlanding/manageservices"
-            className="dashboard-view-link"
-          >
-            View All <FaArrowRight />
-          </Link>
-        </div>
-
-        <div className="row g-3">
-          {services.map((service) => (
-            <div className="col-12 col-sm-6 col-xl-3" key={service.title}>
-              <div className="dashboard-service-card">
-                <div className="service-icon">{service.icon}</div>
-                <h6>{service.title}</h6>
-                <p>{service.description}</p>
-                <span className="service-label">Company Service</span>
+            <div className="col-md-4">
+              <div className="card text-bg-success mb-3 shadow">
+                <div className="card-body">
+                  <h5 className="card-title">Total Users</h5>
+                  <p className="card-text h1">{user.length}</p>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* Recent Enquiries */}
-      <section className="dashboard-panel">
-        <div className="panel-heading">
-          <div>
-            <h4>Recent Enquiries</h4>
-            <p>Keep track of customer enquiries</p>
-          </div>
+            <div className="col-md-4">
+              <div className="card text-bg-danger mb-3 shadow">
+                <div className="card-body">
+                  <h5 className="card-title">Total Projects</h5>
+                  <p className="card-text h1">{NewEnuiry.length}</p>
+                </div>
+              </div>
+            </div>
 
-          <Link
-            to="Enquiries"
-            className="dashboard-view-link"
-          >
-            View All <FaArrowRight />
-          </Link>
-        </div>
+            <div className="col-md-8">
+              <div className="card text-bg-danger mb-3 shadow">
+                <div className="card-body">
+                  <h5 className="card-title">Company Overview</h5>
+                  <p className="card-text">Welcome to Admin Dashboard.</p>
+                </div>
+              </div>
+            </div>
 
-        <div className="dashboard-empty-state">
-          <div className="empty-icon">
-            <FaEnvelope />
-          </div>
-          <h6>No enquiry data connected</h6>
-          <p>
-            Customer enquiries will appear here after connecting
-            this section to your enquiry data.
-          </p>
+            <div className="col-md-4">
+              <div className="card text-bg-danger mb-3 shadow">
+                <div className="card-body">
+                  <h5 className="card-title">New Enquiries</h5>
+                  <p className="card-text h1">{NewEnuiry.length}</p>
+                </div>
+              </div>
+            </div>
 
-          <Link
-            to="Enquiries"
-            className="dashboard-btn"
-          >
-            Open Enquiries <FaArrowRight />
-          </Link>
-        </div>
-      </section>
-
-      {/* Quick Actions */}
-      <section className="dashboard-panel">
-        <div className="panel-heading">
-          <div>
-            <h4>Quick Actions</h4>
-            <p>Quick access to management pages</p>
           </div>
         </div>
 
-        <div className="quick-actions">
-          <Link
-            to="ManageServices"
-            className="quick-action-btn primary-action"
-          >
-            <FaTools />
-            <span>Manage Services</span>
-            <FaArrowRight className="action-arrow" />
-          </Link>
+        {/* Right Side Cards */}
+        <div className="col-md-3">
+          <div className="row">
 
-          <Link
-            to="ManageProject"
-            className="quick-action-btn purple-action"
-          >
-            <FaProjectDiagram />
-            <span>Manage Projects</span>
-            <FaArrowRight className="action-arrow" />
-          </Link>
+            <div className="col-md-12">
+              <div className="card text-bg-danger mb-3 shadow">
+                <div className="card-body">
+                  <h5 className="card-title">Primary Card</h5>
+                  <p className="card-text">Card content.</p>
+                </div>
+              </div>
+            </div>
 
-          <Link
-            to="Enquiries"
-            className="quick-action-btn orange-action"
-          >
-            <FaClock />
-            <span>Check Enquiries</span>
-            <FaArrowRight className="action-arrow" />
-          </Link>
+            <div className="col-md-12">
+              <div className="card text-bg-danger mb-3 shadow">
+                <div className="card-body">
+                  <h5 className="card-title">Secondary Card</h5>
+                  <p className="card-text">Card content.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
-      </section>
+
+      </div>
+
+      {/* Admin List - Full Width */}
+      <div className="row">
+        <div className="col-md-12">
+
+          <div className="card text-bg-primary mb-3 shadow">
+            <div className="card-body">
+
+              <h5 className="card-title mb-3">Admin List <FaListOl/></h5>
+
+              <div className="table-responsive">
+                <table className="table table-primary table-hover table-bordered align-middle ">
+
+                  <thead>
+                    <tr>
+                      <th scope="col">Id</th>
+                      <th scope="col">Username</th>
+                      <th scope="col">Email</th>
+                      <th scope="col">Phone Number</th>
+                      <th scope="col">Gender</th>
+                      <th scope="col">Role</th>
+                      <th scope="col">Comments</th>
+                      <th scope="col">Action</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {admin.map((d,a=1)=> {
+                      return(
+                      <tr>
+                        <th scope="row">{++a }</th>
+                        <td>{d.username}</td>
+                        <td>{d.email}</td>
+                        <td>{d.phone}</td>
+                        <td>{d.gender}</td>
+                        <td>{d.role}</td>
+                        <td>{d.comments}</td>
+                        <td>
+                          <button className="btn btn-sm btn-danger">
+                          <MdDelete/>
+                          </button>
+                             <button className="btn btn-sm btn-warning ms-2">
+                           <FaEdit/>
+                          </button>
+                        </td>
+                      </tr>
+                      )
+})}
+                  </tbody>
+
+                </table>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+{/* User List - Full Width */}
+
+  <div className="row">
+        <div className="col-md-12">
+
+          <div className="card text-bg-primary mb-3 shadow">
+            <div className="card-body">
+
+              <h5 className="card-title mb-3">User List <FaListOl/></h5>
+
+              <div className="table-responsive">
+                <table className="table table-primary table-hover table-bordered align-middle ">
+
+                  <thead>
+                    <tr>
+                      <th scope="col">Id</th>
+                      <th scope="col">Username</th>
+                      <th scope="col">Email</th>
+                      <th scope="col">Phone Number</th>
+                      <th scope="col">Gender</th>
+                      <th scope="col">Role</th>
+                      <th scope="col">Comments</th>
+                      <th scope="col">Action</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {user.map((d,a=1)=> {
+                      return(
+                      <tr>
+                        <th scope="row">{++a }</th>
+                        <td>{d.username}</td>
+                        <td>{d.email}</td>
+                        <td>{d.phone}</td>
+                        <td>{d.gender}</td>
+                        <td>{d.role}</td>
+                        <td>{d.comments}</td>
+                        <td>
+                          <button className="btn btn-sm btn-danger">
+                          <MdDelete/>
+                          </button>
+                             <button className="btn btn-sm btn-warning ms-2">
+                           <FaEdit/>
+                          </button>
+                        </td>
+                      </tr>
+                      )
+})}
+                  </tbody>
+
+                </table>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      
 
     </div>
   );

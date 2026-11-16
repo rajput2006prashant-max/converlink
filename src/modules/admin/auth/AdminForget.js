@@ -2,6 +2,7 @@
 import React, { Fragment, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -10,6 +11,7 @@ function AdminForgotPassword() {
 
   const [emailVerified, setEmailVerified] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
+  const [verifiedAdmin, setVerifiedAdmin] = useState(null);
 
   const {
     register,
@@ -20,45 +22,63 @@ function AdminForgotPassword() {
 
   const newPassword = watch("newPassword");
 
-  const verifyEmail = (data) => {
-    const admins = JSON.parse(
-      localStorage.getItem("admins") || "[]"
-    );
+  // STEP 1: Verify Admin Email
+  const verifyEmail = async (data) => {
+    try {
+      const email = data.adminEmail.trim().toLowerCase();
 
-    const email = data.adminEmail.trim().toLowerCase();
+      const response = await axios.get(
+        "http://localhost:8700/admin"
+      );
 
-    const adminExists = admins.some(
-      (admin) => admin.adminEmail === email
-    );
+      const adminExists = response.data.find(
+        (admin) =>
+          admin.email?.trim().toLowerCase() === email
+      );
 
-    if (!adminExists) {
-      toast.error("Admin account not found!");
-      return;
+      if (!adminExists) {
+        toast.error("Admin account not found!");
+        return;
+      }
+
+      setAdminEmail(adminExists.email);
+      setVerifiedAdmin(adminExists);
+      setEmailVerified(true);
+
+      toast.success("Admin email verified successfully!");
+
+    } catch (error) {
+      console.error("Email verification error:", error);
+      toast.error("Server error! Please start JSON Server.");
     }
-
-    setAdminEmail(email);
-    setEmailVerified(true);
-    toast.success("Admin email verified!");
   };
 
-  const resetPassword = (data) => {
-    const admins = JSON.parse(
-      localStorage.getItem("admins") || "[]"
-    );
+  // STEP 2: Reset Admin Password
+  const resetPassword = async (data) => {
+    try {
+      if (!verifiedAdmin || !verifiedAdmin.id) {
+        toast.error("Please verify your admin email first!");
+        return;
+      }
 
-    const updatedAdmins = admins.map((admin) =>
-      admin.adminEmail === adminEmail
-        ? { ...admin, adminPassword: data.newPassword }
-        : admin
-    );
+      await axios.patch(
+        `http://localhost:8700/admin/${verifiedAdmin.id}`,
+        {
+          pass: data.newPassword,
+        }
+      );
 
-    localStorage.setItem("admins", JSON.stringify(updatedAdmins));
+      toast.success("Admin password reset successful!", {
+        autoClose: 1500,
+        onClose: () => {
+          navigate("/admin-login", { replace: true });
+        },
+      });
 
-    toast.success("Password reset successful!", {
-      autoClose: 1500,
-      onClose: () =>
-        navigate("/admin-login", { replace: true }),
-    });
+    } catch (error) {
+      console.error("Password reset error:", error);
+      toast.error("Password update failed!");
+    }
   };
 
   return (
@@ -66,20 +86,28 @@ function AdminForgotPassword() {
       <ToastContainer position="top-right" />
 
       <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">
+
         <div
           className="card border-0 shadow-lg rounded-4 overflow-hidden w-100"
           style={{ maxWidth: "900px" }}
         >
-          <div className="row g-0">
-            {/* Left Section */}
-            <div className="col-md-5 bg-primary text-white d-flex flex-column justify-content-center p-4 p-lg-5">
-              <h1 className="fw-bold mb-3">Forgot Password?</h1>
 
-              <p className="fs-5">Admin account recovery</p>
+          <div className="row g-0">
+
+            {/* LEFT SECTION */}
+            <div className="col-md-5 bg-primary text-white d-flex flex-column justify-content-center p-4 p-lg-5">
+
+              <h1 className="fw-bold mb-3">
+                Forgot Password?
+              </h1>
+
+              <p className="fs-5">
+                Admin account recovery
+              </p>
 
               <p className="text-white-50">
-                Verify your registered official email to reset your
-                admin account password.
+                Verify your registered official email to reset
+                your admin account password.
               </p>
 
               <div className="mt-4">
@@ -87,16 +115,21 @@ function AdminForgotPassword() {
                   Secure Admin Access
                 </span>
               </div>
+
             </div>
 
-            {/* Right Section */}
+            {/* RIGHT SECTION */}
             <div className="col-md-7 p-4 p-lg-5">
+
               <div className="text-center mb-4">
+
                 <div
                   className="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
                   style={{ width: "75px", height: "75px" }}
                 >
-                  <span style={{ fontSize: "35px" }}>🔐</span>
+                  <span style={{ fontSize: "35px" }}>
+                    🔐
+                  </span>
                 </div>
 
                 <h2 className="fw-bold text-dark">
@@ -108,11 +141,16 @@ function AdminForgotPassword() {
                     ? "Enter your registered official email."
                     : "Create your new password."}
                 </p>
+
               </div>
 
+              {/* EMAIL VERIFICATION FORM */}
               {!emailVerified ? (
+
                 <form onSubmit={handleSubmit(verifyEmail)}>
+
                   <div className="mb-4">
+
                     <label
                       htmlFor="adminEmail"
                       className="form-label fw-semibold"
@@ -136,6 +174,7 @@ function AdminForgotPassword() {
                         {errors.adminEmail.message}
                       </p>
                     )}
+
                   </div>
 
                   <button
@@ -144,14 +183,24 @@ function AdminForgotPassword() {
                   >
                     Verify Email
                   </button>
+
                 </form>
+
               ) : (
+
+                /* PASSWORD RESET FORM */
+
                 <form onSubmit={handleSubmit(resetPassword)}>
+
                   <div className="alert alert-success">
-                    Email verified: <strong>{adminEmail}</strong>
+                    Email verified:
+                    <strong className="ms-2">
+                      {adminEmail}
+                    </strong>
                   </div>
 
                   <div className="mb-3">
+
                     <label
                       htmlFor="newPassword"
                       className="form-label fw-semibold"
@@ -179,9 +228,11 @@ function AdminForgotPassword() {
                         {errors.newPassword.message}
                       </p>
                     )}
+
                   </div>
 
                   <div className="mb-4">
+
                     <label
                       htmlFor="confirmPassword"
                       className="form-label fw-semibold"
@@ -208,6 +259,7 @@ function AdminForgotPassword() {
                         {errors.confirmPassword.message}
                       </p>
                     )}
+
                   </div>
 
                   <button
@@ -216,30 +268,40 @@ function AdminForgotPassword() {
                   >
                     Reset Password
                   </button>
+
                 </form>
+
               )}
 
+              {/* BACK TO LOGIN */}
               <div className="text-center mt-4">
+
                 <Link
                   to="/admin-login"
                   className="text-primary text-decoration-none fw-semibold"
                 >
                   ← Back to Admin Login
                 </Link>
+
               </div>
 
+              {/* BACK TO HOME */}
               <div className="text-center mt-3">
+
                 <Link
                   to="/"
                   className="text-secondary text-decoration-none small"
                 >
                   Back to Home
                 </Link>
+
               </div>
+
             </div>
           </div>
         </div>
       </div>
+
     </Fragment>
   );
 }

@@ -1,286 +1,138 @@
-// import React, { useState, useEffect } from "react";
-// import { Link } from "react-router-dom";
-// import {
-//   FaTools,
-//   FaProjectDiagram,
-//   FaEnvelope,
-//   FaBell,
-//   FaBolt,
-//   FaWrench,
-//   FaPlug,
-//   FaPaintRoller,
-//   FaArrowRight,
-//   FaUserCircle
-// } from "react-icons/fa";
-
-// function Dashboardpage() {
-//   const [userName, setUserName] = useState("User");
-
-//   useEffect(() => {
-//     try {
-//       const storedUser = localStorage.getItem("loggedInUser");
-//       if (storedUser) {
-//         const parsedUser = JSON.parse(storedUser);
-//         if (parsedUser && parsedUser.name) {
-//           setUserName(parsedUser.name);
-//         }
-//       }
-//     } catch (error) {
-//       console.error("Failed to parse loggedInUser from localStorage", error);
-//     }
-//   }, []);
-
-//   const services = [
-//     {
-//       title: "Electrical Work",
-//       description: "Electrical installation and repair solutions.",
-//       icon: <FaBolt />
-//     },
-//     {
-//       title: "Maintenance",
-//       description: "Reliable maintenance for your requirements.",
-//       icon: <FaWrench />
-//     },
-//     {
-//       title: "Installation",
-//       description: "Professional installation services.",
-//       icon: <FaPlug />
-//     },
-//     {
-//       title: "Interior Designing",
-//       description: "Modern and functional interior solutions.",
-//       icon: <FaPaintRoller />
-//     }
-//   ];
-
-//   return (
-//     <div className="user-dashboard">
-
-//       {/* Welcome Section */}
-//       <section className="user-welcome">
-//         <div>
-//           <span className="welcome-tag">USER DASHBOARD</span>
-//           <h2>Welcome Back, {userName}!</h2>
-//           <p>
-//             Explore our engineering services and manage your enquiries
-//             with Converlink Engineering.
-//           </p>
-
-//           <Link to="/landing/services" className="user-primary-btn">
-//             Explore Services <FaArrowRight />
-//           </Link>
-//         </div>
-
-//         <div className="welcome-user-icon">
-//           <FaUserCircle />
-//         </div>
-//       </section>
-
-//       {/* Overview Cards */}
-//       <div className="row g-4 user-overview">
-//         <div className="col-sm-6 col-xl-4">
-//           <Link to="/landing/services" className="user-overview-card">
-//             <span className="overview-icon services-icon">
-//               <FaTools />
-//             </span>
-//             <div>
-//               <h5>Our Services</h5>
-//               <p>Explore all services</p>
-//             </div>
-//             <FaArrowRight className="overview-arrow" />
-//           </Link>
-//         </div>
-
-//         <div className="col-sm-6 col-xl-4">
-//           <Link to="/landing/project" className="user-overview-card">
-//             <span className="overview-icon projects-icon">
-//               <FaProjectDiagram />
-//             </span>
-//             <div>
-//               <h5>Our Projects</h5>
-//               <p>View company projects</p>
-//             </div>
-//             <FaArrowRight className="overview-arrow" />
-//           </Link>
-//         </div>
-
-//         <div className="col-sm-6 col-xl-4">
-//           <Link to="/landing/enquiries" className="user-overview-card">
-//             <span className="overview-icon enquiries-icon">
-//               <FaEnvelope />
-//             </span>
-//             <div>
-//               <h5>My Enquiries</h5>
-//               <p>View enquiry page</p>
-//             </div>
-//             <FaArrowRight className="overview-arrow" />
-//           </Link>
-//         </div>
-//       </div>
-
-//       {/* Services Section */}
-//       <section className="user-dashboard-section">
-//         <div className="user-section-heading">
-//           <div>
-//             <h4>Our Services</h4>
-//             <p>Engineering solutions for your needs</p>
-//           </div>
-
-//           <Link to="/landing/services">
-//             View All <FaArrowRight />
-//           </Link>
-//         </div>
-
-//         <div className="row g-3">
-//           {services.map((service) => (
-//             <div className="col-sm-6 col-xl-3" key={service.title}>
-//               <div className="user-service-card">
-//                 <div className="user-service-icon">
-//                   {service.icon}
-//                 </div>
-//                 <h6>{service.title}</h6>
-//                 <p>{service.description}</p>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       </section>
-
-//       {/* Quick Links */}
-//       <section className="user-dashboard-section">
-//         <div className="user-section-heading">
-//           <div>
-//             <h4>Quick Access</h4>
-//             <p>Important pages in one place</p>
-//           </div>
-//         </div>
-
-//         <div className="user-quick-links">
-//           <Link to="/landing/about">
-//             About Our Company
-//           </Link>
-
-//           <Link to="/landing/contact">
-//             Contact Us
-//           </Link>
-
-//           <Link to="/landing/profile">
-//             My Profile
-//           </Link>
-
-//           <Link to="/landing/notification">
-//             <FaBell className="me-2" />
-//             Notifications
-//           </Link>
-//         </div>
-//       </section>
-
-//     </div>
-//   );
-// }
-
-// export default Dashboardpage;
-
-
-
 import React from "react";
- import GraphOne from "../Graphs/GraphOne";
+import { Link } from "react-router-dom";
+import Graphmonthly from "../../../modules/users/Graphs/Graphmonthly";
+import GraphServicePerformance from "../../../modules/users/Graphs/GraphServicePerformance";
+import GraphProjectStatus from "../../../modules/users/Graphs/GraphProjectStatus";
+import GraphRecentProject from "../../../modules/users/Graphs/GraphRecentProject";
+import recentProjectData from "./Data/DashboardData/RecentProjectData";
 
-export default function Dashboard() {
+function UserDashboardPage() {
+
+
+
+  const totalProjects = recentProjectData.length;
+
+const pendingProjects = recentProjectData.filter(
+  (project) => project.status === "Pending"
+).length;
+
+const inProgressProjects = recentProjectData.filter(
+  (project) => project.status === "In Progress"
+).length;
+
+const completedProjects = recentProjectData.filter(
+  (project) => project.status === "Completed"
+).length;
   return (
-    <div className="Container-fluid mt-3">
-      <div className="row">
-        <div className="col-9">
-          <div className="row">
-            <div className="col-4">
-              <div className="card text-bg-success mb-3 shadow">
-                <div className="card-body">
-                  <h5 className="card-title">Services</h5>
-                  <h2 className="fw-bold">12</h2>
-                  <p className="card-text">Available services</p>
-                </div>
-              </div>
-            </div>
-                        <div className="col-4">
-              <div className="card text-bg-primary mb-3 shadow">
-                <div className="card-body">
-                  <h5 className="card-title">Services</h5>
-                  <h2 className="fw-bold">12</h2>
-                  <p className="card-text">Available services</p>
-                </div>
-              </div>
-            </div>
-                        <div className="col-4">
-              <div className="card text-bg-dark mb-3 shadow">
-                <div className="card-body">
-                  <h5 className="card-title">Services</h5>
-                  <h2 className="fw-bold">12</h2>
-                  <p className="card-text">Available services</p>
-                </div>
-              </div>
+    <div className="container-fluid p-3 p-md-4 bg-light min-vh-100">
+
+      {/* Dashboard Heading */}
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+          <h3 className="fw-bold mb-1">User Dashboard</h3>
+          <p className="text-muted mb-0">
+            Welcome back! Here is your project overview.
+          </p>
+        </div>
+
+        <button className="btn btn-primary mt-3 mt-md-0">
+         <Link to="newenquiry" className="sidebar-link">
+                  New Enquiry
+                </Link>
+        </button>
+      </div>
+
+      {/* Summary Boxes */}
+     <div className="row g-4 mb-4">
+
+  <div className="col-md-6 col-lg-3">
+    <div className="card shadow-sm border-0 rounded-4">
+      <div className="card-body">
+        <h6 className="text-muted">Total Projects</h6>
+        <h2 className="fw-bold">{totalProjects}</h2>
+      </div>
+    </div>
+  </div>
+
+  <div className="col-md-6 col-lg-3">
+    <div className="card shadow-sm border-0 rounded-4">
+      <div className="card-body">
+        <h6 className="text-muted">Pending Projects</h6>
+        <h2 className="fw-bold">{pendingProjects}</h2>
+      </div>
+    </div>
+  </div>
+
+  <div className="col-md-6 col-lg-3">
+    <div className="card shadow-sm border-0 rounded-4">
+      <div className="card-body">
+        <h6 className="text-muted">In Progress</h6>
+        <h2 className="fw-bold">{inProgressProjects}</h2>
+      </div>
+    </div>
+  </div>
+
+  <div className="col-md-6 col-lg-3">
+    <div className="card shadow-sm border-0 rounded-4">
+      <div className="card-body">
+        <h6 className="text-muted">Completed</h6>
+        <h2 className="fw-bold">{completedProjects}</h2>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+      {/* Graph Layout */}
+      <div className="row g-4 mb-4">
+
+        <div className="col-12 col-xl-8">
+          <div className="card border-0 shadow-sm rounded-4 h-100">
+            <div className="card-body p-4">
+             <Graphmonthly/>
             </div>
           </div>
-       <div className="row">
-        <div className="col-12">
-                        
-              <div className="card text-bg-white mb-3 shadow">
-                <GraphOne/>
-              </div>
-            
-        </div>
-       </div>
-    <div className="row">
-        <div className="col-6">
-             <div className="card text-bg-success mb-3 shadow">
-                <div className="card-body">
-                  <h5 className="card-title">Services</h5>
-                  <h2 className="fw-bold">12</h2>
-                  <p className="card-text">Available services</p>
-                </div>
-              </div>
-        </div>
-         <div className="col-6">
-             <div className="card text-bg-success mb-3 shadow">
-                <div className="card-body">
-                  <h5 className="card-title">Services</h5>
-                  <h2 className="fw-bold">12</h2>
-                  <p className="card-text">Available services</p>
-                </div>
-              </div>
-        </div>
-    </div>
-    
- 
         </div>
 
-
-
-        <div className="col-3">
-            <div className="row">
-                <div className="col-12">
-                                
-              <div className="card text-bg-success mb-3 shadow">
-                < div className="card-body">
-                  <h5 className="card-title">Services</h5>
-                  <h2 className="fw-bold">12</h2>
-                  <p className="card-text">Available services</p>
-              </div>
-              
+        <div className="col-12 col-xl-4">
+          <div className="card border-0 shadow-sm rounded-4 h-100">
+            <div className="card-body p-4">
+            <GraphProjectStatus/>
             </div>
-                </div>
-            </div>
-            <div className="row">
-                <div className="col-12">
-                                
-              <div className="card text-bg-success mb-3 shadow">
-                
-            </div>
-                </div>
-            </div>
-             </div>
-
+          </div>
+        </div>
 
       </div>
+
+      {/* Bottom Section */}
+      <div className="row g-4">
+
+        <div className="col-12 col-xl-6">
+          <div className="card border-0 shadow-sm rounded-4">
+            <div className="card-body p-4">
+               <div className="table-responsive">
+             
+                   <GraphRecentProject/>
+               
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-xl-6">
+          <div className="card border-0 shadow-sm rounded-4">
+            <div className="card-body p-4">
+             <GraphServicePerformance/>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </div>
   );
 }
+
+export default UserDashboardPage;

@@ -2,7 +2,8 @@
 import { Fragment } from "react";
 import Headerpage from "../../shares/Headerpage";
 import Sidebar from "../../shares/Sidebar";
-import Footerpage from "../../shares/Footerpage";
+import Footerpage from "../../shares/Footerpage"
+
 import { Outlet } from "react-router-dom";
 
 function Landingpage() {
@@ -20,9 +21,10 @@ function Landingpage() {
           {/* Main Content */}
           <div className="col-10 ch">
             <Outlet />
+            <Footerpage/>
 
             {/* Footer */}
-            <Footerpage />
+           
           </div>
         </div>
       </div>

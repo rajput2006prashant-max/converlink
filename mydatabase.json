@@ -1,0 +1,115 @@
+{
+  "user": [
+    {
+      "username": "Prashant kumar",
+      "email": "rajput2006prashant@gmail.com",
+      "pass": "123456789",
+      "phone": "7417013780",
+      "gender": "male",
+      "role": "user",
+      "comments": "goood",
+      "id": "ZZWoPeITAL8"
+    }
+  ],
+  "employee": [],
+  "totalproject": [],
+  "products": [],
+  "NewEnuiry": [
+    {
+      "clientName": "Prashant Rajput",
+      "email": "rajput2006prashant@gmail.com",
+      "mobile": "7417013780",
+      "serviceId": 2,
+      "service": "Maintenance",
+      "message": "Maintenance",
+      "date": "16/11/2026",
+      "enquiryDate": "2026-11-16T17:39:47.296Z",
+      "status": "Approved",
+      "id": "SV18TkPqcnc"
+    },
+    {
+      "clientName": "Prashant Rajput",
+      "email": "rajput2006prashant@gmail.com",
+      "mobile": "7417013780",
+      "serviceId": 4,
+      "service": "Interior Designing",
+      "message": "ddvvsda",
+      "date": "16/11/2026",
+      "enquiryDate": "2026-11-16T18:11:17.149Z",
+      "status": "Approved",
+      "id": "LI_H5YMCWxc"
+    },
+    {
+      "clientName": "Prashant Rajput",
+      "email": "rajput2006prashant@gmail.com",
+      "mobile": "7417013780",
+      "serviceId": 3,
+      "service": "Installation",
+      "message": "asdwsd",
+      "date": "17/11/2026",
+      "enquiryDate": "2026-11-16T18:44:00.311Z",
+      "status": "New",
+      "id": "NZQgp04mLGY"
+    }
+  ],
+  "admin": [
+    {
+      "username": "Prashant kumar",
+      "email": "rajput2006prashant@gmail.com",
+      "pass": "987654321",
+      "phone": "7417013780",
+      "gender": "male",
+      "comments": "good",
+      "id": "14v7Wvrhaag"
+    },
+    {
+      "username": "Prashant kumar",
+      "email": "rajput2006prashant@gmail.com",
+      "pass": "1234567899",
+      "phone": "7417013780",
+      "gender": "male",
+      "comments": " woefn3hr9h[0jqv1c0",
+      "id": "R2IJwttmgK4"
+    },
+    {
+      "username": "Prashant kumar",
+      "email": "rajput2006prashant@gmail.com",
+      "pass": "123456789",
+      "phone": "7417013780",
+      "gender": "male",
+      "comments": "wfewodjowe",
+      "id": "CcG8satudIU"
+    },
+    {
+      "username": "Ankit kumar",
+      "email": "prashantkumar23118097@gmail.com",
+      "pass": "12345678",
+      "phone": "9557651949",
+      "gender": "other",
+      "role": "student",
+      "comments": "good",
+      "id": "CTUqdMC7o-U"
+    },
+    {
+      "username": "Anmol kumar",
+      "email": "admin@converlink.com",
+      "pass": "123456789",
+      "phone": "9557651949",
+      "gender": "male",
+      "role": "student",
+      "comments": "Anmol Kumar",
+      "id": "AcipMp_aKaI"
+    },
+    {
+      "username": "Vimal Kumar",
+      "email": "vimalkumar2006@gmail.com",
+      "pass": "123456789",
+      "phone": "8057300336",
+      "gender": "other",
+      "role": "teacher",
+      "comments": "bad",
+      "id": "sB3ORIS7FHU"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

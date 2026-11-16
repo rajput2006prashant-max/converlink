@@ -1,8 +1,10 @@
 import React from 'react'
+import Delhibranch from "./Delhibranch";
+import UPbranch from "./Noidabranch";
 
 export default function MainBranch() {
 
-const username = "rohit singh";
+const username = "prashant kumar";
 const msg = ()=>{
     alert("happy diwali 2026");
 }

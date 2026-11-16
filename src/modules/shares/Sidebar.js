@@ -80,10 +80,6 @@
 
 // export default Sidebar;
 
-
-
-
-
 import React from "react";
 import { Link } from "react-router-dom";
 
@@ -93,14 +89,14 @@ export default function Sidebar() {
       className="flex-shrink-0 p-3 text-white"
       style={{
         width: "262px",
-        height: "110vh",
+        height: "680px",
         position: "fixed",
-        top: "82px",
+        top: "84px",
         left: "",
-        
+
         backgroundColor: "#102D4F",
         overflowY: "auto",
-        zIndex: "1000"
+        zIndex: "1000",
       }}
     >
       {/* Logo */}
@@ -112,7 +108,6 @@ export default function Sidebar() {
       </Link>
 
       <ul className="list-unstyled ps-0">
-
         {/* Home */}
         <li className="mb-2">
           <button
@@ -126,9 +121,22 @@ export default function Sidebar() {
 
           <div className="collapse show" id="home-collapse">
             <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
-              <li><Link to="/" className="sidebar-link">Overview</Link></li>
-              <li><Link to="about" className="sidebar-link">About </Link></li>
-              <li><Link to="contact" className="sidebar-link">Contact Us</Link></li>
+              <li>
+                <Link to="/" className="sidebar-link">
+                  Overview
+                </Link>
+              </li>
+              <li>
+                <Link to="about" className="sidebar-link">
+                  About{" "}
+                </Link>
+              </li>
+              <li>
+                <Link to="contact" className="sidebar-link">
+                  Contact Us
+                </Link>
+              </li>
+              
             </ul>
           </div>
         </li>
@@ -146,10 +154,31 @@ export default function Sidebar() {
 
           <div className="collapse" id="dashboard-collapse">
             <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
-              <li><Link to="/landing" className="sidebar-link">Overview</Link></li>
-              <li><Link to="services" className="sidebar-link">Explore Services</Link></li>
-              <li><Link to="project" className="sidebar-link">My Projects</Link></li>
-              <li><Link to="*" className="sidebar-link">Recent Activity</Link></li>
+              <li>
+                <Link to="/landing" className="sidebar-link">
+                  Overview
+                </Link>
+              </li>
+              <li>
+                <Link to="services" className="sidebar-link">
+                  Explore Services
+                </Link>
+              </li>
+              <li>
+                <Link to="project" className="sidebar-link">
+                  My Projects
+                </Link>
+              </li>
+              <li>
+                <Link to="props" className="sidebar-link">
+                  props
+                </Link>
+              </li>
+              <li>
+                <Link to="*" className="sidebar-link">
+                  Recent Activity
+                </Link>
+              </li>
             </ul>
           </div>
         </li>
@@ -167,11 +196,36 @@ export default function Sidebar() {
 
           <div className="collapse" id="orders-collapse">
             <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
-              <li><Link to="*" className="sidebar-link">New Enquiry</Link></li>
-              <li><Link to="*" className="sidebar-link">Pending Orders</Link></li>
-              <li><Link to="*" className="sidebar-link">In Progress</Link></li>
-              <li><Link to="*" className="sidebar-link">Completed Orders</Link></li>
-                  <li><Link to="*" className="sidebar-link">Cancelled Orders</Link></li>
+              <li>
+                <Link to="newenquiry" className="sidebar-link">
+                  New Enquiry
+                </Link>
+              </li>
+              <li>
+                <Link to="totalproject" className="sidebar-link">
+                  Total project
+                </Link>
+              </li>
+              <li>
+                <Link to="pendingorders" className="sidebar-link">
+                  Pending Orders
+                </Link>
+              </li>
+              <li>
+                <Link to="inprogress" className="sidebar-link">
+                  In Progress
+                </Link>
+              </li>
+              <li>
+                <Link to="completedproject" className="sidebar-link">
+                  Completed project
+                </Link>
+              </li>
+              <li>
+                <Link to="*" className="sidebar-link">
+                  Cancelled project
+                </Link>
+              </li>
             </ul>
           </div>
         </li>
@@ -183,23 +237,41 @@ export default function Sidebar() {
             data-bs-toggle="collapse"
             data-bs-target="#account-collapse"
             aria-expanded="false"
-          >
+            >
             Account
           </button>
 
           <div className="collapse" id="account-collapse">
             <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
-              <li><Link to="profile" className="sidebar-link">My Profile</Link></li>
-              <li><Link to="message" className="sidebar-link">My Messages</Link></li>
-              <li><Link to="notification" className="sidebar-link">Notifications</Link></li>
-              <li><Link to="setting" className="sidebar-link">Settings</Link></li>
-              <li><Link to="/" className="sidebar-link">Logout</Link></li>
+              <li>
+                <Link to="profile" className="sidebar-link">
+                  My Profile
+                </Link>
+              </li>
+              <li>
+                <Link to="message" className="sidebar-link">
+                  My Messages
+                </Link>
+              </li>
+              <li>
+                <Link to="notification" className="sidebar-link">
+                  Notifications
+                </Link>
+              </li>
+              <li>
+                <Link to="setting" className="sidebar-link">
+                  Settings
+                </Link>
+              </li>
+              <li>
+                <Link to="/" className="sidebar-link">
+                  Logout
+                </Link>
+              </li>
             </ul>
           </div>
         </li>
-
       </ul>
     </div>
   );
 }
-
