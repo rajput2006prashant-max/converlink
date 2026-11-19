@@ -1,6 +1,9 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useSelector } from 'react-redux'
+import { increment } from './redux/Actionslist';
+import { useDispatch } from 'react-redux';
 import {
   FaBuilding,
   FaUser,
@@ -25,6 +28,9 @@ import Footerpage from "./modules/shares/Footerpage";
 
 
 function Welcome() {
+
+   const esalary = useSelector((state)=>state.counter.salary);
+    const mydis = useDispatch();
   const [search, setSearch] = useState("");
 
   const services = [
@@ -202,9 +208,11 @@ function Welcome() {
                 <Link to="/landing/services" className="btn hero-btn-outline">
                   Explore Services
                 </Link>
+<h1>{esalary}</h1>
 
+            <input type='button' value="change salary" onClick={()=>mydis(increment())}/>
               </div>
-
+            
               <div className="trust-line mt-4">
                 <span>
                   <FaCheckCircle /> Quality Work

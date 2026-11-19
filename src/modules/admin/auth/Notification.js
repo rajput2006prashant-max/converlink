@@ -1,11 +1,12 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
-
 const API_URL = "http://localhost:8700/notifications";
+const USER_API = "http://localhost:8700/user";
 
 const initialForm = {
+  userId: "",
   title: "",
   message: "",
   type: "General",
@@ -15,6 +16,7 @@ const initialForm = {
 
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
+  const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState(initialForm);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
@@ -23,24 +25,36 @@ function Notifications() {
   const [error, setError] = useState("");
 
   // Fetch notifications
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(API_URL);
       setNotifications(response.data);
       setError("");
     } catch (err) {
-      setError("Notifications load nahi ho rahi hain. JSON Server check karo.");
+      console.error(err);
+      setError("Notifications load nahi ho rahi hain.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Fetch users
+  const fetchUsers = useCallback(async () => {
+    try {
+      const response = await axios.get(USER_API);
+      setUsers(response.data);
+    } catch (err) {
+      console.error("Users Error:", err);
+    }
+  }, []);
 
   useEffect(() => {
     fetchNotifications();
-  }, []);
+    fetchUsers();
+  }, [fetchNotifications, fetchUsers]);
 
-  // Input handle
+  // Input handler
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -55,43 +69,54 @@ function Notifications() {
     e.preventDefault();
 
     try {
+      if (!formData.userId) {
+        alert("Please select a user.");
+        return;
+      }
+
       await axios.post(API_URL, {
         ...formData,
+        userId: String(formData.userId),
         read: false
       });
 
-      alert("Notification successfully added!");
+      alert("Notification successfully sent!");
 
-      setFormData(initialForm);
+      setFormData({
+        ...initialForm,
+        date: new Date().toISOString().slice(0, 16)
+      });
+
       setShowForm(false);
       fetchNotifications();
+
     } catch (err) {
+      console.error("Add Notification Error:", err);
       alert("Notification add nahi hui.");
     }
   };
 
-  // Mark as read / unread
-  const toggleRead = async (notification) => {
+  // Mark read / unread
+  const toggleRead = async (item) => {
     try {
-      await axios.patch(`${API_URL}/${notification.id}`, {
-        read: !notification.read
+      await axios.patch(`${API_URL}/${item.id}`, {
+        read: !item.read
       });
 
       fetchNotifications();
     } catch (err) {
-      alert("Notification status update nahi hua.");
+      console.error(err);
+      alert("Status update nahi hua.");
     }
   };
 
   // Mark all as read
   const markAllAsRead = async () => {
     try {
-      const unreadNotifications = notifications.filter(
-        (item) => !item.read
-      );
+      const unread = notifications.filter((item) => !item.read);
 
       await Promise.all(
-        unreadNotifications.map((item) =>
+        unread.map((item) =>
           axios.patch(`${API_URL}/${item.id}`, {
             read: true
           })
@@ -104,29 +129,21 @@ function Notifications() {
     }
   };
 
-  // Delete notification
+  // Delete one
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Kya aap is notification ko delete karna chahte hain?"
-    );
-
-    if (!confirmDelete) return;
+    if (!window.confirm("Delete this notification?")) return;
 
     try {
       await axios.delete(`${API_URL}/${id}`);
       fetchNotifications();
     } catch (err) {
-      alert("Notification delete nahi hui.");
+      alert("Delete nahi hua.");
     }
   };
 
-  // Delete all notifications
+  // Delete all
   const deleteAll = async () => {
-    const confirmDelete = window.confirm(
-      "Kya aap saari notifications delete karna chahte hain?"
-    );
-
-    if (!confirmDelete) return;
+    if (!window.confirm("Delete all notifications?")) return;
 
     try {
       await Promise.all(
@@ -137,25 +154,24 @@ function Notifications() {
 
       fetchNotifications();
     } catch (err) {
-      alert("Notifications delete nahi hui.");
+      alert("Delete all nahi hua.");
     }
   };
 
   // Search and filter
   const filteredNotifications = notifications.filter((item) => {
-    const matchesSearch = [
+    const text = [
       item.title,
       item.message,
       item.type
-    ]
-      .join(" ")
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    ].join(" ").toLowerCase();
+
+    const matchesSearch = text.includes(search.toLowerCase());
 
     const matchesFilter =
       filter === "All" ||
-      (filter === "Unread" && !item.read) ||
-      (filter === "Read" && item.read);
+      (filter === "Read" && item.read) ||
+      (filter === "Unread" && !item.read);
 
     return matchesSearch && matchesFilter;
   });
@@ -168,49 +184,39 @@ function Notifications() {
     (item) => item.read
   ).length;
 
-  // Notification icon
-  const getIcon = (type) => {
-    switch (type) {
-      case "Enquiry":
-        return "📩";
-      case "Order":
-        return "🛒";
-      case "Quotation":
-        return "📄";
-      case "Invoice":
-        return "🧾";
-      case "Project":
-        return "🏗️";
-      case "User":
-        return "👤";
-      default:
-        return "🔔";
-    }
+  const getUserName = (userId) => {
+    const user = users.find(
+      (u) => String(u.id) === String(userId)
+    );
+
+    return user
+      ? user.username || user.name || user.email || user.id
+      : "Unknown User";
   };
 
-  const getTypeColor = (type) => {
-    switch (type) {
-      case "Enquiry": return "primary";
-      case "Order": return "success";
-      case "Quotation": return "info";
-      case "Invoice": return "warning";
-      case "Project": return "secondary";
-      case "User": return "dark";
-      default: return "primary";
-    }
+  const getIcon = (type) => {
+    const icons = {
+      Enquiry: "📩",
+      Order: "🛒",
+      Quotation: "📄",
+      Invoice: "🧾",
+      Project: "🏗️",
+      User: "👤"
+    };
+
+    return icons[type] || "🔔";
   };
 
   return (
     <div className="container-fluid p-3 p-md-4">
 
-      {/* Heading */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
           <h3 className="fw-bold mb-1" style={{ color: "#102D4F" }}>
             Notifications
           </h3>
           <p className="text-muted mb-0">
-            Manage all company notifications and updates
+            Manage and send notifications to users
           </p>
         </div>
 
@@ -218,7 +224,10 @@ function Notifications() {
           className="btn text-white"
           style={{ backgroundColor: "#087FC4" }}
           onClick={() => {
-            setFormData(initialForm);
+            setFormData({
+              ...initialForm,
+              date: new Date().toISOString().slice(0, 16)
+            });
             setShowForm(true);
           }}
         >
@@ -226,97 +235,79 @@ function Notifications() {
         </button>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary */}
       <div className="row g-3 mb-4">
-
         <div className="col-md-4">
-          <div className="card border-0 shadow-sm h-100">
+          <div className="card border-0 shadow-sm">
             <div className="card-body">
-              <p className="text-muted mb-2">Total Notifications</p>
-              <h3 className="fw-bold" style={{ color: "#102D4F" }}>
-                {notifications.length}
-              </h3>
+              <p className="text-muted">Total Notifications</p>
+              <h3 className="fw-bold">{notifications.length}</h3>
             </div>
           </div>
         </div>
 
         <div className="col-md-4">
-          <div className="card border-0 shadow-sm h-100">
+          <div className="card border-0 shadow-sm">
             <div className="card-body">
-              <p className="text-muted mb-2">Unread Notifications</p>
+              <p className="text-muted">Unread</p>
               <h3 className="fw-bold text-danger">{unreadCount}</h3>
             </div>
           </div>
         </div>
 
         <div className="col-md-4">
-          <div className="card border-0 shadow-sm h-100">
+          <div className="card border-0 shadow-sm">
             <div className="card-body">
-              <p className="text-muted mb-2">Read Notifications</p>
+              <p className="text-muted">Read</p>
               <h3 className="fw-bold text-success">{readCount}</h3>
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Notification List */}
       <div className="card border-0 shadow-sm">
         <div className="card-body">
 
-          {/* Toolbar */}
-          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+          <div className="d-flex justify-content-between flex-wrap gap-3 mb-3">
+            <h5 className="fw-bold">All Notifications</h5>
 
-            <h5 className="fw-bold mb-0" style={{ color: "#102D4F" }}>
-              All Notifications
-            </h5>
-
-            <div className="d-flex flex-wrap gap-2">
-
+            <div className="d-flex gap-2 flex-wrap">
               <input
-                type="text"
                 className="form-control"
-                placeholder="Search notification..."
-                style={{ width: "220px" }}
+                placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
 
               <select
                 className="form-select"
-                style={{ width: "130px" }}
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
               >
-                <option value="All">All</option>
-                <option value="Unread">Unread</option>
-                <option value="Read">Read</option>
+                <option>All</option>
+                <option>Read</option>
+                <option>Unread</option>
               </select>
-
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="d-flex flex-wrap gap-2 mb-3">
-
+          <div className="d-flex gap-2 mb-3">
             <button
               className="btn btn-sm btn-outline-success"
-              onClick={markAllAsRead}
               disabled={unreadCount === 0}
+              onClick={markAllAsRead}
             >
-              <i className="bi bi-check2-all me-1"></i>
-              Mark All as Read
+              Mark All Read
             </button>
 
             <button
               className="btn btn-sm btn-outline-danger"
-              onClick={deleteAll}
               disabled={notifications.length === 0}
+              onClick={deleteAll}
             >
-              <i className="bi bi-trash me-1"></i>
               Delete All
             </button>
-
           </div>
 
           {error && (
@@ -324,121 +315,70 @@ function Notifications() {
           )}
 
           {loading ? (
-            <div className="text-center py-5">
-              Loading notifications...
-            </div>
-          ) : (
+            <div className="text-center p-5">Loading...</div>
+          ) : filteredNotifications.length > 0 ? (
 
-            <div>
-              {filteredNotifications.length > 0 ? (
-
-                filteredNotifications
-                  .slice()
-                  .sort((a, b) => new Date(b.date) - new Date(a.date))
-                  .map((item) => (
-
-                    <div
-                      key={item.id}
-                      className="d-flex align-items-start gap-3 p-3 mb-3 rounded border"
-                      style={{
-                        backgroundColor: item.read ? "#ffffff" : "#f0f7ff",
-                        borderLeft: item.read
-                          ? "4px solid #dee2e6"
-                          : "4px solid #087FC4"
-                      }}
-                    >
-
-                      {/* Icon */}
-                      <div
-                        className="rounded-circle d-flex justify-content-center align-items-center flex-shrink-0"
-                        style={{
-                          width: "45px",
-                          height: "45px",
-                          backgroundColor: "#e5f2fb",
-                          fontSize: "21px"
-                        }}
-                      >
-                        {getIcon(item.type)}
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-grow-1">
-
-                        <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
-
-                          <h6 className="fw-bold mb-0">
-                            {item.title}
-                          </h6>
-
-                          {!item.read && (
-                            <span className="badge bg-danger">
-                              New
-                            </span>
-                          )}
-
-                          <span className={`badge text-bg-${getTypeColor(item.type)}`}>
-                            {item.type}
-                          </span>
-
-                        </div>
-
-                        <p className="text-muted mb-2">
-                          {item.message}
-                        </p>
-
-                        <small className="text-secondary">
-                          {new Date(item.date).toLocaleString("en-IN")}
-                        </small>
-
-                      </div>
-
-                      {/* Actions */}
-                      <div className="d-flex flex-column gap-2">
-
-                        <button
-                          className={`btn btn-sm ${
-                            item.read
-                              ? "btn-outline-secondary"
-                              : "btn-outline-success"
-                          }`}
-                          onClick={() => toggleRead(item)}
-                        >
-                          {item.read ? "Unread" : "Mark Read"}
-                        </button>
-
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          Delete
-                        </button>
-
-                      </div>
-
-                    </div>
-
-                  ))
-
-              ) : (
-
-                <div className="text-center py-5">
-                  <div style={{ fontSize: "45px" }}>🔔</div>
-                  <h6 className="fw-bold mt-2">No Notifications Found</h6>
-                  <p className="text-muted mb-0">
-                    Abhi koi notification available nahi hai.
-                  </p>
+            filteredNotifications.map((item) => (
+              <div
+                key={item.id}
+                className="border rounded p-3 mb-3 d-flex gap-3 align-items-start"
+                style={{
+                  backgroundColor: item.read ? "#fff" : "#f0f7ff",
+                  borderLeft: item.read
+                    ? "4px solid #ddd"
+                    : "4px solid #087FC4"
+                }}
+              >
+                <div style={{ fontSize: "28px" }}>
+                  {getIcon(item.type)}
                 </div>
 
-              )}
+                <div className="flex-grow-1">
+                  <h6 className="fw-bold">{item.title}</h6>
+
+                  <p className="mb-1">{item.message}</p>
+
+                  <small className="text-muted">
+                    To: {getUserName(item.userId)}
+                  </small>
+
+                  <br />
+
+                  <small className="text-muted">
+                    {item.date
+                      ? new Date(item.date).toLocaleString("en-IN")
+                      : ""}
+                  </small>
+                </div>
+
+                <div className="d-flex flex-column gap-2">
+                  <button
+                    className="btn btn-sm btn-outline-success"
+                    onClick={() => toggleRead(item)}
+                  >
+                    {item.read ? "Unread" : "Mark Read"}
+                  </button>
+
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={() => handleDelete(item.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+
+          ) : (
+            <div className="text-center py-5">
+              <h5>No Notifications Found</h5>
             </div>
           )}
-
         </div>
       </div>
 
-      {/* Add Notification Modal */}
+      {/* Add Modal */}
       {showForm && (
-
         <div
           className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center p-3"
           style={{
@@ -446,36 +386,48 @@ function Notifications() {
             zIndex: 2000
           }}
         >
-
-          <div
-            className="card border-0 shadow-lg w-100"
-            style={{ maxWidth: "550px" }}
-          >
+          <div className="card w-100 border-0 shadow-lg" style={{ maxWidth: "550px" }}>
 
             <div
-              className="card-header text-white d-flex justify-content-between align-items-center"
+              className="card-header text-white d-flex justify-content-between"
               style={{ backgroundColor: "#102D4F" }}
             >
-              <h5 className="mb-0">Add Notification</h5>
+              <h5 className="mb-0">Send Notification</h5>
 
               <button
-                type="button"
                 className="btn-close btn-close-white"
                 onClick={() => setShowForm(false)}
-              ></button>
+              />
             </div>
 
             <div className="card-body">
-
               <form onSubmit={handleSubmit}>
 
                 <div className="mb-3">
-                  <label className="form-label">Notification Title *</label>
+                  <label className="form-label">Select User *</label>
+
+                  <select
+                    name="userId"
+                    className="form-select"
+                    value={formData.userId}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select User</option>
+
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.username || user.name || user.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Title *</label>
                   <input
-                    type="text"
                     name="title"
                     className="form-control"
-                    placeholder="Enter notification title"
                     value={formData.title}
                     onChange={handleChange}
                     required
@@ -488,28 +440,27 @@ function Notifications() {
                     name="message"
                     className="form-control"
                     rows="3"
-                    placeholder="Enter notification message"
                     value={formData.message}
                     onChange={handleChange}
                     required
-                  ></textarea>
+                  />
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Notification Type</label>
+                  <label className="form-label">Type</label>
                   <select
                     name="type"
                     className="form-select"
                     value={formData.type}
                     onChange={handleChange}
                   >
-                    <option value="General">General</option>
-                    <option value="Enquiry">Enquiry</option>
-                    <option value="Order">Order</option>
-                    <option value="Quotation">Quotation</option>
-                    <option value="Invoice">Invoice</option>
-                    <option value="Project">Project</option>
-                    <option value="User">User</option>
+                    <option>General</option>
+                    <option>Enquiry</option>
+                    <option>Order</option>
+                    <option>Quotation</option>
+                    <option>Invoice</option>
+                    <option>Project</option>
+                    <option>User</option>
                   </select>
                 </div>
 
@@ -525,8 +476,7 @@ function Notifications() {
                   />
                 </div>
 
-                <div className="d-flex justify-content-end gap-2 mt-4">
-
+                <div className="d-flex justify-content-end gap-2">
                   <button
                     type="button"
                     className="btn btn-secondary"
@@ -540,9 +490,8 @@ function Notifications() {
                     className="btn text-white"
                     style={{ backgroundColor: "#087FC4" }}
                   >
-                    Save Notification
+                    Send Notification
                   </button>
-
                 </div>
 
               </form>

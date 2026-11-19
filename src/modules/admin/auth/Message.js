@@ -1,178 +1,398 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import {
+  FaPaperPlane,
+  FaComments,
+  FaSearch,
+  FaSync,
+  FaPaperclip,
+  FaTrash,
+  FaFilePdf,
+  FaFileAlt
+} from "react-icons/fa";
 
-const API_URL = "http://localhost:8700/messages";
+const API = "http://localhost:8700/messages";
+const USER_API = "http://localhost:8700/user";
+const STATUS_API = "http://localhost:8700/chatstatus";
 
 function ManageMessages() {
+  const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [search, setSearch] = useState("");
-  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [reply, setReply] = useState("");
+  const [attachment, setAttachment] = useState(null);
+  const [search, setSearch] = useState("");
+  const [chatSearch, setChatSearch] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [userTyping, setUserTyping] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
-  // Messages fetch
-  const fetchMessages = async () => {
+  const fetchData = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get(API_URL);
-      setMessages(response.data);
+      const [userResponse, messageResponse] = await Promise.all([
+        axios.get(USER_API),
+        axios.get(API)
+      ]);
+
+      setUsers(userResponse.data);
+
+      const sorted = messageResponse.data.sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+      );
+
+      setMessages(sorted);
+
+      const undelivered = sorted.filter(
+        (item) =>
+          item.sender === "user" &&
+          (!item.status || item.status === "sent")
+      );
+
+      await Promise.all(
+        undelivered.map((item) =>
+          axios.patch(`${API}/${item.id}`, {
+            status: "delivered"
+          })
+        )
+      );
+
+      if (selectedUser) {
+        const statusResponse = await axios.get(
+          `${STATUS_API}?userId=${encodeURIComponent(selectedUser.id)}`
+        );
+
+        if (statusResponse.data.length > 0) {
+          const status = statusResponse.data[0];
+
+          const isRecent =
+            Date.now() - new Date(status.updatedAt).getTime() < 10000;
+
+          setUserTyping(Boolean(status.userTyping && isRecent));
+        } else {
+          setUserTyping(false);
+        }
+      }
+
       setError("");
     } catch (err) {
-      setError("Messages load nahi ho rahe. JSON Server check karo.");
+      setError("Users ya messages load nahi hue. JSON Server check karo.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMessages();
-  }, []);
+    fetchData();
 
-  // Message open aur read mark
-  const openMessage = async (message) => {
-    setSelectedMessage(message);
-    setReply(message.reply || "");
+    const interval = setInterval(fetchData, 3000);
 
-    if (message.status === "Unread") {
-      try {
-        await axios.patch(`${API_URL}/${message.id}`, {
-          status: "Read"
+    return () => clearInterval(interval);
+  }, [selectedUser?.id]);
+
+  const updateTyping = async (isTyping) => {
+    if (!selectedUser) return;
+
+    try {
+      const response = await axios.get(
+        `${STATUS_API}?userId=${encodeURIComponent(selectedUser.id)}`
+      );
+
+      const data = {
+        userId: String(selectedUser.id),
+        adminTyping: isTyping,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (response.data.length > 0) {
+        await axios.patch(
+          `${STATUS_API}/${response.data[0].id}`,
+          data
+        );
+      } else {
+        await axios.post(STATUS_API, {
+          userId: String(selectedUser.id),
+          userTyping: false,
+          adminTyping: isTyping,
+          updatedAt: new Date().toISOString()
         });
-        fetchMessages();
-      } catch (err) {
-        alert("Message status update nahi hua.");
       }
+    } catch (err) {
+      console.log("Typing status update failed.");
     }
   };
 
-  // Reply save
+  useEffect(() => {
+    if (!selectedUser) return;
+
+    if (!reply.trim()) {
+      updateTyping(false);
+      return;
+    }
+
+    updateTyping(true);
+
+    const timer = setTimeout(() => {
+      updateTyping(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [reply, selectedUser?.id]);
+
+  const openChat = async (user) => {
+    setSelectedUser(user);
+    setReply("");
+    setAttachment(null);
+    setChatSearch("");
+    setFilterDate("");
+
+    try {
+      const response = await axios.get(
+        `${API}?userId=${encodeURIComponent(user.id)}`
+      );
+
+      const unread = response.data.filter(
+        (item) =>
+          item.sender === "user" &&
+          item.status !== "seen"
+      );
+
+      await Promise.all(
+        unread.map((item) =>
+          axios.patch(`${API}/${item.id}`, {
+            status: "seen"
+          })
+        )
+      );
+
+      fetchData();
+    } catch (err) {
+      alert("Chat open nahi hui.");
+    }
+  };
+
+  // 100 MB file upload frontend limit
+  const handleFile = (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert("Sirf JPG, PNG, WEBP, PDF aur DOC files allowed hain.");
+      e.target.value = "";
+      return;
+    }
+
+    // Maximum 100 MB
+    if (file.size > 100 * 1024 * 1024) {
+      alert("Maximum file size 100 MB hai.");
+      e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setAttachment({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        data: reader.result
+      });
+    };
+
+    reader.onerror = () => {
+      alert("File read nahi hui.");
+    };
+
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   const handleReply = async (e) => {
     e.preventDefault();
 
-    if (!reply.trim()) {
-      alert("Please reply message likho.");
+    if (!selectedUser) return;
+
+    if (!reply.trim() && !attachment) {
+      alert("Reply ya attachment add karo.");
       return;
     }
 
     try {
-      await axios.patch(`${API_URL}/${selectedMessage.id}`, {
-        reply: reply.trim(),
-        replyDate: new Date().toISOString(),
-        status: "Replied"
+      setSending(true);
+
+      await axios.post(API, {
+        userId: String(selectedUser.id),
+        sender: "admin",
+        senderName: "Converlink Admin",
+        message: reply.trim(),
+        attachment: attachment,
+        date: new Date().toISOString(),
+        status: "sent"
       });
 
-      alert("Reply successfully save ho gaya!");
-
-      setSelectedMessage(null);
       setReply("");
-      fetchMessages();
+      setAttachment(null);
+
+      await updateTyping(false);
+      await fetchData();
+
     } catch (err) {
-      alert("Reply save nahi hua.");
+      alert(
+        err.response?.data?.message ||
+        "Reply send nahi hua. JSON Server check karo."
+      );
+    } finally {
+      setSending(false);
     }
   };
 
-  // Unread mark
-  const markUnread = async (id) => {
-    try {
-      await axios.patch(`${API_URL}/${id}`, {
-        status: "Unread"
-      });
-      fetchMessages();
-    } catch (err) {
-      alert("Status update nahi hua.");
+  const deleteMessage = async (item) => {
+    if (!window.confirm("Kya aap ye message delete karna chahte hain?")) {
+      return;
     }
-  };
-
-  // Delete message
-  const deleteMessage = async (id) => {
-    const confirmDelete = window.confirm(
-      "Kya aap is message ko delete karna chahte hain?"
-    );
-
-    if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API_URL}/${id}`);
-
-      if (selectedMessage?.id === id) {
-        setSelectedMessage(null);
-      }
-
-      fetchMessages();
+      await axios.delete(`${API}/${item.id}`);
+      fetchData();
     } catch (err) {
       alert("Message delete nahi hua.");
     }
   };
 
-  // Search
-  const filteredMessages = messages.filter((item) =>
-    [
-      item.senderName,
-      item.email,
-      item.subject,
-      item.message
-    ]
-      .join(" ")
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
-
-  const unreadCount = messages.filter(
-    (item) => item.status === "Unread"
-  ).length;
-
-  const repliedCount = messages.filter(
-    (item) => item.status === "Replied"
-  ).length;
-
-  const statusBadge = (status) => {
-    if (status === "Replied") return "success";
-    if (status === "Unread") return "warning";
-    return "primary";
+  const addEmoji = (emoji) => {
+    setReply((previous) => previous + emoji);
   };
 
   const formatDate = (date) => {
-    if (!date) return "-";
+    if (!date) return "";
 
-    const parsedDate = new Date(date);
-
-    if (Number.isNaN(parsedDate.getTime())) return date;
-
-    return parsedDate.toLocaleString("en-IN", {
-      dateStyle: "medium",
-      timeStyle: "short"
+    return new Date(date).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit"
     });
   };
+
+  const formatSize = (size) => {
+    if (!size) return "";
+
+    return (size / (1024 * 1024)).toFixed(2) + " MB";
+  };
+
+  const renderAttachment = (file) => {
+    if (!file?.data) return null;
+
+    if (file.type?.startsWith("image/")) {
+      return (
+        <a href={file.data} target="_blank" rel="noreferrer">
+          <img
+            src={file.data}
+            alt={file.name}
+            style={{
+              maxWidth: "190px",
+              maxHeight: "150px",
+              display: "block",
+              borderRadius: "8px",
+              marginTop: "8px"
+            }}
+          />
+        </a>
+      );
+    }
+
+    return (
+      <a
+        href={file.data}
+        download={file.name}
+        className="d-flex align-items-center gap-2 mt-2 text-reset"
+      >
+        {file.type === "application/pdf" ? <FaFilePdf /> : <FaFileAlt />}
+        {file.name}
+      </a>
+    );
+  };
+
+  const filteredUsers = users.filter((user) => {
+    const hasMessages = messages.some(
+      (item) => String(item.userId) === String(user.id)
+    );
+
+    return (
+      hasMessages &&
+      [user.username, user.email, user.phone]
+        .join(" ")
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    );
+  });
+
+  const chatMessages = messages.filter((item) => {
+    if (!selectedUser) return false;
+
+    const sameUser =
+      String(item.userId) === String(selectedUser.id);
+
+    const matchesSearch = [
+      item.message,
+      item.attachment?.name
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(chatSearch.toLowerCase());
+
+    const matchesDate = filterDate
+      ? new Date(item.date).toLocaleDateString("en-CA") === filterDate
+      : true;
+
+    return sameUser && matchesSearch && matchesDate;
+  });
+
+  const unreadCount = messages.filter(
+    (item) =>
+      item.sender === "user" &&
+      item.status !== "seen"
+  ).length;
 
   return (
     <div className="container-fluid p-3 p-md-4">
 
-      {/* Heading */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
           <h3 className="fw-bold mb-1" style={{ color: "#102D4F" }}>
             Manage Messages
           </h3>
           <p className="text-muted mb-0">
-            Manage customer messages and replies
+            Customer Support Chat
           </p>
         </div>
 
         <button
           className="btn text-white"
           style={{ backgroundColor: "#087FC4" }}
-          onClick={fetchMessages}
+          onClick={fetchData}
         >
-          <i className="bi bi-arrow-clockwise me-2"></i>
+          <FaSync className="me-2" />
           Refresh
         </button>
       </div>
 
-      {/* Summary Cards */}
       <div className="row g-3 mb-4">
-        <div className="col-md-4">
-          <div className="card border-0 shadow-sm h-100">
+        <div className="col-md-6">
+          <div className="card border-0 shadow-sm">
             <div className="card-body">
               <p className="text-muted mb-2">Total Messages</p>
               <h3 className="fw-bold" style={{ color: "#102D4F" }}>
@@ -182,243 +402,321 @@ function ManageMessages() {
           </div>
         </div>
 
-        <div className="col-md-4">
-          <div className="card border-0 shadow-sm h-100">
+        <div className="col-md-6">
+          <div className="card border-0 shadow-sm">
             <div className="card-body">
-              <p className="text-muted mb-2">Unread Messages</p>
-              <h3 className="fw-bold text-warning">
-                {unreadCount}
-              </h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-4">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <p className="text-muted mb-2">Replied Messages</p>
-              <h3 className="fw-bold text-success">
-                {repliedCount}
-              </h3>
+              <p className="text-muted mb-2">Unread User Messages</p>
+              <h3 className="fw-bold text-warning">{unreadCount}</h3>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Message List */}
-      <div className="card border-0 shadow-sm">
-        <div className="card-body">
+      {error && (
+        <div className="alert alert-danger">{error}</div>
+      )}
 
-          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
-            <h5 className="fw-bold mb-0" style={{ color: "#102D4F" }}>
-              Inbox
-            </h5>
+      <div className="card border-0 shadow-sm overflow-hidden">
+        <div className="row g-0">
 
-            <input
-              type="text"
-              className="form-control"
-              style={{ maxWidth: "300px" }}
-              placeholder="Search messages..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <div className="col-md-4 border-end" style={{ minHeight: "600px" }}>
+            <div className="p-3 border-bottom">
+              <h5 className="fw-bold" style={{ color: "#102D4F" }}>
+                Inbox
+              </h5>
+
+              <div className="input-group">
+                <span className="input-group-text bg-white">
+                  <FaSearch />
+                </span>
+
+                <input
+                  className="form-control"
+                  placeholder="Search users..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div style={{ maxHeight: "550px", overflowY: "auto" }}>
+              {loading ? (
+                <p className="text-center p-4">Loading...</p>
+              ) : filteredUsers.length === 0 ? (
+                <p className="text-center text-muted p-4">
+                  No conversations found.
+                </p>
+              ) : (
+                filteredUsers.map((user) => {
+                  const userMessages = messages.filter(
+                    (item) => String(item.userId) === String(user.id)
+                  );
+
+                  const lastMessage =
+                    userMessages[userMessages.length - 1];
+
+                  const unread = userMessages.filter(
+                    (item) =>
+                      item.sender === "user" &&
+                      item.status !== "seen"
+                  ).length;
+
+                  return (
+                    <button
+                      key={user.id}
+                      type="button"
+                      onClick={() => openChat(user)}
+                      className="w-100 text-start border-0 border-bottom p-3"
+                      style={{
+                        backgroundColor:
+                          selectedUser?.id === user.id
+                            ? "#eaf5fc"
+                            : "#ffffff"
+                      }}
+                    >
+                      <div className="d-flex justify-content-between">
+                        <strong style={{ color: "#102D4F" }}>
+                          {user.username}
+                        </strong>
+
+                        {unread > 0 && (
+                          <span className="badge bg-danger rounded-pill">
+                            {unread}
+                          </span>
+                        )}
+                      </div>
+
+                      <small className="text-muted d-block">
+                        {user.email}
+                      </small>
+
+                      <small className="text-secondary d-block text-truncate mt-2">
+                        {lastMessage?.sender === "admin" ? "You: " : ""}
+                        {lastMessage?.message || lastMessage?.attachment?.name}
+                      </small>
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
 
-          {error && (
-            <div className="alert alert-danger">{error}</div>
-          )}
+          <div className="col-md-8">
+            {selectedUser ? (
+              <>
+                <div
+                  className="p-3 text-white d-flex align-items-center gap-3"
+                  style={{ backgroundColor: "#102D4F" }}
+                >
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                    style={{
+                      width: "45px",
+                      height: "45px",
+                      backgroundColor: "#087FC4"
+                    }}
+                  >
+                    {selectedUser.username?.charAt(0).toUpperCase()}
+                  </div>
 
-          {loading ? (
-            <p className="text-center py-4">Loading messages...</p>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-hover align-middle">
-                <thead className="table-light">
-                  <tr>
-                    <th>S.No.</th>
-                    <th>Sender</th>
-                    <th>Subject</th>
-                    <th>Message</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
+                  <div>
+                    <h6 className="mb-0">{selectedUser.username}</h6>
+                    <small>{selectedUser.email}</small>
+                  </div>
+                </div>
 
-                <tbody>
-                  {filteredMessages.length > 0 ? (
-                    filteredMessages.map((item, index) => (
-                      <tr
+                <div className="p-3 border-bottom">
+                  <div className="row g-2">
+                    <div className="col-md-8">
+                      <input
+                        className="form-control"
+                        placeholder="Search chat..."
+                        value={chatSearch}
+                        onChange={(e) => setChatSearch(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="col-md-4">
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={filterDate}
+                        onChange={(e) => setFilterDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="p-3 bg-light"
+                  style={{ height: "430px", overflowY: "auto" }}
+                >
+                  {chatMessages.length === 0 ? (
+                    <div className="text-center text-muted mt-5">
+                      <FaComments size={40} />
+                      <p className="mt-3">No messages found.</p>
+                    </div>
+                  ) : (
+                    chatMessages.map((item) => (
+                      <div
                         key={item.id}
-                        className={item.status === "Unread" ? "fw-semibold" : ""}
+                        className={`d-flex mb-3 ${
+                          item.sender === "admin"
+                            ? "justify-content-end"
+                            : "justify-content-start"
+                        }`}
                       >
-                        <td>{index + 1}</td>
-
-                        <td>
-                          <div>{item.senderName}</div>
-                          <small className="text-muted">
-                            {item.email}
+                        <div
+                          className="p-3 shadow-sm"
+                          style={{
+                            maxWidth: "78%",
+                            minWidth: "130px",
+                            borderRadius: "14px",
+                            backgroundColor:
+                              item.sender === "admin"
+                                ? "#087FC4"
+                                : "#ffffff",
+                            color:
+                              item.sender === "admin"
+                                ? "#ffffff"
+                                : "#212529"
+                          }}
+                        >
+                          <small className="fw-bold d-block mb-1">
+                            {item.sender === "admin"
+                              ? "You (Admin)"
+                              : selectedUser.username}
                           </small>
-                        </td>
 
-                        <td>{item.subject}</td>
-
-                        <td style={{ maxWidth: "220px" }}>
-                          <span className="d-inline-block text-truncate" style={{ maxWidth: "200px" }}>
+                          <div style={{ whiteSpace: "pre-wrap" }}>
                             {item.message}
-                          </span>
-                        </td>
+                          </div>
 
-                        <td>{formatDate(item.date)}</td>
+                          {renderAttachment(item.attachment)}
 
-                        <td>
-                          <span className={`badge text-bg-${statusBadge(item.status)}`}>
-                            {item.status || "Read"}
-                          </span>
-                        </td>
+                          <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
+                            <small style={{ opacity: 0.8, fontSize: "11px" }}>
+                              {formatDate(item.date)}
+                            </small>
 
-                        <td>
-                          <div className="d-flex gap-2">
-                            <button
-                              className="btn btn-sm btn-outline-primary"
-                              onClick={() => openMessage(item)}
-                            >
-                              View
-                            </button>
-
-                            <button
-                              className="btn btn-sm btn-outline-warning"
-                              title="Mark unread"
-                              onClick={() => markUnread(item.id)}
-                            >
-                              Unread
-                            </button>
+                            {item.sender === "admin" && (
+                              <small>
+                                {item.status === "seen"
+                                  ? "✓✓ Seen"
+                                  : item.status === "delivered"
+                                  ? "✓✓ Delivered"
+                                  : "✓ Sent"}
+                              </small>
+                            )}
 
                             <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => deleteMessage(item.id)}
+                              type="button"
+                              className={`btn btn-sm p-0 ${
+                                item.sender === "admin"
+                                  ? "text-white"
+                                  : "text-danger"
+                              }`}
+                              title="Delete message"
+                              onClick={() => deleteMessage(item)}
                             >
-                              Delete
+                              <FaTrash size={11} />
                             </button>
                           </div>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="text-center py-4 text-muted">
-                        No messages found
-                      </td>
-                    </tr>
                   )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Message Details and Reply Modal */}
-      {selectedMessage && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center p-3"
-          style={{
-            backgroundColor: "rgba(0,0,0,0.55)",
-            zIndex: 2000
-          }}
-        >
-          <div
-            className="card border-0 shadow-lg w-100"
-            style={{ maxWidth: "650px", maxHeight: "90vh", overflowY: "auto" }}
-          >
-            <div
-              className="card-header text-white d-flex justify-content-between align-items-center py-3"
-              style={{ backgroundColor: "#102D4F" }}
-            >
-              <h5 className="mb-0">Message Details</h5>
+                  {userTyping && (
+                    <div className="text-muted small">
+                      {selectedUser.username} is typing...
+                    </div>
+                  )}
+                </div>
 
-              <button
-                className="btn-close btn-close-white"
-                onClick={() => setSelectedMessage(null)}
-              ></button>
-            </div>
+                <div className="p-3 border-top">
+                  <div className="d-flex gap-2 mb-2 flex-wrap">
+                    {["😀", "😂", "❤️", "👍", "🙏", "😊","😀", "😂", "😍", "🥰", "😊",
+  "😉", "😎", "🤔", "😭", "😡",
+   "👏", "🙏",  "💙",
+  "🔥", "🎉",  "🤝", "💯"
+,].map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        className="btn btn-light border"
+                        onClick={() => addEmoji(emoji)}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
 
-            <div className="card-body">
-              <div className="mb-3">
-                <small className="text-muted">Sender Name</small>
-                <h6>{selectedMessage.senderName}</h6>
-              </div>
+                  {attachment && (
+                    <div className="alert alert-info py-2 d-flex justify-content-between align-items-center">
+                      <span className="text-truncate">
+                        {attachment.name}
+                        {" "}
+                        ({formatSize(attachment.size)})
+                      </span>
 
-              <div className="mb-3">
-                <small className="text-muted">Email</small>
-                <h6>{selectedMessage.email}</h6>
-              </div>
+                      <button
+                        type="button"
+                        className="btn-close ms-2"
+                        onClick={() => setAttachment(null)}
+                      />
+                    </div>
+                  )}
 
-              <div className="mb-3">
-                <small className="text-muted">Subject</small>
-                <h6>{selectedMessage.subject}</h6>
-              </div>
+                  <form onSubmit={handleReply}>
+                    <div className="d-flex gap-2 align-items-end">
+                      <label className="btn btn-light border mb-0 py-3">
+                        <FaPaperclip />
+                        <input
+                          type="file"
+                          hidden
+                          accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx"
+                          onChange={handleFile}
+                        />
+                      </label>
 
-              <div className="mb-3">
-                <small className="text-muted">Received Date</small>
-                <h6>{formatDate(selectedMessage.date)}</h6>
-              </div>
+                      <textarea
+                        className="form-control"
+                        rows="2"
+                        placeholder="Write your reply..."
+                        value={reply}
+                        onChange={(e) => setReply(e.target.value)}
+                      />
 
-              <div className="p-3 rounded bg-light mb-4">
-                <small className="text-muted">Customer Message</small>
-                <p className="mb-0 mt-2" style={{ whiteSpace: "pre-wrap" }}>
-                  {selectedMessage.message}
-                </p>
-              </div>
+                      <button
+                        type="submit"
+                        className="btn text-white py-3 px-4"
+                        style={{ backgroundColor: "#087FC4" }}
+                        disabled={sending}
+                      >
+                        <FaPaperPlane />
+                      </button>
+                    </div>
+                  </form>
 
-              {selectedMessage.reply && (
-                <div className="alert alert-success">
-                  <strong>Previous Reply:</strong>
-                  <p className="mb-1 mt-2" style={{ whiteSpace: "pre-wrap" }}>
-                    {selectedMessage.reply}
-                  </p>
-                  <small>
-                    {formatDate(selectedMessage.replyDate)}
+                  <small className="text-muted">
+                    Maximum file size: 100 MB
                   </small>
                 </div>
-              )}
-
-              <form onSubmit={handleReply}>
-                <label className="form-label fw-semibold">
-                  Write Reply
-                </label>
-
-                <textarea
-                  className="form-control"
-                  rows="4"
-                  placeholder="Write your reply here..."
-                  value={reply}
-                  onChange={(e) => setReply(e.target.value)}
-                  required
-                ></textarea>
-
-                <div className="d-flex justify-content-end gap-2 mt-3">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setSelectedMessage(null)}
-                  >
-                    Close
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="btn text-white"
-                    style={{ backgroundColor: "#087FC4" }}
-                  >
-                    Save Reply
-                  </button>
-                </div>
-              </form>
-            </div>
+              </>
+            ) : (
+              <div
+                className="d-flex flex-column justify-content-center align-items-center text-muted"
+                style={{ minHeight: "600px" }}
+              >
+                <FaComments size={55} />
+                <h5 className="mt-3">Select a Conversation</h5>
+                <p>Choose a user from the inbox.</p>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

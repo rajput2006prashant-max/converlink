@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+
+import React, { useEffect, useState, useCallback } from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
+
 import {
   FaBell,
   FaCheckDouble,
@@ -11,81 +14,133 @@ import {
   FaArrowLeft
 } from "react-icons/fa";
 
+const API = "http://localhost:8700/notifications";
 
-const initialNotifications = [
-  {
-    id: 1,
-    title: "Welcome to Converlink!",
-    message: "Thank you for visiting Converlink Engineering Pvt. Ltd.",
-    time: "Just now",
-    type: "company",
-    unread: true
-  },
-  {
-    id: 2,
-    title: "Service Update",
-    message: "Our electrical installation and maintenance services are available.",
-    time: "1 hour ago",
-    type: "service",
-    unread: true
-  },
-  {
-    id: 3,
-    title: "Enquiry Received",
-    message: "Your enquiry details can be tracked through the contact section.",
-    time: "Yesterday",
-    type: "enquiry",
-    unread: false
-  },
-  {
-    id: 4,
-    title: "Company News",
-    message: "Explore our latest projects and engineering solutions.",
-    time: "2 days ago",
-    type: "news",
-    unread: false
-  }
-];
+function Notificationpage() {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-function Notifications() {
-  const [notifications, setNotifications] = useState(
-    initialNotifications
+  const loginData = JSON.parse(
+    localStorage.getItem("userLoginData") || "null"
   );
 
+  const userId = loginData?.id;
+
+  // Fetch only logged-in user's notifications
+  const fetchNotifications = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      if (!userId) {
+        setNotifications([]);
+        setError("Please login to view notifications.");
+        return;
+      }
+
+      const response = await axios.get(API);
+
+      const userNotifications = response.data.filter(
+        (item) => String(item.userId) === String(userId)
+      );
+
+      setNotifications(userNotifications);
+
+    } catch (err) {
+      console.error("Notification Error:", err);
+      setNotifications([]);
+      setError("Notifications load nahi ho payi.");
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  // Mark one notification read
+  const markRead = async (id) => {
+    try {
+      await axios.patch(`${API}/${id}`, {
+        read: true
+      });
+
+      setNotifications((prev) =>
+        prev.map((item) =>
+          String(item.id) === String(id)
+            ? { ...item, read: true }
+            : item
+        )
+      );
+
+    } catch (err) {
+      console.error(err);
+      alert("Notification update nahi hui.");
+    }
+  };
+
+  // Mark all read
+  const markAllRead = async () => {
+    try {
+      const unread = notifications.filter(
+        (item) => !item.read
+      );
+
+      await Promise.all(
+        unread.map((item) =>
+          axios.patch(`${API}/${item.id}`, {
+            read: true
+          })
+        )
+      );
+
+      setNotifications((prev) =>
+        prev.map((item) => ({ ...item, read: true }))
+      );
+
+    } catch (err) {
+      console.error(err);
+      alert("Notifications update nahi hui.");
+    }
+  };
+
+  // Delete notification
+  const deleteNotification = async (id) => {
+    if (!window.confirm("Delete this notification?")) return;
+
+    try {
+      await axios.delete(`${API}/${id}`);
+
+      setNotifications((prev) =>
+        prev.filter(
+          (item) => String(item.id) !== String(id)
+        )
+      );
+
+    } catch (err) {
+      console.error(err);
+      alert("Notification delete nahi hui.");
+    }
+  };
+
   const unreadCount = notifications.filter(
-    (item) => item.unread
+    (item) => !item.read
   ).length;
-
-  const markAllRead = () => {
-    setNotifications((items) =>
-      items.map((item) => ({ ...item, unread: false }))
-    );
-  };
-
-  const markRead = (id) => {
-    setNotifications((items) =>
-      items.map((item) =>
-        item.id === id ? { ...item, unread: false } : item
-      )
-    );
-  };
-
-  const deleteNotification = (id) => {
-    setNotifications((items) =>
-      items.filter((item) => item.id !== id)
-    );
-  };
 
   const getIcon = (type) => {
     switch (type) {
-      case "service":
+      case "Invoice":
+        return <FaEnvelope />;
+      case "Project":
         return <FaTools />;
-      case "enquiry":
+      case "Enquiry":
         return <FaUserCheck />;
-      case "news":
+      case "General":
         return <FaBullhorn />;
       default:
-        return <FaEnvelope />;
+        return <FaBell />;
     }
   };
 
@@ -97,95 +152,139 @@ function Notifications() {
           <FaArrowLeft /> Back to Home
         </Link>
 
-        <div className="notification-heading">
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 my-4">
           <div>
             <h2>
               <FaBell /> Notifications
             </h2>
-            <p>Stay updated with Converlink Engineering.</p>
+            <p className="text-muted">
+              Stay updated with Converlink Engineering.
+            </p>
           </div>
 
-          <div className="unread-count">
+          <div className="badge bg-primary fs-6">
             {unreadCount} Unread
           </div>
         </div>
 
-        <div className="notification-card">
+        <div className="card border-0 shadow-sm">
 
-          <div className="notification-toolbar">
-            <h5>All Notifications</h5>
+          <div className="card-body">
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+              <h5>All Notifications</h5>
 
-            <button
-              className="mark-read-btn"
-              onClick={markAllRead}
-              disabled={unreadCount === 0}
-            >
-              <FaCheckDouble /> Mark all as read
-            </button>
-          </div>
-
-          {notifications.length > 0 ? (
-            notifications.map((item) => (
-              <div
-                key={item.id}
-                className={`notification-item ${
-                  item.unread ? "unread" : ""
-                }`}
+              <button
+                className="btn btn-sm btn-outline-success"
+                onClick={markAllRead}
+                disabled={unreadCount === 0}
               >
-                <div className="notification-icon">
-                  {getIcon(item.type)}
-                </div>
-
-                <div className="notification-details">
-                  <div className="notification-title">
-                    <h6>{item.title}</h6>
-                    {item.unread && (
-                      <span className="unread-dot"></span>
-                    )}
-                  </div>
-
-                  <p>{item.message}</p>
-                  <small>{item.time}</small>
-                </div>
-
-                <div className="notification-actions">
-                  {item.unread && (
-                    <button
-                      title="Mark as read"
-                      aria-label={`Mark ${item.title} as read`}
-                      onClick={() => markRead(item.id)}
-                    >
-                      <FaCheckDouble />
-                    </button>
-                  )}
-
-                  <button
-                    title="Delete notification"
-                    aria-label={`Delete ${item.title}`}
-                    className="delete-notification"
-                    onClick={() => deleteNotification(item.id)}
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="empty-notifications">
-              <FaBell />
-              <h5>You're all caught up!</h5>
-              <p>You have no notifications.</p>
+                <FaCheckDouble /> Mark All as Read
+              </button>
             </div>
-          )}
 
-          <div className="notification-footer">
-            Showing your latest company updates.
+            {loading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" />
+                <p className="mt-2">Loading notifications...</p>
+              </div>
+            ) : error ? (
+              <div className="alert alert-danger">
+                {error}
+                <button
+                  className="btn btn-sm btn-primary ms-3"
+                  onClick={fetchNotifications}
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : notifications.length > 0 ? (
+
+              notifications
+                .slice()
+                .sort(
+                  (a, b) =>
+                    new Date(b.date) - new Date(a.date)
+                )
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    className={`d-flex align-items-start gap-3 p-3 mb-3 rounded border ${
+                      item.read ? "bg-white" : "bg-light"
+                    }`}
+                  >
+                    <div
+                      className="rounded-circle d-flex justify-content-center align-items-center flex-shrink-0"
+                      style={{
+                        width: "45px",
+                        height: "45px",
+                        backgroundColor: "#e5f2fb",
+                        fontSize: "20px",
+                        color: "#087FC4"
+                      }}
+                    >
+                      {getIcon(item.type)}
+                    </div>
+
+                    <div className="flex-grow-1">
+                      <div className="d-flex align-items-center gap-2 flex-wrap">
+                        <h6 className="fw-bold mb-1">
+                          {item.title}
+                        </h6>
+
+                        {!item.read && (
+                          <span className="badge bg-danger">
+                            New
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="mb-2 text-muted">
+                        {item.message}
+                      </p>
+
+                      <small className="text-secondary">
+                        {item.date
+                          ? new Date(item.date).toLocaleString("en-IN")
+                          : ""}
+                      </small>
+                    </div>
+
+                    <div className="d-flex flex-column gap-2">
+                      {!item.read && (
+                        <button
+                          className="btn btn-sm btn-outline-success"
+                          title="Mark as read"
+                          onClick={() => markRead(item.id)}
+                        >
+                          <FaCheckDouble />
+                        </button>
+                      )}
+
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        title="Delete"
+                        onClick={() => deleteNotification(item.id)}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </div>
+                ))
+
+            ) : (
+              <div className="text-center py-5">
+                <FaBell className="fs-1 text-secondary" />
+                <h5 className="mt-3">You're all caught up!</h5>
+                <p className="text-muted">
+                  You have no notifications.
+                </p>
+              </div>
+            )}
           </div>
-
         </div>
       </div>
     </div>
   );
 }
 
-export default Notifications;
+export default Notificationpage;

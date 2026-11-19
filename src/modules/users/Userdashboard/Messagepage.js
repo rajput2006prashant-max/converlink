@@ -1,213 +1,584 @@
-import React, { useState } from "react";
+
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
-  FaSearch,
-  FaEnvelope,
-  FaEnvelopeOpen,
-  FaTrash,
   FaPaperPlane,
-  FaArrowLeft
+  FaArrowLeft,
+  FaComments,
+  FaPaperclip,
+  FaTrash,
+  FaFilePdf,
+  FaFileAlt,
+  FaTimes
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
-
-const initialMessages = [
-  {
-    id: 1,
-    name: "Converlink Team",
-    subject: "Welcome to Converlink",
-    message:
-      "Welcome to Converlink Engineering Pvt. Ltd. Thank you for connecting with us.",
-    time: "10:30 AM",
-    unread: true
-  },
-  {
-    id: 2,
-    name: "Service Department",
-    subject: "Electrical Services",
-    message:
-      "Please contact our team for electrical installation and maintenance enquiries.",
-    time: "Yesterday",
-    unread: true
-  },
-  {
-    id: 3,
-    name: "Support Team",
-    subject: "Contact Support",
-    message:
-      "Our support team is available to help with your questions and enquiries.",
-    time: "20 Oct",
-    unread: false
-  }
-];
+const API = "http://localhost:8700/messages";
+const STATUS_API = "http://localhost:8700/chatstatus";
 
 function MessagePage() {
-  const [messages, setMessages] = useState(initialMessages);
-  const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState(null);
-  const [reply, setReply] = useState("");
-
-  const filteredMessages = messages.filter((item) =>
-    `${item.name} ${item.subject} ${item.message}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
+  const loginData = JSON.parse(
+    localStorage.getItem("userLoginData") || "null"
   );
 
-  const openMessage = (item) => {
-    setSelected(item);
-    setMessages((previous) =>
-      previous.map((message) =>
-        message.id === item.id
-          ? { ...message, unread: false }
-          : message
-      )
-    );
-  };
+  const userId = loginData?.id;
 
-  const deleteMessage = (id) => {
-    setMessages((previous) =>
-      previous.filter((item) => item.id !== id)
-    );
+  const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState("");
+  const [attachment, setAttachment] = useState(null);
+  const [search, setSearch] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [adminTyping, setAdminTyping] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
 
-    if (selected?.id === id) {
-      setSelected(null);
+  const updateTyping = async (isTyping) => {
+    if (!userId) return;
+
+    try {
+      const response = await axios.get(
+        `${STATUS_API}?userId=${encodeURIComponent(userId)}`
+      );
+
+      const data = {
+        userId: String(userId),
+        userTyping: isTyping,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (response.data.length > 0) {
+        await axios.patch(
+          `${STATUS_API}/${response.data[0].id}`,
+          data
+        );
+      } else {
+        await axios.post(STATUS_API, data);
+      }
+    } catch (err) {
+      console.log("Typing status update failed.");
     }
   };
 
-  const sendReply = (event) => {
-    event.preventDefault();
+  const fetchMessages = async () => {
+    if (!userId) {
+      setError("Login details nahi mile. Dobara login karo.");
+      setLoading(false);
+      return;
+    }
 
-    if (!reply.trim()) return;
+    try {
+      const response = await axios.get(
+        `${API}?userId=${encodeURIComponent(userId)}`
+      );
 
-    alert("Demo only: connect a backend to send this message.");
-    setReply("");
+      const sorted = response.data.sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+      );
+
+      setMessages(sorted);
+
+      const unread = sorted.filter(
+        (item) =>
+          item.sender === "admin" &&
+          item.status !== "seen"
+      );
+
+      await Promise.all(
+        unread.map((item) =>
+          axios.patch(`${API}/${item.id}`, {
+            status: "seen"
+          })
+        )
+      );
+
+      const statusResponse = await axios.get(
+        `${STATUS_API}?userId=${encodeURIComponent(userId)}`
+      );
+
+      if (statusResponse.data.length > 0) {
+        const status = statusResponse.data[0];
+
+        const isRecent =
+          Date.now() - new Date(status.updatedAt).getTime() < 10000;
+
+        setAdminTyping(Boolean(status.adminTyping && isRecent));
+      } else {
+        setAdminTyping(false);
+      }
+
+      setError("");
+    } catch (err) {
+      setError("Messages load nahi ho rahe. JSON Server check karo.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="message-page">
-      <div className="container py-5">
+  useEffect(() => {
+    fetchMessages();
 
-        <Link to="/landing/home" className="message-back">
-          <FaArrowLeft /> Back to Home
+    const interval = setInterval(fetchMessages, 3000);
+
+    return () => clearInterval(interval);
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    if (!message.trim()) {
+      updateTyping(false);
+      return;
+    }
+
+    updateTyping(true);
+
+    const timer = setTimeout(() => {
+      updateTyping(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [message, userId]);
+
+  // File selection - maximum 100 MB
+  const handleFile = (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert("Sirf JPG, PNG, WEBP, GIF, PDF, DOC aur DOCX files allowed hain.");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 100 * 1024 * 1024) {
+      alert("Maximum file size 100 MB hai.");
+      e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setAttachment({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        data: reader.result
+      });
+    };
+
+    reader.onerror = () => {
+      alert("File read nahi hui.");
+    };
+
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+
+    if (!message.trim() && !attachment) {
+      alert("Message ya attachment add karo.");
+      return;
+    }
+
+    try {
+      setSending(true);
+
+      await axios.post(API, {
+        userId: String(userId),
+        sender: "user",
+        senderName: loginData?.username || "User",
+        email: loginData?.email || "",
+        message: message.trim(),
+        attachment: attachment,
+        date: new Date().toISOString(),
+        status: "sent"
+      });
+
+      setMessage("");
+      setAttachment(null);
+
+      await updateTyping(false);
+      await fetchMessages();
+
+    } catch (err) {
+      alert(
+        err.response?.data?.message ||
+        "Message send nahi hua. JSON Server ki request limit check karo."
+      );
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const deleteMessage = async (item) => {
+    if (item.sender !== "user") return;
+
+    if (!window.confirm("Kya aap ye message delete karna chahte hain?")) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/${item.id}`);
+      await fetchMessages();
+    } catch (err) {
+      alert("Message delete nahi hua.");
+    }
+  };
+
+  const addEmoji = (emoji) => {
+    setMessage((previous) => previous + emoji);
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "";
+
+    return new Date(date).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
+  const formatSize = (size) => {
+    if (!size) return "";
+
+    return (size / (1024 * 1024)).toFixed(2) + " MB";
+  };
+
+  // Image and document attachment display
+  const renderAttachment = (file) => {
+    if (!file) return null;
+
+    // Old and new records support
+    const fileData = file.data || file.url;
+
+    if (!fileData) return null;
+
+    if (file.type?.startsWith("image/")) {
+      return (
+        <div className="mt-2">
+          <a
+            href={fileData}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open image"
+          >
+            <img
+              src={fileData}
+              alt={file.name || "Chat attachment"}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+              style={{
+                maxWidth: "220px",
+                maxHeight: "180px",
+                width: "auto",
+                height: "auto",
+                objectFit: "contain",
+                display: "block",
+                borderRadius: "10px",
+                cursor: "pointer",
+                background: "#ffffff"
+              }}
+            />
+          </a>
+
+          <small className="d-block mt-1">
+            {file.name}
+          </small>
+        </div>
+      );
+    }
+
+    return (
+      <a
+        href={fileData}
+        target="_blank"
+        rel="noopener noreferrer"
+        download={file.name}
+        className="d-flex align-items-center gap-2 mt-2 text-reset"
+      >
+        {file.type === "application/pdf" ? (
+          <FaFilePdf />
+        ) : (
+          <FaFileAlt />
+        )}
+
+        <span>{file.name || "Download attachment"}</span>
+      </a>
+    );
+  };
+
+  const filteredMessages = messages.filter((item) => {
+    const matchesSearch = [
+      item.message,
+      item.attachment?.name
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    const matchesDate = filterDate
+      ? new Date(item.date).toLocaleDateString("en-CA") === filterDate
+      : true;
+
+    return matchesSearch && matchesDate;
+  });
+
+  if (!userId) {
+    return (
+      <div className="container py-5 text-center">
+        <h5>Please login first</h5>
+
+        <Link to="/UserLoginPage" className="btn btn-primary mt-3">
+          Login
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container-fluid p-3 p-md-4">
+
+      <div className="d-flex align-items-center gap-3 mb-4">
+        <Link to="/landing/home" className="btn btn-light border">
+          <FaArrowLeft />
         </Link>
 
-        <div className="message-heading">
-          <div>
-            <h2><FaEnvelope /> Messages</h2>
-            <p>Manage your messages and company enquiries.</p>
+        <div>
+          <h3 className="fw-bold mb-1" style={{ color: "#102D4F" }}>
+            Messages
+          </h3>
+
+          <p className="text-muted mb-0">
+            Chat with Converlink Admin
+          </p>
+        </div>
+      </div>
+
+      <div
+        className="card border-0 shadow-sm mx-auto"
+        style={{ maxWidth: "950px" }}
+      >
+        <div
+          className="card-header text-white d-flex align-items-center gap-3 py-3"
+          style={{ backgroundColor: "#102D4F" }}
+        >
+          <div
+            className="rounded-circle d-flex justify-content-center align-items-center"
+            style={{
+              width: "45px",
+              height: "45px",
+              backgroundColor: "#087FC4"
+            }}
+          >
+            <FaComments size={20} />
           </div>
 
-          <span className="message-count">
-            {messages.filter((item) => item.unread).length} Unread
-          </span>
+          <div>
+            <h6 className="mb-0">Converlink Admin</h6>
+            <small>Customer Support</small>
+          </div>
         </div>
 
-        <div className="message-layout">
-
-          {/* Message List */}
-          <div className="message-list-panel">
-            <div className="message-search">
-              <FaSearch />
+        <div className="p-3 border-bottom">
+          <div className="row g-2">
+            <div className="col-md-8">
               <input
-                type="text"
-                placeholder="Search messages..."
+                className="form-control"
+                placeholder="Search chat messages..."
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
 
-            {filteredMessages.map((item) => (
+            <div className="col-md-4">
+              <input
+                type="date"
+                className="form-control"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="card-body bg-light"
+          style={{ height: "430px", overflowY: "auto" }}
+        >
+          {loading ? (
+            <p className="text-center mt-5">Loading messages...</p>
+          ) : error ? (
+            <div className="alert alert-danger">{error}</div>
+          ) : filteredMessages.length === 0 ? (
+            <div className="text-center text-muted mt-5">
+              <FaComments size={40} />
+              <p className="mt-3">No messages found.</p>
+            </div>
+          ) : (
+            filteredMessages.map((item) => (
               <div
                 key={item.id}
-                className={`message-list-item ${
-                  selected?.id === item.id ? "selected" : ""
-                } ${item.unread ? "unread" : ""}`}
+                className={`d-flex mb-3 ${
+                  item.sender === "user"
+                    ? "justify-content-end"
+                    : "justify-content-start"
+                }`}
               >
-                <button
-                  className="message-select"
-                  onClick={() => openMessage(item)}
+                <div
+                  className="p-3 shadow-sm"
+                  style={{
+                    maxWidth: "78%",
+                    minWidth: "130px",
+                    borderRadius: "14px",
+                    backgroundColor:
+                      item.sender === "user" ? "#087FC4" : "#ffffff",
+                    color: item.sender === "user" ? "#ffffff" : "#212529"
+                  }}
                 >
-                  <div className="message-avatar">
-                    {item.name.charAt(0)}
+                  <small className="fw-bold d-block mb-1">
+                    {item.sender === "user" ? "You" : "Converlink Admin"}
+                  </small>
+
+                  <div style={{ whiteSpace: "pre-wrap" }}>
+                    {item.message}
                   </div>
 
-                  <div className="message-preview">
-                    <div className="message-name-row">
-                      <strong>{item.name}</strong>
-                      {item.unread && <span className="message-dot" />}
-                    </div>
+                  {renderAttachment(item.attachment)}
 
-                    <small>{item.subject}</small>
-                    <p>{item.message}</p>
-                    <span className="message-time">{item.time}</span>
+                  <div className="d-flex justify-content-end align-items-center gap-2 mt-2">
+                    <small style={{ fontSize: "11px", opacity: 0.8 }}>
+                      {formatDate(item.date)}
+                    </small>
+
+                    {item.sender === "user" && (
+                      <small title={item.status}>
+                        {item.status === "seen"
+                          ? "✓✓ Seen"
+                          : item.status === "delivered"
+                          ? "✓✓ Delivered"
+                          : "✓ Sent"}
+                      </small>
+                    )}
+
+                    {item.sender === "user" && (
+                      <button
+                        type="button"
+                        className="btn btn-sm p-0 text-white"
+                        title="Delete message"
+                        onClick={() => deleteMessage(item)}
+                      >
+                        <FaTrash size={11} />
+                      </button>
+                    )}
                   </div>
-                </button>
-
-                <button
-                  className="message-delete"
-                  onClick={() => deleteMessage(item.id)}
-                  aria-label={`Delete message from ${item.name}`}
-                  title="Delete message"
-                >
-                  <FaTrash />
-                </button>
+                </div>
               </div>
+            ))
+          )}
+
+          {adminTyping && (
+            <div className="text-muted small">
+              Converlink Admin is typing...
+            </div>
+          )}
+        </div>
+
+        <div className="card-body border-top">
+
+          <div className="d-flex gap-2 mb-2 flex-wrap">
+            {["😀", "😂", "❤️", "👍", "🙏", "😊","😀", "😂", "😍", "🥰", "😊",
+  "😉", "😎", "🤔", "😭", "😡",
+  "👍", "👏",  "💙",
+  "🔥", "🎉", "👋", "🤝", "💯"
+].map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                className="btn btn-light border"
+                onClick={() => addEmoji(emoji)}
+              >
+                {emoji}
+              </button>
             ))}
-
-            {filteredMessages.length === 0 && (
-              <p className="message-empty">No messages found.</p>
-            )}
           </div>
 
-          {/* Message Details */}
-          <div className="message-detail-panel">
-            {selected ? (
-              <>
-                <div className="message-detail-header">
-                  <div className="message-avatar">
-                    {selected.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h5>{selected.name}</h5>
-                    <small>{selected.time}</small>
-                  </div>
+          {attachment && (
+            <div className="alert alert-info py-2 d-flex justify-content-between align-items-center">
+              <span className="text-truncate">
+                <FaPaperclip className="me-2" />
+                {attachment.name}
+                {" "}
+                ({formatSize(attachment.size)})
+              </span>
 
-                  <button
-                    className="message-delete ms-auto"
-                    onClick={() => deleteMessage(selected.id)}
-                    aria-label="Delete selected message"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
+              <button
+                type="button"
+                className="btn btn-sm text-danger"
+                onClick={() => setAttachment(null)}
+              >
+                <FaTimes />
+              </button>
+            </div>
+          )}
 
-                <div className="message-body">
-                  <h4>{selected.subject}</h4>
-                  <p>{selected.message}</p>
-                </div>
+          <form onSubmit={sendMessage}>
+            <div className="d-flex gap-2 align-items-end">
 
-                <form className="message-reply" onSubmit={sendReply}>
-                  <label htmlFor="messageReply">Reply</label>
-                  <textarea
-                    id="messageReply"
-                    value={reply}
-                    onChange={(event) => setReply(event.target.value)}
-                    placeholder="Write your message..."
-                    rows="4"
-                  />
+              <label
+                className="btn btn-light border mb-0 py-3"
+                title="Attach file"
+              >
+                <FaPaperclip />
 
-                  <button type="submit">
-                    <FaPaperPlane /> Send Reply
-                  </button>
-                </form>
-              </>
-            ) : (
-              <div className="message-placeholder">
-                <FaEnvelopeOpen />
-                <h4>Select a Message</h4>
-                <p>Choose a message from the list to read it.</p>
-              </div>
-            )}
-          </div>
+                <input
+                  type="file"
+                  hidden
+                  accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx"
+                  onChange={handleFile}
+                />
+              </label>
+
+              <textarea
+                className="form-control"
+                rows="2"
+                placeholder="Write your message..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
+
+              <button
+                type="submit"
+                className="btn text-white py-3 px-4"
+                style={{ backgroundColor: "#087FC4" }}
+                disabled={sending}
+              >
+                {sending ? "..." : <FaPaperPlane />}
+              </button>
+
+            </div>
+          </form>
+
+          <small className="text-muted">
+            Maximum file selection size: 100 MB
+          </small>
 
         </div>
       </div>

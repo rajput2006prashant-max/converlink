@@ -1,5 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { ProjectProvider } from "./Context/ProjectContext";
+import { Provider } from 'react-redux';
+import { Myactionstore } from './redux/Mystore';
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
@@ -63,6 +65,7 @@ import Errorpage from "./modules/shares/Errorpage";
 function App() {
   return (
     <ProjectProvider>
+      <Provider  store={Myactionstore}>
     <Routes>
       {/* Welcome */}
       <Route path="/" element={<Welcome />} />
@@ -131,7 +134,9 @@ function App() {
       {/* Invalid URL */}
       <Route path="*" element={<Errorpage />} />
     </Routes>
+     </Provider>
     </ProjectProvider>
+   
   );
 }
 
