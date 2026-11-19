@@ -1,14 +1,25 @@
 
-import React, { Fragment } from "react";
+import React, { Fragment, useState } from "react";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
+
+import {
+  FaEye,
+  FaEyeSlash,
+  FaGoogle,
+  FaLinkedin,
+  FaFacebook,
+  FaGithub,
+} from "react-icons/fa";
+
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function AdminLogin() {
-
   const navigate = useNavigate();
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -18,9 +29,7 @@ function AdminLogin() {
 
   // Admin Login Function
   const myform = async (data) => {
-
     try {
-
       // Get Admin Data From JSON Server
       const response = await axios.get(
         "http://localhost:8700/admin"
@@ -34,21 +43,17 @@ function AdminLogin() {
 
       // Find Admin
       const admin = admins.find((item) => {
-
         return (
+          item.email &&
           item.email.trim().toLowerCase() === email &&
           item.pass === password
         );
-
       });
 
       // Check Login
       if (admin) {
-
-        // Save Login Status
         localStorage.setItem("adminLoggedIn", "true");
 
-        // Save Admin Details
         localStorage.setItem(
           "adminLoginData",
           JSON.stringify({
@@ -66,27 +71,28 @@ function AdminLogin() {
             navigate("/adminlandingpage");
           },
         });
-
       } else {
-
         toast.error("Invalid Email or Password!");
-
       }
-
     } catch (error) {
-
       console.log(error);
-
       toast.error("JSON Server is not running!");
-
     }
+  };
 
+  // Social Login Function
+  const handleSocialLogin = (provider) => {
+    toast.info(
+      `${provider} Login requires OAuth configuration.`,
+      {
+        position: "top-right",
+        autoClose: 2500,
+      }
+    );
   };
 
   return (
-
     <Fragment>
-
       <ToastContainer position="top-right" />
 
       <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">
@@ -95,7 +101,6 @@ function AdminLogin() {
           className="card border-0 shadow-lg rounded-4 overflow-hidden w-100"
           style={{ maxWidth: "1000px" }}
         >
-
           <div className="row g-0">
 
             {/* Left Section */}
@@ -116,39 +121,22 @@ function AdminLogin() {
               </p>
 
               <div className="mt-4">
-
                 <span className="badge bg-white text-primary rounded-pill p-3">
                   Secure Admin Access
                 </span>
-
               </div>
 
               <div className="mt-5">
-
                 <h5 className="fw-semibold">
                   Admin Responsibilities
                 </h5>
 
                 <ul className="list-unstyled text-white-50 mt-3">
-
-                  <li className="mb-2">
-                    ✓ Manage Enquiries
-                  </li>
-
-                  <li className="mb-2">
-                    ✓ Manage Services
-                  </li>
-
-                  <li className="mb-2">
-                    ✓ Manage Projects
-                  </li>
-
-                  <li>
-                    ✓ Manage Website Information
-                  </li>
-
+                  <li className="mb-2">✓ Manage Enquiries</li>
+                  <li className="mb-2">✓ Manage Services</li>
+                  <li className="mb-2">✓ Manage Projects</li>
+                  <li>✓ Manage Website Information</li>
                 </ul>
-
               </div>
 
             </div>
@@ -168,7 +156,6 @@ function AdminLogin() {
 
                 {/* Email */}
                 <div className="mb-4">
-
                   <label
                     htmlFor="email"
                     className="form-label fw-semibold"
@@ -191,12 +178,10 @@ function AdminLogin() {
                       {errors.email.message}
                     </p>
                   )}
-
                 </div>
 
                 {/* Password */}
                 <div className="mb-3">
-
                   <label
                     htmlFor="password"
                     className="form-label fw-semibold"
@@ -204,29 +189,39 @@ function AdminLogin() {
                     Password
                   </label>
 
-                  <input
-                    id="password"
-                    type="password"
-                    className="form-control form-control-lg rounded-3"
-                    placeholder="Enter your password"
-                    {...register("pass", {
-                      required: "Password is required",
-                    })}
-                  />
+                  <div className="input-group">
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      className="form-control form-control-lg rounded-start-3"
+                      placeholder="Enter your password"
+                      {...register("pass", {
+                        required: "Password is required",
+                      })}
+                    />
+
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() =>
+                        setShowPassword(!showPassword)
+                      }
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
 
                   {errors.pass && (
                     <p className="text-danger small mt-1">
                       {errors.pass.message}
                     </p>
                   )}
-
                 </div>
 
                 {/* Remember and Forgot */}
                 <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
 
                   <div className="form-check">
-
                     <input
                       type="checkbox"
                       className="form-check-input"
@@ -239,7 +234,6 @@ function AdminLogin() {
                     >
                       Remember me
                     </label>
-
                   </div>
 
                   <Link
@@ -261,9 +255,70 @@ function AdminLogin() {
 
               </form>
 
+              {/* Divider */}
+              <div className="d-flex align-items-center my-4">
+                <hr className="flex-grow-1" />
+                <span className="px-3 text-secondary small">
+                  OR CONTINUE WITH
+                </span>
+                <hr className="flex-grow-1" />
+              </div>
+
+              {/* Social Login Buttons */}
+              <div className="row g-2">
+
+                {/* Google */}
+                <div className="col-6">
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger w-100 py-2"
+                    onClick={() => handleSocialLogin("Google")}
+                  >
+                    <FaGoogle className="me-2" />
+                    Google
+                  </button>
+                </div>
+
+                {/* LinkedIn */}
+                <div className="col-6">
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary w-100 py-2"
+                    onClick={() => handleSocialLogin("LinkedIn")}
+                  >
+                    <FaLinkedin className="me-2" />
+                    LinkedIn
+                  </button>
+                </div>
+
+                {/* Facebook */}
+                <div className="col-6">
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary w-100 py-2"
+                    onClick={() => handleSocialLogin("Facebook")}
+                  >
+                    <FaFacebook className="me-2" />
+                    Facebook
+                  </button>
+                </div>
+
+                {/* GitHub */}
+                <div className="col-6">
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark w-100 py-2"
+                    onClick={() => handleSocialLogin("GitHub")}
+                  >
+                    <FaGithub className="me-2" />
+                    GitHub
+                  </button>
+                </div>
+
+              </div>
+
               {/* Register Link */}
               <p className="text-center text-secondary mt-4 mb-0">
-
                 Don't have an account?{" "}
 
                 <Link
@@ -272,31 +327,23 @@ function AdminLogin() {
                 >
                   Sign Up
                 </Link>
-
               </p>
 
               {/* Back Home */}
               <div className="text-center mt-3">
-
                 <Link
                   to="/"
                   className="text-secondary text-decoration-none small"
                 >
                   ← Back to Home
                 </Link>
-
               </div>
 
             </div>
-
           </div>
-
         </div>
-
       </div>
-
     </Fragment>
-
   );
 }
 

@@ -1,22 +1,63 @@
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import serviceData from "../Userdashboard/ServiceData";
+import axios from "axios";
+
+const API = "http://localhost:8700/Services";
 
 function Services() {
+  const [serviceData, setServiceData] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const categories = [
-    "All",
-    ...new Set(serviceData.map((item) => item.category)),
-  ];
+  // JSON Server se services fetch karna
+  const getServices = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
+      const response = await axios.get(API);
+
+      // Sirf Active services show hongi
+      const activeServices = response.data.filter(
+        (service) => service.status === "Active"
+      );
+
+      setServiceData(activeServices);
+    } catch (err) {
+      console.error("Services Error:", err);
+      setError("Services load nahi ho paayi. JSON Server check karo.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getServices();
+  }, []);
+
+  // Dynamic categories
+  const categories = useMemo(() => {
+    return [
+      "All",
+      ...new Set(
+        serviceData
+          .map((item) => item.category)
+          .filter(Boolean)
+      ),
+    ];
+  }, [serviceData]);
+
+  // Search and category filter
   const filteredServices = useMemo(() => {
     return serviceData.filter((service) => {
       const matchesSearch =
-        service.title.toLowerCase().includes(search.toLowerCase()) ||
-        service.shortDescription.toLowerCase().includes(search.toLowerCase());
+        (service.title || "").toLowerCase().includes(search.toLowerCase()) ||
+        (service.shortDescription || "")
+          .toLowerCase()
+          .includes(search.toLowerCase());
 
       const matchesCategory =
         selectedCategory === "All" ||
@@ -24,7 +65,7 @@ function Services() {
 
       return matchesSearch && matchesCategory;
     });
-  }, [search, selectedCategory]);
+  }, [serviceData, search, selectedCategory]);
 
   return (
     <div style={{ background: "#f5f8fc" }}>
@@ -40,10 +81,11 @@ function Services() {
       >
         <div className="container py-5">
           <div className="row align-items-center py-lg-5">
-
             <div className="col-lg-7 py-4">
-              <span className="badge rounded-pill px-3 py-2 mb-4"
-                style={{ background: "#38C8F5", color: "#102D4F" }}>
+              <span
+                className="badge rounded-pill px-3 py-2 mb-4"
+                style={{ background: "#38C8F5", color: "#102D4F" }}
+              >
                 ENGINEERING EXCELLENCE
               </span>
 
@@ -61,11 +103,17 @@ function Services() {
               </p>
 
               <div className="d-flex flex-wrap gap-3">
-                <a href="#our-services" className="btn btn-info btn-lg fw-semibold">
+                <a
+                  href="#our-services"
+                  className="btn btn-info btn-lg fw-semibold"
+                >
                   Explore Services →
                 </a>
 
-                <a href="#service-contact" className="btn btn-outline-light btn-lg">
+                <a
+                  href="#service-contact"
+                  className="btn btn-outline-light btn-lg"
+                >
                   Contact Us
                 </a>
               </div>
@@ -84,7 +132,6 @@ function Services() {
                 }}
               />
             </div>
-
           </div>
         </div>
       </section>
@@ -92,7 +139,6 @@ function Services() {
       {/* INTRODUCTION */}
       <section className="container py-5">
         <div className="row align-items-center">
-
           <div className="col-lg-7">
             <p className="fw-bold text-primary mb-2">
               WHAT WE DO
@@ -111,11 +157,10 @@ function Services() {
 
           <div className="col-lg-5 mt-4 mt-lg-0">
             <div className="row g-3 text-center">
-
               <div className="col-6">
                 <div className="bg-white rounded-4 shadow-sm p-4 h-100">
                   <h2 className="fw-bold text-primary">
-                    {serviceData.length.toString().padStart(2, "0")}
+                    {String(serviceData.length).padStart(2, "0")}
                   </h2>
                   <p className="text-secondary mb-0">Core Services</p>
                 </div>
@@ -127,19 +172,18 @@ function Services() {
                   <p className="text-secondary mb-0">Project Approach</p>
                 </div>
               </div>
-
             </div>
           </div>
-
         </div>
       </section>
 
       {/* SERVICES SECTION */}
-      <section id="our-services" className="py-5"
-        style={{ background: "#edf3f9" }}>
-
+      <section
+        id="our-services"
+        className="py-5"
+        style={{ background: "#edf3f9" }}
+      >
         <div className="container">
-
           <div className="text-center mb-5">
             <p className="fw-bold text-primary mb-2">
               OUR EXPERTISE
@@ -169,9 +213,9 @@ function Services() {
 
           {/* CATEGORY FILTER */}
           <div className="d-flex flex-wrap justify-content-center gap-2 mb-5">
-            {categories.map((category, index) => (
+            {categories.map((category) => (
               <button
-                key={index}
+                key={category}
                 type="button"
                 onClick={() => setSelectedCategory(category)}
                 className={`btn rounded-pill px-4 ${
@@ -185,97 +229,116 @@ function Services() {
             ))}
           </div>
 
+          {/* LOADING */}
+          {loading && (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary"></div>
+              <p className="text-secondary mt-3">
+                Loading services...
+              </p>
+            </div>
+          )}
+
+          {/* ERROR */}
+          {!loading && error && (
+            <div className="alert alert-danger text-center">
+              {error}
+              <button
+                className="btn btn-outline-danger btn-sm ms-3"
+                onClick={getServices}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
           {/* SERVICE CARDS */}
-          <div className="row g-4">
+          {!loading && !error && (
+            <div className="row g-4">
+              {filteredServices.length > 0 ? (
+                filteredServices.map((service, index) => (
+                  <div className="col-md-6 col-xl-4" key={service.id}>
+                    <div className="card border-0 rounded-4 overflow-hidden h-100 shadow-sm">
 
-            {filteredServices.length > 0 ? (
-              filteredServices.map((service, index) => (
-                <div className="col-md-6 col-xl-4" key={service.id}>
+                      {/* IMAGE */}
+                      <div className="position-relative overflow-hidden">
+                        <img
+                          src={
+                            service.image ||
+                            "https://placehold.co/900x600?text=Service"
+                          }
+                          alt={service.title}
+                          className="card-img-top"
+                          style={{
+                            height: "240px",
+                            objectFit: "cover",
+                          }}
+                        />
 
-                  <div
-                    className="card border-0 rounded-4 overflow-hidden h-100 shadow-sm"
-                    style={{ transition: "all 0.3s ease" }}
-                  >
-
-                    {/* IMAGE */}
-                    <div className="position-relative overflow-hidden">
-                      <img
-                        src={service.image}
-                        alt={service.title}
-                        className="card-img-top"
-                        style={{
-                          height: "240px",
-                          objectFit: "cover",
-                        }}
-                      />
-
-                      <span
-                        className="badge position-absolute top-0 start-0 m-3 px-3 py-2"
-                        style={{
-                          background: "#102D4F",
-                          color: "#fff",
-                        }}
-                      >
-                        SERVICE 0{index + 1}
-                      </span>
-                    </div>
-
-                    {/* CARD BODY */}
-                    <div className="card-body p-4 d-flex flex-column">
-
-                      <small className="fw-bold text-primary">
-                        {service.category}
-                      </small>
-
-                      <h4 className="fw-bold mt-2"
-                        style={{ color: "#102D4F" }}>
-                        {service.title}
-                      </h4>
-
-                      <p className="text-secondary lh-lg">
-                        {service.shortDescription}
-                      </p>
-
-                      <div className="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
-
-                        <span className="fw-semibold text-dark">
-                          {service.price}
-                        </span>
-
-                        <Link
-                          to={`/landing/service/${service.id}`}
-                          className="btn btn-primary rounded-pill px-4"
+                        <span
+                          className="badge position-absolute top-0 start-0 m-3 px-3 py-2"
+                          style={{
+                            background: "#102D4F",
+                            color: "#fff",
+                          }}
                         >
-                          View Details →
-                        </Link>
-
+                          SERVICE {String(index + 1).padStart(2, "0")}
+                        </span>
                       </div>
 
+                      {/* CARD BODY */}
+                      <div className="card-body p-4 d-flex flex-column">
+                        <small className="fw-bold text-primary">
+                          {service.category}
+                        </small>
+
+                        <h4
+                          className="fw-bold mt-2"
+                          style={{ color: "#102D4F" }}
+                        >
+                          {service.title}
+                        </h4>
+
+                        <p className="text-secondary lh-lg">
+                          {service.shortDescription}
+                        </p>
+
+                        <div className="mt-auto pt-3 border-top d-flex align-items-center justify-content-between gap-2">
+                          <span className="fw-semibold text-dark">
+                            {service.price || "Custom Quote"}
+                          </span>
+
+                          <Link
+                            to={`/landing/service/${service.id}`}
+                            className="btn btn-primary rounded-pill px-4"
+                          >
+                            View Details →
+                          </Link>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="col-12 text-center py-5">
+                  <h4 className="fw-bold">No Services Found</h4>
+                  <p className="text-secondary">
+                    Try another search or category.
+                  </p>
 
+                  <button
+                    className="btn btn-outline-primary"
+                    onClick={() => {
+                      setSearch("");
+                      setSelectedCategory("All");
+                    }}
+                  >
+                    Clear Filters
+                  </button>
                 </div>
-              ))
-            ) : (
-              <div className="col-12 text-center py-5">
-                <h4 className="fw-bold">No Services Found</h4>
-                <p className="text-secondary">
-                  Try another search or category.
-                </p>
-
-                <button
-                  className="btn btn-outline-primary"
-                  onClick={() => {
-                    setSearch("");
-                    setSelectedCategory("All");
-                  }}
-                >
-                  Clear Filters
-                </button>
-              </div>
-            )}
-
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -289,7 +352,6 @@ function Services() {
         </div>
 
         <div className="row g-4">
-
           {[
             {
               icon: "✓",
@@ -317,14 +379,15 @@ function Services() {
                 <div className="fs-1 text-info mb-3">
                   {item.icon}
                 </div>
+
                 <h5 className="fw-bold">{item.title}</h5>
+
                 <p className="text-secondary mb-0">
                   {item.desc}
                 </p>
               </div>
             </div>
           ))}
-
         </div>
       </section>
 
@@ -335,7 +398,6 @@ function Services() {
         style={{ background: "#102D4F" }}
       >
         <div className="container text-center py-3">
-
           <p className="fw-bold text-info">
             HAVE A PROJECT IN MIND?
           </p>
@@ -349,15 +411,17 @@ function Services() {
           </p>
 
           <Link
-            to="/landing/service/1"
+            to={
+              serviceData.length > 0
+                ? `/landing/service/${serviceData[0].id}`
+                : "/landing/services"
+            }
             className="btn btn-info btn-lg fw-semibold mt-3 px-4"
           >
             Get Started →
           </Link>
-
         </div>
       </section>
-
     </div>
   );
 }

@@ -1,366 +1,313 @@
 
-import React, { useState } from "react";
-import {
-  FaBolt,
-  FaTools,
-  FaPlug,
-  FaPaintRoller,
-  FaPlus,
-  FaEdit,
-  FaTrash,
-  FaTimes,
-} from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { MdDelete } from "react-icons/md";
+import { FaEdit } from "react-icons/fa";
 
-
-const initialServices = [
-  {
-    id: 1,
-    name: "Electrical Work",
-    description: "Professional electrical installation and repair services.",
-    icon: "electrical",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Maintenance",
-    description: "Reliable maintenance for buildings and equipment.",
-    icon: "maintenance",
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Installation",
-    description: "Safe and efficient installation solutions.",
-    icon: "installation",
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "Interior Designing",
-    description: "Modern and functional interior design solutions.",
-    icon: "interior",
-    status: "Active",
-  },
-];
-
-const serviceIcons = {
-  electrical: <FaBolt />,
-  maintenance: <FaTools />,
-  installation: <FaPlug />,
-  interior: <FaPaintRoller />,
-};
+const API = "http://localhost:8700/Services";
 
 const emptyForm = {
-  name: "",
+  title: "",
+  category: "",
+  image: "",
+  shortDescription: "",
   description: "",
-  icon: "electrical",
+  price: "Custom Quote",
   status: "Active",
+  benefits: "",
+  workIncludes: "",
+  process: ""
 };
 
 function ManageServices() {
-  const [services, setServices] = useState(initialServices);
-  const [form, setForm] = useState(emptyForm);
-  const [editingId, setEditingId] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+  const [services, setServices] = useState([]);
+  const [formData, setFormData] = useState(emptyForm);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [editId, setEditId] = useState(null);
 
-  const filteredServices = services.filter((service) =>
-    service.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Fetch services
+  const getServices = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-  const openAddForm = () => {
-    setEditingId(null);
-    setForm(emptyForm);
-    setShowForm(true);
+      const response = await axios.get(API);
+      setServices(response.data);
+    } catch (error) {
+      setError("Services load nahi ho paayi. JSON Server check karo.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const openEditForm = (service) => {
-    setEditingId(service.id);
-    setForm({
-      name: service.name,
-      description: service.description,
-      icon: service.icon,
-      status: service.status,
+  useEffect(() => {
+    getServices();
+  }, []);
+
+  // Input handle
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Add modal
+  const handleAdd = () => {
+    setEditId(null);
+    setFormData(emptyForm);
+    setShowModal(true);
+  };
+
+  // Edit modal
+  const handleEdit = (service) => {
+    setEditId(service.id);
+
+    setFormData({
+      title: service.title || "",
+      category: service.category || "",
+      image: service.image || "",
+      shortDescription: service.shortDescription || "",
+      description: service.description || "",
+      price: service.price || "Custom Quote",
+      status: service.status || "Active",
+      benefits: (service.benefits || []).join("\n"),
+      workIncludes: (service.workIncludes || []).join("\n"),
+      process: (service.process || []).join("\n")
     });
-    setShowForm(true);
+
+    setShowModal(true);
   };
 
-  const handleSubmit = (e) => {
+  // Convert textarea lines into arrays
+  const convertToArray = (value) =>
+    value.split("\n").map((item) => item.trim()).filter(Boolean);
+
+  // Add / Update
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name.trim() || !form.description.trim()) {
+    try {
+      setSaving(true);
+
+      const serviceData = {
+        title: formData.title,
+        category: formData.category,
+        image: formData.image,
+        shortDescription: formData.shortDescription,
+        description: formData.description,
+        price: formData.price,
+        status: formData.status,
+        benefits: convertToArray(formData.benefits),
+        workIncludes: convertToArray(formData.workIncludes),
+        process: convertToArray(formData.process),
+        rating: 5
+      };
+
+      if (editId !== null) {
+        await axios.patch(`${API}/${editId}`, serviceData);
+        alert("Service successfully updated!");
+      } else {
+        await axios.post(API, serviceData);
+        alert("New service successfully added!");
+      }
+
+      setShowModal(false);
+      setEditId(null);
+      setFormData(emptyForm);
+
+      await getServices();
+    } catch (error) {
+      console.error("Save service error:", error);
+      alert("Service save nahi ho paayi. JSON Server check karo.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Delete
+  const handleDelete = async (id) => {
+    if (!window.confirm("Kya aap is service ko delete karna chahte hain?")) {
       return;
     }
 
-    if (editingId !== null) {
-      setServices((previous) =>
-        previous.map((service) =>
-          service.id === editingId
-            ? { ...service, ...form }
-            : service
-        )
-      );
-    } else {
-      setServices((previous) => [
-        ...previous,
-        {
-          id: Date.now(),
-          ...form,
-        },
-      ]);
-    }
-
-    setForm(emptyForm);
-    setEditingId(null);
-    setShowForm(false);
-  };
-
-  const deleteService = (id) => {
-    const confirmed = window.confirm(
-      "Kya aap is service ko delete karna chahte hain?"
-    );
-
-    if (confirmed) {
-      setServices((previous) =>
-        previous.filter((service) => service.id !== id)
-      );
+    try {
+      await axios.delete(`${API}/${id}`);
+      alert("Service deleted successfully!");
+      await getServices();
+    } catch (error) {
+      alert("Service delete nahi ho paayi.");
     }
   };
 
-  const toggleStatus = (id) => {
-    setServices((previous) =>
-      previous.map((service) =>
-        service.id === id
-          ? {
-              ...service,
-              status:
-                service.status === "Active" ? "Inactive" : "Active",
-            }
-          : service
-      )
-    );
-  };
+  // Search
+  const filteredServices = services.filter((service) =>
+    `${service.title} ${service.category} ${service.description}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
+  const activeServices = services.filter(
+    (service) => service.status === "Active"
+  ).length;
+
+  const inactiveServices = services.filter(
+    (service) => service.status === "Inactive"
+  ).length;
 
   return (
-    <div className="manage-services">
-      <div className="manage-services-header">
+    <div className="container-fluid py-3">
+
+      {/* Heading */}
+      <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
-          <span className="services-eyebrow">ADMIN PANEL</span>
-          <h2>Manage Services</h2>
-          <p>Add, update and manage your company services.</p>
+          <h3 className="fw-bold">Manage Services</h3>
+          <p className="text-muted mb-0">
+            Add, edit and manage company services.
+          </p>
         </div>
 
-        <button
-          type="button"
-          className="btn add-service-btn"
-          onClick={openAddForm}
-        >
-          <FaPlus className="me-2" />
-          Add Service
+        <button className="btn btn-primary" onClick={handleAdd}>
+          <i className="bi bi-plus-lg me-2"></i>
+          Add New Service
         </button>
       </div>
 
-      <div className="services-summary">
-        <div className="summary-card">
-          <span>Total Services</span>
-          <h3>{services.length}</h3>
-        </div>
-
-        <div className="summary-card">
-          <span>Active Services</span>
-          <h3>
-            {services.filter((s) => s.status === "Active").length}
-          </h3>
-        </div>
-
-        <div className="summary-card">
-          <span>Inactive Services</span>
-          <h3>
-            {services.filter((s) => s.status === "Inactive").length}
-          </h3>
-        </div>
-      </div>
-
-      <div className="services-toolbar">
-        <input
-          type="search"
-          className="form-control"
-          placeholder="Search services..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-
-      {showForm && (
-        <div className="service-form-card">
-          <div className="service-form-heading">
-            <h4>{editingId !== null ? "Edit Service" : "Add New Service"}</h4>
-
-            <button
-              type="button"
-              className="close-form-btn"
-              onClick={() => setShowForm(false)}
-              aria-label="Close form"
-            >
-              <FaTimes />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            <div className="row g-3">
-              <div className="col-md-6">
-                <label className="form-label">Service Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter service name"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm({ ...form, name: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label">Service Icon</label>
-                <select
-                  className="form-select"
-                  value={form.icon}
-                  onChange={(e) =>
-                    setForm({ ...form, icon: e.target.value })
-                  }
-                >
-                  <option value="electrical">Electrical Work</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="installation">Installation</option>
-                  <option value="interior">Interior Designing</option>
-                </select>
-              </div>
-
-              <div className="col-12">
-                <label className="form-label">Description</label>
-                <textarea
-                  className="form-control"
-                  rows="3"
-                  placeholder="Enter service description"
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label">Status</label>
-                <select
-                  className="form-select"
-                  value={form.status}
-                  onChange={(e) =>
-                    setForm({ ...form, status: e.target.value })
-                  }
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-
-              <div className="col-12 d-flex gap-2">
-                <button type="submit" className="btn save-service-btn">
-                  {editingId !== null ? "Update Service" : "Save Service"}
-                </button>
-
-                <button
-                  type="button"
-                  className="btn cancel-service-btn"
-                  onClick={() => setShowForm(false)}
-                >
-                  Cancel
-                </button>
-              </div>
+      {/* Cards */}
+      <div className="row g-3 mb-4">
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body">
+              <p className="text-muted">Total Services</p>
+              <h3 className="fw-bold">{services.length}</h3>
             </div>
-          </form>
+          </div>
         </div>
-      )}
 
-      <div className="services-table-card">
-        <div className="services-table-heading">
-          <h4>All Services</h4>
-          <span>{filteredServices.length} services found</span>
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body">
+              <p className="text-muted">Active Services</p>
+              <h3 className="fw-bold text-success">{activeServices}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body">
+              <p className="text-muted">Inactive Services</p>
+              <h3 className="fw-bold text-danger">{inactiveServices}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="card border-0 shadow-sm">
+        <div className="card-header bg-white py-3">
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h5 className="fw-bold mb-0">Services List</h5>
+
+            <input
+              type="text"
+              className="form-control"
+              style={{ maxWidth: "300px" }}
+              placeholder="Search service..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="table-responsive">
-          <table className="table align-middle services-table">
-            <thead>
+          <table className="table table-hover align-middle mb-0">
+            <thead className="table-light">
               <tr>
-                <th>Service</th>
-                <th>Description</th>
+                <th>S.No.</th>
+                <th>Image</th>
+                <th>Service Name</th>
+                <th>Category</th>
+                <th>Price</th>
                 <th>Status</th>
-                <th className="text-center">Actions</th>
+                <th>Action</th>
               </tr>
             </thead>
 
             <tbody>
-              {filteredServices.map((service) => (
-                <tr key={service.id}>
-                  <td>
-                    <div className="service-name-cell">
-                      <div className="service-icon">
-                        {serviceIcons[service.icon]}
-                      </div>
-                      <strong>{service.name}</strong>
-                    </div>
-                  </td>
-
-                  <td className="service-description">
-                    {service.description}
-                  </td>
-
-                  <td>
-                    <button
-                      type="button"
-                      className={`status-badge ${
-                        service.status === "Active"
-                          ? "status-active"
-                          : "status-inactive"
-                      }`}
-                      onClick={() => toggleStatus(service.id)}
-                      title="Click to change status"
-                    >
-                      {service.status}
-                    </button>
-                  </td>
-
-                  <td>
-                    <div className="service-actions">
-                      <button
-                        type="button"
-                        className="edit-service-btn"
-                        onClick={() => openEditForm(service)}
-                        aria-label={`Edit ${service.name}`}
-                        title="Edit"
-                      >
-                        <FaEdit />
-                      </button>
-
-                      <button
-                        type="button"
-                        className="delete-service-btn"
-                        onClick={() => deleteService(service.id)}
-                        aria-label={`Delete ${service.name}`}
-                        title="Delete"
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-4">
+                    Loading services...
                   </td>
                 </tr>
-              ))}
-
-              {filteredServices.length === 0 && (
+              ) : error ? (
                 <tr>
-                  <td colSpan="4" className="text-center py-5">
+                  <td colSpan="7" className="text-center text-danger py-4">
+                    {error}
+                  </td>
+                </tr>
+              ) : filteredServices.length > 0 ? (
+                filteredServices.map((service, index) => (
+                  <tr key={service.id}>
+                    <td>{index + 1}</td>
+
+                    <td>
+                      <img
+                        src={service.image}
+                        alt={service.title}
+                        width="65"
+                        height="50"
+                        style={{ objectFit: "cover", borderRadius: "6px" }}
+                      />
+                    </td>
+
+                    <td className="fw-semibold">{service.title}</td>
+                    <td>{service.category}</td>
+                    <td>{service.price}</td>
+
+                    <td>
+                      <span
+                        className={`badge ${
+                          service.status === "Active"
+                            ? "bg-success"
+                            : "bg-danger"
+                        }`}
+                      >
+                        {service.status}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="d-flex gap-2">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleEdit(service)}
+                          title="Edit"
+                        >
+                          <FaEdit />
+                        </button>
+
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(service.id)}
+                          title="Delete"
+                        >
+                          <MdDelete />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="text-center py-4">
                     No services found.
                   </td>
                 </tr>
@@ -369,6 +316,196 @@ function ManageServices() {
           </table>
         </div>
       </div>
+
+      {/* Add / Edit Modal */}
+      {showModal && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3"
+          style={{
+            background: "rgba(0,0,0,0.6)",
+            zIndex: 9999,
+            overflowY: "auto"
+          }}
+        >
+          <div
+            className="bg-white rounded-4 shadow p-4 my-auto"
+            style={{
+              width: "100%",
+              maxWidth: "650px",
+              maxHeight: "90vh",
+              overflowY: "auto"
+            }}
+          >
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h5 className="fw-bold mb-0">
+                {editId !== null ? "Edit Service" : "Add New Service"}
+              </h5>
+
+              <button
+                className="btn-close"
+                onClick={() => setShowModal(false)}
+              ></button>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div className="mb-3">
+                <label className="form-label fw-semibold">Service Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  className="form-control"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="Electrical Work"
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">Category</label>
+                <input
+                  type="text"
+                  name="category"
+                  className="form-control"
+                  value={formData.category}
+                  onChange={handleChange}
+                  placeholder="Electrical Solutions"
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">Image URL</label>
+                <input
+                  type="url"
+                  name="image"
+                  className="form-control"
+                  value={formData.image}
+                  onChange={handleChange}
+                  placeholder="https://example.com/image.jpg"
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">
+                  Short Description
+                </label>
+                <textarea
+                  name="shortDescription"
+                  className="form-control"
+                  rows="2"
+                  value={formData.shortDescription}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">Description</label>
+                <textarea
+                  name="description"
+                  className="form-control"
+                  rows="3"
+                  value={formData.description}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">Price</label>
+                <input
+                  type="text"
+                  name="price"
+                  className="form-control"
+                  value={formData.price}
+                  onChange={handleChange}
+                  placeholder="Custom Quote"
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">
+                  Benefits (one per line)
+                </label>
+                <textarea
+                  name="benefits"
+                  className="form-control"
+                  rows="3"
+                  value={formData.benefits}
+                  onChange={handleChange}
+                  placeholder={"Quality work\nProfessional team"}
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">
+                  Work Includes (one per line)
+                </label>
+                <textarea
+                  name="workIncludes"
+                  className="form-control"
+                  rows="3"
+                  value={formData.workIncludes}
+                  onChange={handleChange}
+                  placeholder={"Electrical Wiring\nLighting Installation"}
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">
+                  Process (one per line)
+                </label>
+                <textarea
+                  name="process"
+                  className="form-control"
+                  rows="3"
+                  value={formData.process}
+                  onChange={handleChange}
+                  placeholder={"Understand requirements\nPrepare plan"}
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="form-label fw-semibold">Status</label>
+                <select
+                  name="status"
+                  className="form-select"
+                  value={formData.status}
+                  onChange={handleChange}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+
+              <div className="d-flex justify-content-end gap-2">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={saving}
+                >
+                  {saving
+                    ? "Saving..."
+                    : editId !== null
+                    ? "Update Service"
+                    : "Save Service"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

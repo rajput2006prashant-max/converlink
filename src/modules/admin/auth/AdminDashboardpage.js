@@ -4,6 +4,7 @@ import axios from "axios";
 import { MdDelete } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
 import { FaListOl } from "react-icons/fa";
+import { toast,ToastContainer } from 'react-toastify';
 
 
 
@@ -22,6 +23,14 @@ function AdminDashboardpage() {
     }, [])
 
 
+const deletepro = (myid)=>{
+    console.log(myid)
+    axios.delete(`http://localhost:8700/admin/${myid}`).then((r)=>{
+        toast.success("user deleted successfully",{autoClose:2000,position:"top-center",theme:'dark'});
+        getadmin();
+    })
+}
+
 
 
       const [user, updateuser] = useState([])
@@ -35,6 +44,16 @@ function AdminDashboardpage() {
     useEffect(() => {
         getuser();
     }, [])
+
+
+    
+const deleteprou = (myid)=>{
+    console.log(myid)
+    axios.delete(`http://localhost:8700/user/${myid}`).then((r)=>{
+        toast.success("user deleted successfully",{autoClose:2000,position:"top-center",theme:'dark'});
+        getuser();
+    })
+}
 
      const [NewEnuiry, updateNewEnuiryt] = useState([])
     const getNewEnuiry = () => {
@@ -110,6 +129,7 @@ function AdminDashboardpage() {
         <div className="col-md-3">
           <div className="row">
 
+<ToastContainer/>
             <div className="col-md-12">
               <div className="card text-bg-danger mb-3 shadow">
                 <div className="card-body">
@@ -170,7 +190,7 @@ function AdminDashboardpage() {
                         <td>{d.role}</td>
                         <td>{d.comments}</td>
                         <td>
-                          <button className="btn btn-sm btn-danger">
+                          <button className="btn btn-sm btn-danger"onClick={()=>deletepro(d.id)}>
                           <MdDelete/>
                           </button>
                              <button className="btn btn-sm btn-warning ms-2">
@@ -230,7 +250,7 @@ function AdminDashboardpage() {
                         <td>{d.role}</td>
                         <td>{d.comments}</td>
                         <td>
-                          <button className="btn btn-sm btn-danger">
+                          <button className="btn btn-sm btn-danger"onClick={()=>deleteprou(d.id)}>
                           <MdDelete/>
                           </button>
                              <button className="btn btn-sm btn-warning ms-2">

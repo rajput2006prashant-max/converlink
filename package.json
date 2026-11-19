@@ -12,6 +12,7 @@
     "react-icons": "^5.7.0",
     "react-router-dom": "^7.18.4",
     "react-scripts": "5.0.1",
+    "react-share": "^6.1.0",
     "react-toastify": "^11.1.0",
     "recharts": "^3.10.1",
     "toastify": "^2.0.1"
@@ -20,7 +21,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "Server": "npx json-server --watch mydatabase.json --port 8700"
   },
   "eslintConfig": {
     "extends": [

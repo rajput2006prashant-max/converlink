@@ -3,6 +3,7 @@ import React, { Fragment, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import axios from "axios";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -12,6 +13,9 @@ function AdminForgotPassword() {
   const [emailVerified, setEmailVerified] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
   const [verifiedAdmin, setVerifiedAdmin] = useState(null);
+
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -199,6 +203,7 @@ function AdminForgotPassword() {
                     </strong>
                   </div>
 
+                  {/* NEW PASSWORD */}
                   <div className="mb-3">
 
                     <label
@@ -208,20 +213,37 @@ function AdminForgotPassword() {
                       New Password
                     </label>
 
-                    <input
-                      type="password"
-                      id="newPassword"
-                      className="form-control form-control-lg rounded-3"
-                      placeholder="Enter new password"
-                      autoComplete="new-password"
-                      {...register("newPassword", {
-                        required: "New password is required",
-                        minLength: {
-                          value: 6,
-                          message: "Minimum 6 characters required",
-                        },
-                      })}
-                    />
+                    <div className="input-group">
+                      <input
+                        type={showNewPassword ? "text" : "password"}
+                        id="newPassword"
+                        className="form-control form-control-lg"
+                        placeholder="Enter new password"
+                        autoComplete="new-password"
+                        {...register("newPassword", {
+                          required: "New password is required",
+                          minLength: {
+                            value: 6,
+                            message: "Minimum 6 characters required",
+                          },
+                        })}
+                      />
+
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() =>
+                          setShowNewPassword(!showNewPassword)
+                        }
+                        aria-label={
+                          showNewPassword
+                            ? "Hide new password"
+                            : "Show new password"
+                        }
+                      >
+                        {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
 
                     {errors.newPassword && (
                       <p className="text-danger small mt-1">
@@ -231,6 +253,7 @@ function AdminForgotPassword() {
 
                   </div>
 
+                  {/* CONFIRM PASSWORD */}
                   <div className="mb-4">
 
                     <label
@@ -240,19 +263,36 @@ function AdminForgotPassword() {
                       Confirm New Password
                     </label>
 
-                    <input
-                      type="password"
-                      id="confirmPassword"
-                      className="form-control form-control-lg rounded-3"
-                      placeholder="Confirm new password"
-                      autoComplete="new-password"
-                      {...register("confirmPassword", {
-                        required: "Please confirm your password",
-                        validate: (value) =>
-                          value === newPassword ||
-                          "Passwords do not match",
-                      })}
-                    />
+                    <div className="input-group">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        id="confirmPassword"
+                        className="form-control form-control-lg"
+                        placeholder="Confirm new password"
+                        autoComplete="new-password"
+                        {...register("confirmPassword", {
+                          required: "Please confirm your password",
+                          validate: (value) =>
+                            value === newPassword ||
+                            "Passwords do not match",
+                        })}
+                      />
+
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        aria-label={
+                          showConfirmPassword
+                            ? "Hide confirm password"
+                            : "Show confirm password"
+                        }
+                      >
+                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
 
                     {errors.confirmPassword && (
                       <p className="text-danger small mt-1">

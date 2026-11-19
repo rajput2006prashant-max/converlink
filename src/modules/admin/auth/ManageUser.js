@@ -1,436 +1,497 @@
 
-import React, { useState } from "react";
-import {
-  FaUsers,
-  FaSearch,
-  FaUserPlus,
-  FaEdit,
-  FaTrash,
-  FaTimes,
-  FaEnvelope,
-  FaPhone,
-  FaUserShield
-} from "react-icons/fa";
-
-
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { MdDelete } from "react-icons/md";
+import { FaEdit } from "react-icons/fa";
 function ManageUsers() {
-  const initialUsers = [
-    {
-      id: 1,
-      name: "Rahul Sharma",
-      email: "rahul@example.com",
-      phone: "9876543210",
-      role: "User",
-      status: "Active"
-    },
-    {
-      id: 2,
-      name: "Amit Verma",
-      email: "amit@example.com",
-      phone: "9876543211",
-      role: "Manager",
-      status: "Active"
-    },
-    {
-      id: 3,
-      name: "Priya Singh",
-      email: "priya@example.com",
-      phone: "9876543212",
-      role: "User",
-      status: "Inactive"
-    },
-    {
-      id: 4,
-      name: "Neha Gupta",
-      email: "neha@example.com",
-      phone: "9876543213",
-      role: "User",
-      status: "Active"
-    }
-  ];
+  const API = "http://localhost:8700/user";
 
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("All");
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const emptyForm = {
-    name: "",
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState(null);
+
+  const initialForm = {
+    username: "",
     email: "",
     phone: "",
-    role: "User",
-    status: "Active"
+    gender: "",
+    role: "user",
+    comments: ""
   };
 
-  const [form, setForm] = useState(emptyForm);
+  const [formData, setFormData] = useState(initialForm);
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase()) ||
-      user.phone.includes(search);
+  // 1. GET USERS DATA
+  const getUsers = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-    const matchesRole =
-      roleFilter === "All" || user.role === roleFilter;
+      const response = await axios.get(API);
 
-    return matchesSearch && matchesRole;
-  });
+      console.log("Users Data:", response.data);
 
-  const openAddForm = () => {
-    setEditingId(null);
-    setForm(emptyForm);
-    setShowForm(true);
+      setUsers(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      console.error("GET ERROR:", err);
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Users data load nahi ho raha hai."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const openEditForm = (user) => {
-    setEditingId(user.id);
-    setForm({ ...user });
-    setShowForm(true);
-  };
+  useEffect(() => {
+    getUsers();
+  }, []);
 
+  // 2. INPUT HANDLE
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setFormData({
+      ...formData,
+      [name]: value
+    });
   };
 
-  const handleSubmit = (e) => {
+  // 3. ADD / UPDATE USER
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (editingId !== null) {
-      setUsers((previous) =>
-        previous.map((user) =>
-          user.id === editingId ? { ...form, id: editingId } : user
-        )
-      );
-    } else {
-      const newUser = {
-        ...form,
-        id: Date.now()
-      };
-
-      setUsers((previous) => [newUser, ...previous]);
+    if (!formData.username.trim() || !formData.email.trim()) {
+      alert("Name aur Email required hain.");
+      return;
     }
 
-    setShowForm(false);
-    setForm(emptyForm);
-    setEditingId(null);
-  };
+    try {
+      if (editId) {
+        await axios.patch(`${API}/${editId}`, formData);
+        alert("User successfully updated!");
+      } else {
+        await axios.post(API, formData);
+        alert("New user successfully added!");
+      }
 
-  const deleteUser = (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      setUsers((previous) => previous.filter((user) => user.id !== id));
+      setFormData(initialForm);
+      setEditId(null);
+      setShowForm(false);
+
+      getUsers();
+    } catch (err) {
+      console.error("SAVE ERROR:", err);
+      alert("User save nahi hua. API check karo.");
     }
   };
 
-  const toggleStatus = (id) => {
-    setUsers((previous) =>
-      previous.map((user) =>
-        user.id === id
-          ? {
-              ...user,
-              status: user.status === "Active" ? "Inactive" : "Active"
-            }
-          : user
-      )
+  // 4. EDIT USER
+  const handleEdit = (user) => {
+    setEditId(user.id);
+
+    setFormData({
+      username: user.username || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      gender: user.gender || "",
+      role: user.role || "user",
+      comments: user.comments || ""
+    });
+
+    setShowForm(true);
+  };
+
+  // 5. DELETE USER
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Kya aap is user ko delete karna chahte hain?"
     );
+
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`${API}/${id}`);
+
+      alert("User successfully deleted!");
+
+      getUsers();
+    } catch (err) {
+      console.error("DELETE ERROR:", err);
+      alert("User delete nahi hua.");
+    }
+  };
+
+  // 6. SEARCH USERS
+  const filteredUsers = users.filter((user) => {
+    const searchValue = search.toLowerCase();
+
+    return (
+      String(user.username || "").toLowerCase().includes(searchValue) ||
+      String(user.email || "").toLowerCase().includes(searchValue) ||
+      String(user.phone || "").toLowerCase().includes(searchValue) ||
+      String(user.role || "").toLowerCase().includes(searchValue)
+    );
+  });
+
+  // 7. RESET FORM
+  const handleAddNew = () => {
+    setEditId(null);
+    setFormData(initialForm);
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditId(null);
+    setFormData(initialForm);
   };
 
   return (
-    <div className="manage-users-page">
-      {/* Header */}
-      <div className="mu-header">
+    <div className="container-fluid p-3">
+
+      {/* HEADER */}
+      <div className="d-flex justify-content-between align-items-center flex-wrap mb-4">
         <div>
-          <span className="mu-eyebrow">ADMINISTRATION</span>
-          <h2>Manage Users</h2>
-          <p>Manage company users, accounts and access roles.</p>
+          <h3 className="fw-bold mb-1">Manage Users</h3>
+          <p className="text-muted mb-0">
+            Manage all registered users
+          </p>
         </div>
 
-        <button className="mu-add-btn" onClick={openAddForm}>
-          <FaUserPlus /> Add New User
+        <button
+          className="btn text-white mt-2"
+          style={{ backgroundColor: "#087FC4" }}
+          onClick={handleAddNew}
+        >
+          <i className="bi bi-plus-lg me-2"></i>
+          Add New User
         </button>
       </div>
 
-      {/* Statistics */}
-      <div className="mu-stats">
-        <div className="mu-stat-card">
-          <div className="mu-stat-icon blue"><FaUsers /></div>
-          <div>
-            <p>Total Users</p>
-            <h3>{users.length}</h3>
+      {/* SUMMARY CARDS */}
+      <div className="row g-3 mb-4">
+
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body">
+              <p className="text-muted mb-1">Total Users</p>
+              <h3 className="fw-bold mb-0">{users.length}</h3>
+            </div>
           </div>
         </div>
 
-        <div className="mu-stat-card">
-          <div className="mu-stat-icon green"><FaUserShield /></div>
-          <div>
-            <p>Active Users</p>
-            <h3>{users.filter((u) => u.status === "Active").length}</h3>
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body">
+              <p className="text-muted mb-1">User Accounts</p>
+              <h3 className="fw-bold text-success mb-0">
+                {users.filter(user => user.role === "user").length}
+              </h3>
+            </div>
           </div>
         </div>
 
-        <div className="mu-stat-card">
-          <div className="mu-stat-icon purple"><FaUserShield /></div>
-          <div>
-            <p>Managers</p>
-            <h3>{users.filter((u) => u.role === "Manager").length}</h3>
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body">
+              <p className="text-muted mb-1">Other Roles</p>
+              <h3 className="fw-bold text-primary mb-0">
+                {users.filter(user => user.role !== "user").length}
+              </h3>
+            </div>
           </div>
         </div>
+
       </div>
 
-      {/* User Table */}
-      <section className="mu-panel">
-        <div className="mu-toolbar">
-          <div>
-            <h4>All Users</h4>
-            <p>{filteredUsers.length} users found</p>
-          </div>
+      {/* USER TABLE */}
+      <div className="card border-0 shadow-sm">
 
-          <div className="mu-filters">
-            <div className="mu-search">
-              <FaSearch />
+        <div className="card-header bg-white py-3">
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+            <h5 className="fw-bold mb-0">User List</h5>
+
+            <div className="d-flex gap-2">
               <input
                 type="text"
-                placeholder="Search name, email or phone..."
+                className="form-control"
+                placeholder="Search users..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
+
+              <button
+                className="btn btn-outline-primary"
+                onClick={getUsers}
+                title="Refresh"
+              >
+                <i className="bi bi-arrow-clockwise"></i>
+              </button>
             </div>
 
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              aria-label="Filter users by role"
-            >
-              <option value="All">All Roles</option>
-              <option value="Admin">Admin</option>
-              <option value="Manager">Manager</option>
-              <option value="User">User</option>
-            </select>
           </div>
         </div>
 
-        <div className="mu-table-wrap">
-          <table className="mu-table">
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Contact</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+        <div className="card-body p-0">
 
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>
-                    <div className="mu-user-info">
-                      <div className="mu-avatar">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <strong>{user.name}</strong>
-                        <small>ID: {user.id}</small>
-                      </div>
-                    </div>
-                  </td>
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary"></div>
+              <p className="mt-2 mb-0">Loading users...</p>
+            </div>
+          ) : error ? (
+            <div className="alert alert-danger m-3">
+              {error}
+              <button
+                className="btn btn-sm btn-outline-danger ms-3"
+                onClick={getUsers}
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <div className="table-responsive">
 
-                  <td>
-                    <div className="mu-contact">
-                      <span><FaEnvelope /> {user.email}</span>
-                      <span><FaPhone /> {user.phone}</span>
-                    </div>
-                  </td>
+              <table className="table table-hover align-middle mb-0">
 
-                  <td>
-                    <span className={`mu-role ${user.role.toLowerCase()}`}>
-                      {user.role}
-                    </span>
-                  </td>
+                <thead className="table-light">
+                  <tr>
+                    <th>S.No</th>
+                    <th>User Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Gender</th>
+                    <th>Role</th>
+                    <th>Comments</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
 
-                  <td>
-                    <button
-                      type="button"
-                      className={`mu-status ${user.status.toLowerCase()}`}
-                      onClick={() => toggleStatus(user.id)}
-                      title="Click to change status"
-                    >
-                      <span />
-                      {user.status}
-                    </button>
-                  </td>
+                <tbody>
 
-                  <td>
-                    <div className="mu-actions">
-                      <button
-                        className="mu-icon-btn edit"
-                        title="Edit user"
-                        onClick={() => openEditForm(user)}
-                      >
-                        <FaEdit />
-                      </button>
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user, index) => (
+                      <tr key={user.id}>
 
-                      <button
-                        className="mu-icon-btn delete"
-                        title="Delete user"
-                        onClick={() => deleteUser(user.id)}
-                      >
-                        <FaTrash />
-                      </button>
+                        <td>{index + 1}</td>
 
-                      <button
-                        className="mu-icon-btn view"
-                        title="View user"
-                        onClick={() => setSelectedUser(user)}
-                      >
-                        <FaUsers />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        <td className="fw-semibold">
+                          {user.username || "-"}
+                        </td>
 
-              {filteredUsers.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="mu-no-data">
-                    No users found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                        <td>{user.email || "-"}</td>
+
+                        <td>{user.phone || "-"}</td>
+
+                        <td>
+                          {user.gender || "-"}
+                        </td>
+
+                        <td>
+                          <span className="badge bg-primary">
+                            {user.role || "user"}
+                          </span>
+                        </td>
+
+                        <td>
+                          {user.comments || "-"}
+                        </td>
+
+                        <td>
+                          <div className="d-flex gap-2">
+
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => handleEdit(user)}
+                              title="Edit"
+                            >
+                                <MdDelete/>
+                            </button>
+
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleDelete(user.id)}
+                              title="Delete"
+                            >
+                               <FaEdit/>
+                            </button>
+
+                          </div>
+                        </td>
+
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="text-center py-4">
+                        No users found.
+                      </td>
+                    </tr>
+                  )}
+
+                </tbody>
+
+              </table>
+
+            </div>
+          )}
+
         </div>
-      </section>
 
-      {/* Add/Edit Modal */}
+        <div className="card-footer bg-white text-muted">
+          Showing {filteredUsers.length} of {users.length} users
+        </div>
+
+      </div>
+
+      {/* ADD / EDIT FORM */}
       {showForm && (
-        <div className="mu-modal-backdrop">
-          <div className="mu-modal">
-            <div className="mu-modal-heading">
-              <div>
-                <h4>{editingId !== null ? "Edit User" : "Add New User"}</h4>
-                <p>Enter user details below.</p>
-              </div>
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 1050,
+            padding: "15px"
+          }}
+        >
 
-              <button
-                className="mu-close-btn"
-                onClick={() => setShowForm(false)}
-                aria-label="Close form"
-              >
-                <FaTimes />
-              </button>
-            </div>
+          <div
+            className="card border-0 shadow"
+            style={{ width: "550px", maxWidth: "100%", maxHeight: "90vh", overflowY: "auto" }}
+          >
 
-            <form onSubmit={handleSubmit}>
-              <label>Full Name</label>
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Enter full name"
-                required
-              />
-
-              <label>Email Address</label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="Enter email address"
-                required
-              />
-
-              <label>Phone Number</label>
-              <input
-                type="tel"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                placeholder="Enter phone number"
-                required
-              />
-
-              <div className="mu-form-row">
-                <div>
-                  <label>Role</label>
-                  <select name="role" value={form.role} onChange={handleChange}>
-                    <option value="User">User</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Admin">Admin</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label>Status</label>
-                  <select name="status" value={form.status} onChange={handleChange}>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mu-form-actions">
-                <button
-                  type="button"
-                  className="mu-cancel-btn"
-                  onClick={() => setShowForm(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="mu-add-btn">
-                  {editingId !== null ? "Save Changes" : "Add User"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* View User Modal */}
-      {selectedUser && (
-        <div className="mu-modal-backdrop">
-          <div className="mu-modal mu-view-modal">
-            <div className="mu-modal-heading">
-              <h4>User Details</h4>
-              <button
-                className="mu-close-btn"
-                onClick={() => setSelectedUser(null)}
-                aria-label="Close details"
-              >
-                <FaTimes />
-              </button>
-            </div>
-
-            <div className="mu-detail-avatar">
-              {selectedUser.name.charAt(0).toUpperCase()}
-            </div>
-            <h3 className="mu-detail-name">{selectedUser.name}</h3>
-
-            <div className="mu-detail-row">
-              <strong>Email</strong><span>{selectedUser.email}</span>
-            </div>
-            <div className="mu-detail-row">
-              <strong>Phone</strong><span>{selectedUser.phone}</span>
-            </div>
-            <div className="mu-detail-row">
-              <strong>Role</strong><span>{selectedUser.role}</span>
-            </div>
-            <div className="mu-detail-row">
-              <strong>Status</strong><span>{selectedUser.status}</span>
-            </div>
-
-            <button
-              className="mu-add-btn mu-full-btn"
-              onClick={() => setSelectedUser(null)}
+            <div className="card-header text-white d-flex justify-content-between align-items-center"
+              style={{ backgroundColor: "#102D4F" }}
             >
-              Close
-            </button>
+              <h5 className="mb-0">
+                {editId ? "Edit User" : "Add New User"}
+              </h5>
+
+              <button
+                className="btn-close btn-close-white"
+                onClick={closeForm}
+              ></button>
+            </div>
+
+            <div className="card-body">
+
+              <form onSubmit={handleSubmit}>
+
+                <div className="mb-3">
+                  <label className="form-label">User Name *</label>
+                  <input
+                    type="text"
+                    name="username"
+                    className="form-control"
+                    placeholder="Enter user name"
+                    value={formData.username}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Email *</label>
+                  <input
+                    type="email"
+                    name="email"
+                    className="form-control"
+                    placeholder="Enter email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Phone</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    className="form-control"
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Gender</label>
+                  <select
+                    name="gender"
+                    className="form-select"
+                    value={formData.gender}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Role</label>
+                  <select
+                    name="role"
+                    className="form-select"
+                    value={formData.role}
+                    onChange={handleChange}
+                  >
+                    <option value="user">User</option>
+                    <option value="student">Student</option>
+                    <option value="employee">Employee</option>
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Comments</label>
+                  <textarea
+                    name="comments"
+                    className="form-control"
+                    rows="3"
+                    placeholder="Enter comments"
+                    value={formData.comments}
+                    onChange={handleChange}
+                  ></textarea>
+                </div>
+
+                <div className="d-flex justify-content-end gap-2">
+
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={closeForm}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="btn text-white"
+                    style={{ backgroundColor: "#087FC4" }}
+                  >
+                    {editId ? "Update User" : "Save User"}
+                  </button>
+
+                </div>
+
+              </form>
+
+            </div>
+
           </div>
+
         </div>
       )}
+
     </div>
   );
 }

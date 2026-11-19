@@ -1,28 +1,66 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 
-import serviceData from "../Userdashboard/ServiceData";
+const API = "http://localhost:8700/Services";
+const ENQUIRY_API = "http://localhost:8700/NewEnuiry";
 
 function ServiceDetails() {
   const { id } = useParams();
 
-  const service = serviceData.find(
-    (item) => String(item.id) === id
-  );
+  const [serviceData, setServiceData] = useState([]);
+  const [serviceLoading, setServiceLoading] = useState(true);
+  const [serviceError, setServiceError] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     mobile: "",
+    amount: "",
     message: "",
   });
 
   const [success, setSuccess] = useState("");
+  const [messageType, setMessageType] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Service-wise gallery images
+  // FETCH SERVICES
+  const getServices = async () => {
+    try {
+      setServiceLoading(true);
+      setServiceError("");
+
+      const response = await axios.get(API);
+
+      const activeServices = response.data.filter(
+        (item) =>
+          !item.status ||
+          String(item.status).toLowerCase() === "active"
+      );
+
+      setServiceData(activeServices);
+    } catch (error) {
+      console.error("Services Fetch Error:", error);
+
+      setServiceError(
+        "Services load nahi ho pa rahi hain. JSON Server check karo."
+      );
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getServices();
+  }, []);
+
+  // FIND SERVICE
+  const service = serviceData.find(
+    (item) => String(item.id) === String(id)
+  );
+
+  // GALLERY IMAGES
   const galleryImages = {
     1: [
       "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=900&q=80",
@@ -50,7 +88,7 @@ function ServiceDetails() {
     ],
   };
 
-  // FAQs
+  // FAQ
   const faqs = [
     {
       question: `What is included in ${service?.title}?`,
@@ -73,7 +111,7 @@ function ServiceDetails() {
     },
   ];
 
-  // Customer reviews (demo content)
+  // DEMO REVIEWS
   const reviews = [
     {
       name: "Amit Sharma",
@@ -98,60 +136,141 @@ function ServiceDetails() {
     },
   ];
 
-  // Form input handle
+  // FORM INPUT
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  // Enquiry submit to JSON Server
+  // SUBMIT ENQUIRY
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!service) return;
-
-    setLoading(true);
     setSuccess("");
+    setMessageType("");
 
-    const newEnquiry = {
-      clientName: formData.name,
-      email: formData.email,
-      mobile: formData.mobile,
-      serviceId: service.id,
-      service: service.title,
-      message: formData.message,
-      date: new Date().toLocaleDateString("en-IN"),
-      enquiryDate: new Date().toISOString(),
-      status: "New",
-    };
+    if (!service) {
+      setMessageType("danger");
+      setSuccess("Service details nahi mili.");
+      return;
+    }
+
+    if (!/^[0-9]{10}$/.test(formData.mobile.trim())) {
+      setMessageType("danger");
+      setSuccess("Please enter a valid 10 digit mobile number.");
+      return;
+    }
+
+    if (
+      !formData.amount ||
+      !Number.isFinite(Number(formData.amount)) ||
+      Number(formData.amount) <= 0
+    ) {
+      setMessageType("danger");
+      setSuccess("Please enter a valid project amount.");
+      return;
+    }
 
     try {
+      setLoading(true);
+
+      const newEnquiry = {
+        clientName: formData.name.trim(),
+        email: formData.email.trim(),
+        mobile: formData.mobile.trim(),
+
+        // CUSTOMER AMOUNT
+        amount: Number(formData.amount),
+
+        serviceId: service.id,
+        service: service.title,
+        message: formData.message.trim(),
+        date: new Date().toLocaleDateString("en-IN"),
+        enquiryDate: new Date().toISOString(),
+        status: "New",
+      };
+
+      console.log("Enquiry Data Sending:", newEnquiry);
+
       const response = await axios.post(
-        "http://localhost:8700/NewEnuiry",
-        newEnquiry
+        ENQUIRY_API,
+        newEnquiry,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       console.log("Enquiry Saved:", response.data);
 
-      setSuccess("Your enquiry has been submitted successfully!");
+      setMessageType("success");
+      setSuccess(
+        "Your enquiry has been submitted successfully!"
+      );
 
+      // RESET FORM
       setFormData({
         name: "",
         email: "",
         mobile: "",
+        amount: "",
         message: "",
       });
+
     } catch (error) {
-      console.error("Enquiry Error:", error);
-      setSuccess("Enquiry submit nahi hui. Please try again.");
+      console.error("Enquiry Submit Error:", error);
+
+      setMessageType("danger");
+
+      if (error.response) {
+        setSuccess(
+          `Error ${error.response.status}: Enquiry save nahi hui.`
+        );
+      } else if (error.request) {
+        setSuccess(
+          "JSON Server connect nahi ho raha. Server start karo."
+        );
+      } else {
+        setSuccess("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Service not found
+  // SERVICE LOADING
+  if (serviceLoading) {
+    return (
+      <div className="container py-5 text-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <h5 className="mt-3">Loading Service Details...</h5>
+      </div>
+    );
+  }
+
+  // API ERROR
+  if (serviceError) {
+    return (
+      <div className="container py-5 text-center">
+        <h4 className="text-danger">{serviceError}</h4>
+        <button
+          className="btn btn-primary mt-3"
+          onClick={getServices}
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  // SERVICE NOT FOUND
   if (!service) {
     return (
       <div className="container py-5 text-center">
@@ -166,7 +285,8 @@ function ServiceDetails() {
     );
   }
 
-  const images = galleryImages[service.id] || [service.image];
+  const images = galleryImages[service.id] ||
+    (service.image ? [service.image] : []);
 
   const relatedServices = serviceData.filter(
     (item) => String(item.id) !== String(service.id)
@@ -180,7 +300,7 @@ function ServiceDetails() {
         className="position-relative text-white d-flex align-items-center"
         style={{
           minHeight: "430px",
-          backgroundImage: `linear-gradient(90deg, rgba(8,30,55,0.95), rgba(8,30,55,0.55)), url(${service.image})`,
+          backgroundImage: `linear-gradient(90deg, rgba(8,30,55,0.95), rgba(8,30,55,0.55)), url(${service.image || ""})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -215,11 +335,17 @@ function ServiceDetails() {
               </p>
 
               <div className="d-flex flex-wrap gap-3">
-                <a href="#enquiry" className="btn btn-info btn-lg fw-semibold">
+                <a
+                  href="#enquiry"
+                  className="btn btn-info btn-lg fw-semibold"
+                >
                   Get a Free Quote →
                 </a>
 
-                <a href="#about" className="btn btn-outline-light btn-lg">
+                <a
+                  href="#about"
+                  className="btn btn-outline-light btn-lg"
+                >
                   Explore Service
                 </a>
               </div>
@@ -280,20 +406,25 @@ function ServiceDetails() {
               What Makes Our Service Special?
             </h5>
 
-            {service.benefits?.map((benefit, index) => (
-              <div key={index} className="d-flex align-items-center mb-3">
-                <span
-                  className="rounded-circle bg-info text-white d-flex align-items-center justify-content-center me-3"
-                  style={{ width: "28px", height: "28px", flexShrink: 0 }}
-                >
-                  ✓
-                </span>
-                <span className="text-secondary">{benefit}</span>
-              </div>
-            ))}
+            {(Array.isArray(service.benefits) ? service.benefits : []).map(
+              (benefit, index) => (
+                <div key={index} className="d-flex align-items-center mb-3">
+                  <span
+                    className="rounded-circle bg-info text-white d-flex align-items-center justify-content-center me-3"
+                    style={{ width: "28px", height: "28px", flexShrink: 0 }}
+                  >
+                    ✓
+                  </span>
+                  <span className="text-secondary">{benefit}</span>
+                </div>
+              )
+            )}
 
             <h5 className="fw-bold mt-4">
-              Pricing: <span className="text-primary">{service.price}</span>
+              Pricing:{" "}
+              <span className="text-primary">
+                {service.price || "Custom Quote"}
+              </span>
             </h5>
           </div>
         </div>
@@ -311,17 +442,19 @@ function ServiceDetails() {
           </div>
 
           <div className="row g-3">
-            {service.workIncludes?.map((work, index) => (
-              <div className="col-md-6 col-lg-4" key={index}>
-                <div className="border rounded-4 p-4 h-100 shadow-sm">
-                  <div className="text-info fs-3 mb-2">✦</div>
-                  <h5 className="fw-bold">{work}</h5>
-                  <p className="text-secondary small mb-0">
-                    Planned according to your project requirements.
-                  </p>
+            {(Array.isArray(service.workIncludes) ? service.workIncludes : []).map(
+              (work, index) => (
+                <div className="col-md-6 col-lg-4" key={index}>
+                  <div className="border rounded-4 p-4 h-100 shadow-sm">
+                    <div className="text-info fs-3 mb-2">✦</div>
+                    <h5 className="fw-bold">{work}</h5>
+                    <p className="text-secondary small mb-0">
+                      Planned according to your project requirements.
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         </div>
       </section>
@@ -343,10 +476,7 @@ function ServiceDetails() {
                 src={image}
                 alt={`${service.title} gallery ${index + 1}`}
                 className="img-fluid rounded-4 shadow-sm w-100"
-                style={{
-                  height: "220px",
-                  objectFit: "cover",
-                }}
+                style={{ height: "220px", objectFit: "cover" }}
               />
             </div>
           ))}
@@ -365,21 +495,23 @@ function ServiceDetails() {
           </div>
 
           <div className="row g-4">
-            {service.process?.map((step, index) => (
-              <div className="col-md-6 col-lg-3" key={index}>
-                <div className="border border-secondary rounded-4 p-4 h-100">
-                  <div
-                    className="rounded-circle bg-info text-dark fw-bold d-flex align-items-center justify-content-center mb-4"
-                    style={{ width: "55px", height: "55px", fontSize: "22px" }}
-                  >
-                    0{index + 1}
-                  </div>
+            {(Array.isArray(service.process) ? service.process : []).map(
+              (step, index) => (
+                <div className="col-md-6 col-lg-3" key={index}>
+                  <div className="border border-secondary rounded-4 p-4 h-100">
+                    <div
+                      className="rounded-circle bg-info text-dark fw-bold d-flex align-items-center justify-content-center mb-4"
+                      style={{ width: "55px", height: "55px", fontSize: "22px" }}
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </div>
 
-                  <h5 className="fw-bold">Step {index + 1}</h5>
-                  <p className="text-light mb-0">{step}</p>
+                    <h5 className="fw-bold">Step {index + 1}</h5>
+                    <p className="text-light mb-0">{step}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         </div>
       </section>
@@ -474,7 +606,7 @@ function ServiceDetails() {
             <div className="col-md-6 col-lg-4" key={item.id}>
               <div className="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
                 <img
-                  src={item.image}
+                  src={item.image || "https://placehold.co/600x400?text=Service"}
                   alt={item.title}
                   className="card-img-top"
                   style={{ height: "210px", objectFit: "cover" }}
@@ -515,11 +647,13 @@ function ServiceDetails() {
             <div className="col-lg-9">
               <div className="bg-white shadow-lg rounded-4 overflow-hidden">
                 <div className="row g-0">
+
                   <div
                     className="col-lg-5 text-white p-4 p-md-5 d-flex flex-column justify-content-center"
                     style={{ backgroundColor: "#102D4F" }}
                   >
                     <p className="text-info fw-bold">LET'S CONNECT</p>
+
                     <h2 className="fw-bold">
                       Start Your Project With Us
                     </h2>
@@ -538,28 +672,25 @@ function ServiceDetails() {
 
                   <div className="col-lg-7 p-4 p-md-5">
                     <h3 className="fw-bold mb-2">Send an Enquiry</h3>
+
                     <p className="text-secondary">
                       Fill in your details below.
                     </p>
 
                     {success && (
-                      <div
-                        className={`alert ${
-                          success.includes("successfully")
-                            ? "alert-success"
-                            : "alert-danger"
-                        }`}
-                        role="alert"
-                      >
+                      <div className={`alert alert-${messageType}`} role="alert">
                         {success}
                       </div>
                     )}
 
                     <form onSubmit={handleSubmit}>
+
+                      {/* NAME */}
                       <div className="mb-3">
                         <label className="form-label fw-semibold">
                           Full Name
                         </label>
+
                         <input
                           type="text"
                           name="name"
@@ -571,10 +702,12 @@ function ServiceDetails() {
                         />
                       </div>
 
+                      {/* EMAIL */}
                       <div className="mb-3">
                         <label className="form-label fw-semibold">
                           Email Address
                         </label>
+
                         <input
                           type="email"
                           name="email"
@@ -586,15 +719,17 @@ function ServiceDetails() {
                         />
                       </div>
 
+                      {/* MOBILE */}
                       <div className="mb-3">
                         <label className="form-label fw-semibold">
                           Mobile Number
                         </label>
+
                         <input
                           type="tel"
                           name="mobile"
                           className="form-control form-control-lg"
-                          placeholder="Enter mobile number"
+                          placeholder="Enter 10 digit mobile number"
                           pattern="[0-9]{10}"
                           maxLength="10"
                           value={formData.mobile}
@@ -603,10 +738,39 @@ function ServiceDetails() {
                         />
                       </div>
 
+                      {/* AMOUNT */}
+                      <div className="mb-3">
+                        <label className="form-label fw-semibold">
+                          Project Amount (₹)
+                        </label>
+
+                        <div className="input-group input-group-lg">
+                          <span className="input-group-text">₹</span>
+
+                          <input
+                            type="number"
+                            name="amount"
+                            className="form-control"
+                            placeholder="Enter your project amount"
+                            min="1"
+                            step="1"
+                            value={formData.amount}
+                            onChange={handleChange}
+                            required
+                          />
+                        </div>
+
+                        <small className="text-muted">
+                          Enter your estimated project budget.
+                        </small>
+                      </div>
+
+                      {/* MESSAGE */}
                       <div className="mb-3">
                         <label className="form-label fw-semibold">
                           Project Requirements
                         </label>
+
                         <textarea
                           name="message"
                           className="form-control"
@@ -618,13 +782,22 @@ function ServiceDetails() {
                         />
                       </div>
 
+                      {/* SUBMIT BUTTON */}
                       <button
                         type="submit"
                         className="btn btn-primary btn-lg w-100"
                         disabled={loading}
                       >
-                        {loading ? "Submitting..." : "Submit Enquiry →"}
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2"></span>
+                            Submitting...
+                          </>
+                        ) : (
+                          "Submit Enquiry →"
+                        )}
                       </button>
+
                     </form>
                   </div>
                 </div>
@@ -648,11 +821,15 @@ function ServiceDetails() {
             Connect with Converlink Engineering for your next project.
           </p>
 
-          <a href="#enquiry" className="btn btn-info btn-lg fw-semibold mt-2">
+          <a
+            href="#enquiry"
+            className="btn btn-info btn-lg fw-semibold mt-2"
+          >
             Contact Our Team
           </a>
         </div>
       </section>
+
     </div>
   );
 }

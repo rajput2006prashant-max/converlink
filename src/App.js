@@ -11,12 +11,18 @@ import Welcome from "./Welcome";
 import AdminLogin from "./modules/admin/auth/AdminLogin";
 import AdminForget from "./modules/admin/auth/AdminForget";
 import AdminRegister from "./modules/admin/auth/AdminRegister";
+
 import AdminLandingpage from "./modules/admin/auth/AdminLandingpage";
 import ManageServices from "./modules/admin/auth/ManageServices";
+import ManageAdmin from "./modules/admin/auth/ManageAdmin";
 import AdminDashboardpage from "./modules/admin/auth/AdminDashboardpage";
 import ManageProject from "./modules/admin/auth/ManageProject";
 import Enquiries from "./modules/admin/auth/Enquiries";
 import ManageUser from "./modules/admin/auth/ManageUser";
+import ManageOrder from "./modules/admin/auth/ManageOrder";
+import Quotations from "./modules/admin/auth/Quotations";
+import Invoices from "./modules/admin/auth/Invoices";
+import Reports from "./modules/admin/auth/Reports";
 import MyProfile from "./modules/admin/auth/MyProfile";
 import Settings from "./modules/admin/auth/Settings";
 import Message from "./modules/admin/auth/Message";
@@ -70,13 +76,18 @@ function App() {
       <Route path="/adminlandingpage" element={<AdminLandingpage />}>
         <Route index element={<AdminDashboardpage />} />
         <Route path="ManageServices" element={<ManageServices />} />
+             <Route path="ManageAdmin" element={<ManageAdmin/>} />
         <Route path="ManageProject" element={<ManageProject />} />
         <Route path="Enquiries" element={<Enquiries />} />
         <Route path="ManageUser" element={<ManageUser />} />
+         <Route path="ManageOrder" element={<ManageOrder />} />
+          <Route path="Quotations" element={<Quotations />} />
+          <Route path="Invoices" element={<Invoices />} />
         <Route path="MyProfile" element={<MyProfile />} />
         <Route path="Settings" element={<Settings />} />
         <Route path="Message" element={<Message />} />
         <Route path="Notification" element={<Notification />} />
+           <Route path="Reports" element={<Reports />} />
         <Route path="AdminSearch" element={<AdminSearch />} />
 
         <Route path="*" element={<Errorpage />} />

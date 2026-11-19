@@ -2,12 +2,16 @@
 import React, { Fragment, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { FaEnvelope, FaLock } from "react-icons/fa";
+import {
+  FaEnvelope,
+  FaLock,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function UserForgot() {
-
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -15,21 +19,21 @@ function UserForgot() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [verifiedUser, setVerifiedUser] = useState(null);
 
+  // Password Eye States
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   // Verify Email Function
   const handleEmailSubmit = async (e) => {
-
     e.preventDefault();
 
     try {
-
-      // Get Users From JSON Server
       const response = await axios.get(
         "http://localhost:8700/user"
       );
 
       const users = response.data;
 
-      // Find User By Email
       const user = users.find(
         (item) =>
           item.email &&
@@ -38,7 +42,6 @@ function UserForgot() {
       );
 
       if (!user) {
-
         toast.error("This email is not registered!", {
           autoClose: 2500,
           position: "top-right",
@@ -47,7 +50,6 @@ function UserForgot() {
         return;
       }
 
-      // Save Verified User
       setVerifiedUser(user);
 
       toast.success("Email verified! Set your new password.", {
@@ -56,39 +58,29 @@ function UserForgot() {
       });
 
     } catch (error) {
-
       console.log(error);
 
       toast.error("JSON Server is not running!", {
         autoClose: 2500,
       });
-
     }
-
   };
 
   // Reset Password Function
   const handlePasswordReset = async (e) => {
-
     e.preventDefault();
 
     if (newPassword.length < 6) {
-
       toast.error("Password must be at least 6 characters!");
-
       return;
     }
 
     if (newPassword !== confirmPassword) {
-
       toast.error("Password and Confirm Password do not match!");
-
       return;
     }
 
     try {
-
-      // Update Password In JSON Server
       await axios.patch(
         `http://localhost:8700/user/${verifiedUser.id}`,
         {
@@ -108,21 +100,18 @@ function UserForgot() {
       setEmail("");
       setNewPassword("");
       setConfirmPassword("");
+      setShowPassword(false);
+      setShowConfirmPassword(false);
 
     } catch (error) {
-
       console.log(error);
 
       toast.error("Password reset failed. Please try again!");
-
     }
-
   };
 
   return (
-
     <Fragment>
-
       <ToastContainer />
 
       <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">
@@ -131,7 +120,6 @@ function UserForgot() {
           className="card border-0 shadow-lg rounded-4 overflow-hidden w-100"
           style={{ maxWidth: "900px" }}
         >
-
           <div className="row g-0">
 
             {/* Left Section */}
@@ -153,11 +141,9 @@ function UserForgot() {
               </p>
 
               <div className="mt-4">
-
                 <span className="badge bg-white text-primary rounded-pill p-3">
                   Simple. Secure. Smart.
                 </span>
-
               </div>
 
             </div>
@@ -233,6 +219,7 @@ function UserForgot() {
                     Email Verified: {verifiedUser.email}
                   </div>
 
+                  {/* New Password */}
                   <div className="mb-3">
 
                     <label
@@ -242,20 +229,33 @@ function UserForgot() {
                       New Password
                     </label>
 
-                    <input
-                      id="newPassword"
-                      type="password"
-                      className="form-control form-control-lg"
-                      placeholder="Enter new password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      minLength={6}
-                      autoComplete="new-password"
-                      required
-                    />
+                    <div className="input-group">
+
+                      <input
+                        id="newPassword"
+                        type={showPassword ? "text" : "password"}
+                        className="form-control form-control-lg"
+                        placeholder="Enter new password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        minLength={6}
+                        autoComplete="new-password"
+                        required
+                      />
+
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+
+                    </div>
 
                   </div>
 
+                  {/* Confirm Password */}
                   <div className="mb-3">
 
                     <label
@@ -265,17 +265,33 @@ function UserForgot() {
                       Confirm New Password
                     </label>
 
-                    <input
-                      id="confirmPassword"
-                      type="password"
-                      className="form-control form-control-lg"
-                      placeholder="Confirm new password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      minLength={6}
-                      autoComplete="new-password"
-                      required
-                    />
+                    <div className="input-group">
+
+                      <input
+                        id="confirmPassword"
+                        type={
+                          showConfirmPassword ? "text" : "password"
+                        }
+                        className="form-control form-control-lg"
+                        placeholder="Confirm new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        minLength={6}
+                        autoComplete="new-password"
+                        required
+                      />
+
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+
+                    </div>
 
                   </div>
 
@@ -290,6 +306,7 @@ function UserForgot() {
 
               )}
 
+              {/* Login Link */}
               <div className="text-center mt-4">
 
                 <Link
@@ -301,6 +318,7 @@ function UserForgot() {
 
               </div>
 
+              {/* Home Link */}
               <div className="text-center mt-3">
 
                 <Link
@@ -313,17 +331,11 @@ function UserForgot() {
               </div>
 
             </div>
-
           </div>
-
         </div>
-
       </div>
-
     </Fragment>
-
   );
-
 }
 
 export default UserForgot;

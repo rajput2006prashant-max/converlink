@@ -1,392 +1,764 @@
 
-import React, { useState } from "react";
-import {
-  FaEnvelope,
-  FaEye,
-  FaTrash,
-  FaSearch,
-  FaTimes,
-  FaPhoneAlt,
-  FaCalendarAlt,
-  FaUser,
-} from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { CiViewList } from "react-icons/ci";
+import { MdDelete } from "react-icons/md";
 
-
-
-const initialEnquiries = [
-  {
-    id: 1,
-    name: "Rahul Sharma",
-    email: "rahul@example.com",
-    phone: "9876543210",
-    service: "Electrical Work",
-    message: "I need electrical installation for my new office.",
-    date: "2026-10-20",
-    status: "New",
-  },
-  {
-    id: 2,
-    name: "Amit Verma",
-    email: "amit@example.com",
-    phone: "9876501234",
-    service: "Maintenance",
-    message: "I want regular maintenance for our commercial building.",
-    date: "2026-10-21",
-    status: "In Progress",
-  },
-  {
-    id: 3,
-    name: "Priya Singh",
-    email: "priya@example.com",
-    phone: "9876512340",
-    service: "Interior Designing",
-    message: "Please share details about office interior design.",
-    date: "2026-10-22",
-    status: "Resolved",
-  },
-  {
-    id: 4,
-    name: "Vikas Kumar",
-    email: "vikas@example.com",
-    phone: "9876523451",
-    service: "Installation",
-    message: "I need installation services for office equipment.",
-    date: "2026-10-23",
-    status: "New",
-  },
-];
+const ENQUIRY_API = "http://localhost:8700/NewEnuiry";
+const PROJECT_API = "http://localhost:8700/totalproject";
 
 function ManageEnquiries() {
-  const [enquiries, setEnquiries] = useState(initialEnquiries);
+  const [enquiries, setEnquiries] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
 
-  const filteredEnquiries = enquiries.filter((enquiry) => {
-    const searchText = [
-      enquiry.name,
-      enquiry.email,
-      enquiry.service,
-      enquiry.phone,
-    ]
-      .join(" ")
-      .toLowerCase();
+  // Fetch Enquiries
+  const getEnquiries = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-    const matchesSearch = searchText.includes(search.toLowerCase());
-    const matchesStatus =
-      statusFilter === "All" || enquiry.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  const updateStatus = (id, status) => {
-    setEnquiries((previous) =>
-      previous.map((enquiry) =>
-        enquiry.id === id ? { ...enquiry, status } : enquiry
-      )
-    );
-
-    setSelectedEnquiry((previous) =>
-      previous && previous.id === id
-        ? { ...previous, status }
-        : previous
-    );
+      const response = await axios.get(ENQUIRY_API);
+      setEnquiries(response.data);
+    } catch (err) {
+      console.error("Fetch Error:", err);
+      setError("Enquiries load nahi ho paayi. JSON Server check karo.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deleteEnquiry = (id) => {
-    if (window.confirm("Kya aap is enquiry ko delete karna chahte hain?")) {
+  useEffect(() => {
+    getEnquiries();
+  }, []);
+
+  // Update Status
+  const updateStatus = async (id, status) => {
+    try {
+      await axios.patch(`${ENQUIRY_API}/${id}`, { status });
+
       setEnquiries((previous) =>
-        previous.filter((enquiry) => enquiry.id !== id)
+        previous.map((item) =>
+          String(item.id) === String(id)
+            ? { ...item, status }
+            : item
+        )
       );
 
-      setSelectedEnquiry((previous) =>
-        previous && previous.id === id ? null : previous
+      if (
+        selectedEnquiry &&
+        String(selectedEnquiry.id) === String(id)
+      ) {
+        setSelectedEnquiry((previous) => ({
+          ...previous,
+          status
+        }));
+      }
+    } catch (err) {
+      console.error("Status Error:", err);
+      alert("Status update nahi ho paaya.");
+    }
+  };
+
+  // Delete Enquiry
+  const deleteEnquiry = async (id) => {
+    const confirmDelete = window.confirm(
+      "Kya aap is enquiry ko delete karna chahte hain?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`${ENQUIRY_API}/${id}`);
+
+      setEnquiries((previous) =>
+        previous.filter(
+          (item) => String(item.id) !== String(id)
+        )
+      );
+
+      if (
+        selectedEnquiry &&
+        String(selectedEnquiry.id) === String(id)
+      ) {
+        setShowDetails(false);
+        setSelectedEnquiry(null);
+      }
+
+      alert("Enquiry deleted successfully!");
+    } catch (err) {
+      console.error("Delete Error:", err);
+      alert("Enquiry delete nahi ho paayi.");
+    }
+  };
+
+  // Convert Enquiry Into Project
+  const convertToProject = async (enquiry) => {
+    const confirmConvert = window.confirm(
+      "Kya aap is enquiry ko project mein convert karna chahte hain?"
+    );
+
+    if (!confirmConvert) return;
+
+    try {
+      const projectResponse = await axios.get(PROJECT_API);
+
+      const existingProject = projectResponse.data.find(
+        (project) =>
+          String(project.enquiryId) === String(enquiry.id)
+      );
+
+      if (existingProject) {
+        alert("Ye enquiry pehle se project mein convert ho chuki hai.");
+        return;
+      }
+
+      const projectData = {
+        name:
+          enquiry.projectName ||
+          enquiry.clientName ||
+          enquiry.name ||
+          enquiry.fullName ||
+          "New Project",
+
+        client:
+          enquiry.clientName ||
+          enquiry.name ||
+          enquiry.fullName ||
+          "Customer",
+
+        email: enquiry.email || "",
+        mobile: enquiry.mobile || enquiry.phone || "",
+
+        service:
+          enquiry.service ||
+          enquiry.serviceName ||
+          "Electrical Work",
+
+        startDate: new Date().toISOString().slice(0, 10),
+        endDate: "",
+
+        budget: Number(enquiry.amount || enquiry.budget || 0),
+
+        status: "Pending",
+
+        description:
+          enquiry.message ||
+          enquiry.description ||
+          "Created from customer enquiry.",
+
+        enquiryId: enquiry.id
+      };
+
+      await axios.post(PROJECT_API, projectData);
+
+      await axios.patch(`${ENQUIRY_API}/${enquiry.id}`, {
+        status: "Approved",
+        convertedToProject: true
+      });
+
+      setEnquiries((previous) =>
+        previous.map((item) =>
+          String(item.id) === String(enquiry.id)
+            ? {
+                ...item,
+                status: "Approved",
+                convertedToProject: true
+              }
+            : item
+        )
+      );
+
+      if (
+        selectedEnquiry &&
+        String(selectedEnquiry.id) === String(enquiry.id)
+      ) {
+        setSelectedEnquiry((previous) => ({
+          ...previous,
+          status: "Approved",
+          convertedToProject: true
+        }));
+      }
+
+      alert("Enquiry successfully converted into Project!");
+
+    } catch (err) {
+      console.error("Project Conversion Error:", err);
+
+      alert(
+        "Project create nahi ho paaya. Projects API aur JSON Server check karo."
       );
     }
   };
 
-  const statusClass = (status) => {
-    if (status === "New") return "enquiry-status-new";
-    if (status === "In Progress") return "enquiry-status-progress";
-    return "enquiry-status-resolved";
+  // Search and Filter
+  const filteredEnquiries = enquiries.filter((item) => {
+    const name =
+      item.clientName || item.name || item.fullName || "";
+
+    const email = item.email || "";
+    const mobile = item.mobile || item.phone || "";
+
+    const service =
+      item.service || item.serviceName || "";
+
+    const status = item.status || "Pending";
+
+    const matchesSearch =
+      `
+        ${item.id || ""}
+        ${name}
+        ${email}
+        ${mobile}
+        ${service}
+        ${item.amount || ""}
+        ${item.message || ""}
+      `
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "All" || status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Summary Counts
+  const total = enquiries.length;
+
+  const pending = enquiries.filter(
+    (item) => (item.status || "Pending") === "Pending"
+  ).length;
+
+  const approved = enquiries.filter(
+    (item) => item.status === "Approved"
+  ).length;
+
+  const contacted = enquiries.filter(
+    (item) => item.status === "Contacted"
+  ).length;
+
+  // Status Badge
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "Approved":
+        return "bg-success";
+      case "Contacted":
+        return "bg-primary";
+      case "Rejected":
+        return "bg-danger";
+      default:
+        return "bg-warning text-dark";
+    }
+  };
+
+  // Amount Format
+  const formatAmount = (amount) => {
+    if (
+      amount === undefined ||
+      amount === null ||
+      amount === ""
+    ) {
+      return "Not Provided";
+    }
+
+    const value = Number(amount);
+
+    if (!Number.isFinite(value)) {
+      return "Not Provided";
+    }
+
+    return `₹${value.toLocaleString("en-IN")}`;
   };
 
   return (
-    <div className="manage-enquiries">
-      {/* Header */}
-      <div className="enquiries-header">
+    <div className="container-fluid manage-enquiries-page p-3">
+
+      {/* PAGE HEADING */}
+      <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
         <div>
-          <span className="enquiries-eyebrow">ADMIN PANEL</span>
-          <h2>Manage Enquiries</h2>
-          <p>View customer enquiries and manage their status.</p>
+          <h3 className="fw-bold mb-1">
+            Manage Enquiries
+          </h3>
+
+          <p className="text-muted mb-0">
+            View and manage customer enquiries.
+          </p>
         </div>
 
-        <div className="enquiries-header-icon">
-          <FaEnvelope />
-        </div>
-      </div>
-
-      {/* Summary cards */}
-      <div className="enquiries-summary">
-        <div className="enquiry-summary-card">
-          <div className="enquiry-summary-icon">
-            <FaEnvelope />
-          </div>
-          <div>
-            <p>Total Enquiries</p>
-            <h3>{enquiries.length}</h3>
-          </div>
-        </div>
-
-        <div className="enquiry-summary-card">
-          <div className="enquiry-summary-icon new-icon">
-            <FaCalendarAlt />
-          </div>
-          <div>
-            <p>New Enquiries</p>
-            <h3>
-              {enquiries.filter((e) => e.status === "New").length}
-            </h3>
-          </div>
-        </div>
-
-        <div className="enquiry-summary-card">
-          <div className="enquiry-summary-icon progress-icon">
-            <FaEye />
-          </div>
-          <div>
-            <p>In Progress</p>
-            <h3>
-              {enquiries.filter((e) => e.status === "In Progress").length}
-            </h3>
-          </div>
-        </div>
-
-        <div className="enquiry-summary-card">
-          <div className="enquiry-summary-icon resolved-icon">
-            <FaEnvelope />
-          </div>
-          <div>
-            <p>Resolved</p>
-            <h3>
-              {enquiries.filter((e) => e.status === "Resolved").length}
-            </h3>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="enquiries-toolbar">
-        <div className="enquiry-search-box">
-          <FaSearch />
-          <input
-            type="search"
-            placeholder="Search name, email, phone or service..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        <select
-          className="form-select enquiry-filter"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          aria-label="Filter enquiries by status"
+        <button
+          className="btn btn-outline-primary"
+          onClick={getEnquiries}
+          disabled={loading}
         >
-          <option value="All">All Statuses</option>
-          <option value="New">New</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Resolved">Resolved</option>
-        </select>
+          <i className="bi bi-arrow-clockwise me-2"></i>
+          Refresh
+        </button>
+
       </div>
 
-      {/* Table */}
-      <div className="enquiries-table-card">
-        <div className="enquiries-table-heading">
-          <h4>Customer Enquiries</h4>
-          <span>{filteredEnquiries.length} records found</span>
+      {/* SUMMARY CARDS */}
+      <div className="row g-3 mb-4">
+
+        <div className="col-md-3 col-sm-6">
+          <div className="card dashboard-card shadow-sm border-0 h-100">
+            <div className="card-body">
+              <p className="text-muted mb-2">
+                Total Enquiries
+              </p>
+              <h3 className="fw-bold mb-0">{total}</h3>
+            </div>
+          </div>
         </div>
 
-        <div className="table-responsive">
-          <table className="table align-middle enquiries-table">
-            <thead>
-              <tr>
-                <th>Customer</th>
-                <th>Service</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th className="text-center">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredEnquiries.map((enquiry) => (
-                <tr key={enquiry.id}>
-                  <td>
-                    <div className="enquiry-customer">
-                      <div className="enquiry-avatar">
-                        {enquiry.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <strong>{enquiry.name}</strong>
-                        <small>{enquiry.email}</small>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>{enquiry.service}</td>
-                  <td>{enquiry.date}</td>
-
-                  <td>
-                    <select
-                      className={`enquiry-status-select ${statusClass(
-                        enquiry.status
-                      )}`}
-                      value={enquiry.status}
-                      onChange={(e) =>
-                        updateStatus(enquiry.id, e.target.value)
-                      }
-                      aria-label={`Status for ${enquiry.name}`}
-                    >
-                      <option>New</option>
-                      <option>In Progress</option>
-                      <option>Resolved</option>
-                    </select>
-                  </td>
-
-                  <td>
-                    <div className="enquiry-actions">
-                      <button
-                        type="button"
-                        className="enquiry-view-btn"
-                        onClick={() => setSelectedEnquiry(enquiry)}
-                        title="View enquiry"
-                        aria-label={`View enquiry from ${enquiry.name}`}
-                      >
-                        <FaEye />
-                      </button>
-
-                      <button
-                        type="button"
-                        className="enquiry-delete-btn"
-                        onClick={() => deleteEnquiry(enquiry.id)}
-                        title="Delete enquiry"
-                        aria-label={`Delete enquiry from ${enquiry.name}`}
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {filteredEnquiries.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="text-center py-5">
-                    No enquiries found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="col-md-3 col-sm-6">
+          <div className="card dashboard-card shadow-sm border-0 h-100">
+            <div className="card-body">
+              <p className="text-muted mb-2">Pending</p>
+              <h3 className="fw-bold text-warning mb-0">
+                {pending}
+              </h3>
+            </div>
+          </div>
         </div>
+
+        <div className="col-md-3 col-sm-6">
+          <div className="card dashboard-card shadow-sm border-0 h-100">
+            <div className="card-body">
+              <p className="text-muted mb-2">Contacted</p>
+              <h3 className="fw-bold text-primary mb-0">
+                {contacted}
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-3 col-sm-6">
+          <div className="card dashboard-card shadow-sm border-0 h-100">
+            <div className="card-body">
+              <p className="text-muted mb-2">Approved</p>
+              <h3 className="fw-bold text-success mb-0">
+                {approved}
+              </h3>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      {/* Enquiry details */}
-      {selectedEnquiry && (
-        <div
-          className="enquiry-modal-backdrop"
-          onClick={() => setSelectedEnquiry(null)}
-        >
-          <section
-            className="enquiry-detail-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="enquiry-detail-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="enquiry-modal-header">
-              <div>
-                <span className="enquiries-eyebrow">CUSTOMER DETAILS</span>
-                <h3 id="enquiry-detail-title">Enquiry Details</h3>
-              </div>
+      {/* ENQUIRY TABLE */}
+      <div className="card dashboard-panel shadow-sm border-0">
 
-              <button
-                type="button"
-                className="enquiry-modal-close"
-                onClick={() => setSelectedEnquiry(null)}
-                aria-label="Close details"
+        <div className="card-header bg-white py-3">
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+            <h5 className="fw-bold mb-0">
+              Enquiries List
+            </h5>
+
+            <div className="d-flex flex-wrap gap-2 enquiry-filters">
+
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search name, email, mobile..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+
+              <select
+                className="form-select"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
               >
-                <FaTimes />
+                <option value="All">All Status</option>
+                <option value="New">New</option>
+                <option value="Pending">Pending</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+
+            </div>
+          </div>
+        </div>
+
+        {/* TABLE BODY */}
+        <div className="card-body p-0">
+
+          {loading ? (
+
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary"></div>
+              <p className="mt-2 mb-0">Loading enquiries...</p>
+            </div>
+
+          ) : error ? (
+
+            <div className="alert alert-danger m-3">
+              {error}
+              <button
+                className="btn btn-sm btn-outline-danger ms-3"
+                onClick={getEnquiries}
+              >
+                Retry
               </button>
             </div>
 
-            <div className="enquiry-detail-row">
-              <FaUser />
-              <div>
-                <small>Customer Name</small>
-                <strong>{selectedEnquiry.name}</strong>
-              </div>
+          ) : (
+
+            <div className="table-responsive">
+
+              <table className="table table-hover align-middle mb-0">
+
+                <thead className="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Customer Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Service</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+
+                  {filteredEnquiries.length > 0 ? (
+
+                    filteredEnquiries.map((item, index) => {
+                      const status = item.status || "Pending";
+
+                      return (
+                        <tr key={item.id}>
+
+                          <td>{index + 1}</td>
+
+                          <td className="fw-semibold">
+                            {item.clientName ||
+                              item.name ||
+                              item.fullName ||
+                              "N/A"}
+                          </td>
+
+                          <td>{item.email || "N/A"}</td>
+
+                          <td>
+                            {item.mobile || item.phone || "N/A"}
+                          </td>
+
+                          <td>
+                            {item.service || item.serviceName || "N/A"}
+                          </td>
+
+                          <td>
+                            <span className={`badge ${getStatusClass(status)}`}>
+                              {status}
+                            </span>
+                          </td>
+
+                          <td>
+                            <div className="d-flex gap-2 align-items-center">
+
+                              {/* VIEW DETAILS */}
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                title="View Details"
+                                onClick={() => {
+                                  setSelectedEnquiry({
+                                    ...item,
+                                    serialNo: index + 1
+                                  });
+                                  setShowDetails(true);
+                                }}
+                              >
+                                <CiViewList size={20} />
+                              </button>
+
+                              {/* STATUS UPDATE */}
+                              <select
+                                className="form-select form-select-sm enquiry-status-select"
+                                value={status}
+                                onChange={(e) =>
+                                  updateStatus(item.id, e.target.value)
+                                }
+                                aria-label="Update enquiry status"
+                              >
+                                <option value="New">New</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Contacted">Contacted</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                              </select>
+
+                              {/* CONVERT TO PROJECT */}
+                              {!item.convertedToProject &&
+                                status !== "Rejected" && (
+                                  <button
+                                    className="btn btn-sm btn-success"
+                                    title="Convert to Project"
+                                    onClick={() => convertToProject(item)}
+                                  >
+                                    <i className="bi bi-arrow-left-right"></i>
+                                  </button>
+                                )}
+
+                              {/* DELETE */}
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                title="Delete"
+                                onClick={() => deleteEnquiry(item.id)}
+                              >
+                               <MdDelete/>
+                              </button>
+
+                            </div>
+                          </td>
+
+                        </tr>
+                      );
+                    })
+
+                  ) : (
+
+                    <tr>
+                      <td colSpan="7" className="text-center py-4 text-muted">
+                        <i className="bi bi-inbox fs-2 d-block mb-2"></i>
+                        No enquiries found.
+                      </td>
+                    </tr>
+
+                  )}
+
+                </tbody>
+
+              </table>
+
             </div>
 
-            <div className="enquiry-detail-row">
-              <FaEnvelope />
-              <div>
-                <small>Email Address</small>
-                <strong>{selectedEnquiry.email}</strong>
-              </div>
-            </div>
+          )}
 
-            <div className="enquiry-detail-row">
-              <FaPhoneAlt />
-              <div>
-                <small>Phone Number</small>
-                <strong>{selectedEnquiry.phone}</strong>
-              </div>
-            </div>
-
-            <div className="enquiry-detail-row">
-              <FaCalendarAlt />
-              <div>
-                <small>Enquiry Date</small>
-                <strong>{selectedEnquiry.date}</strong>
-              </div>
-            </div>
-
-            <div className="enquiry-message">
-              <small>Requested Service</small>
-              <strong>{selectedEnquiry.service}</strong>
-
-              <small>Customer Message</small>
-              <p>{selectedEnquiry.message}</p>
-            </div>
-
-            <div className="enquiry-detail-status">
-              <label htmlFor="detail-status">Update Status</label>
-              <select
-                id="detail-status"
-                className="form-select"
-                value={selectedEnquiry.status}
-                onChange={(e) =>
-                  updateStatus(selectedEnquiry.id, e.target.value)
-                }
-              >
-                <option>New</option>
-                <option>In Progress</option>
-                <option>Resolved</option>
-              </select>
-            </div>
-
-            <button
-              type="button"
-              className="btn enquiry-done-btn"
-              onClick={() => setSelectedEnquiry(null)}
-            >
-              Done
-            </button>
-          </section>
         </div>
+
+        {/* TABLE FOOTER */}
+        {!loading && !error && (
+          <div className="card-footer bg-white text-muted">
+            Showing {filteredEnquiries.length} of {enquiries.length} enquiries
+          </div>
+        )}
+
+      </div>
+
+      {/* ENQUIRY DETAILS MODAL */}
+      {showDetails && selectedEnquiry && (
+
+        <div
+          className="enquiry-modal-backdrop"
+          onClick={() => setShowDetails(false)}
+        >
+
+          <div
+            className="enquiry-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+
+            {/* MODAL HEADER */}
+            <div className="enquiry-modal-header">
+
+              <div>
+                <h4 className="fw-bold mb-1">
+                  Enquiry Details
+                </h4>
+
+                <p className="mb-0 text-white-50">
+                  Customer enquiry information
+                </p>
+              </div>
+
+              <button
+                className="btn-close btn-close-white"
+                onClick={() => setShowDetails(false)}
+              ></button>
+
+            </div>
+
+            {/* MODAL BODY */}
+            <div className="enquiry-modal-body">
+
+              {/* ENQUIRY OVERVIEW */}
+              <div className="enquiry-overview mb-4">
+
+                <div>
+                  <small>Enquiry ID</small>
+
+                  <h5 className="fw-bold mb-0">
+                    #{selectedEnquiry.serialNo}
+                  </h5>
+                </div>
+
+                <div>
+                  <small>Current Status</small>
+
+                  <div>
+                    <span
+                      className={`badge ${getStatusClass(
+                        selectedEnquiry.status || "Pending"
+                      )}`}
+                    >
+                      {selectedEnquiry.status || "Pending"}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* CUSTOMER INFORMATION */}
+              <div className="detail-section">
+
+                <h6 className="detail-section-title">
+                  <i className="bi bi-person-circle me-2"></i>
+                  Customer Information
+                </h6>
+
+                <div className="row g-3">
+
+                  <div className="col-md-6">
+                    <div className="detail-item">
+                      <small>Customer Name</small>
+                      <p>
+                        {selectedEnquiry.clientName ||
+                          selectedEnquiry.name ||
+                          selectedEnquiry.fullName ||
+                          "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="detail-item">
+                      <small>Email Address</small>
+                      <p className="detail-break">
+                        {selectedEnquiry.email || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="detail-item">
+                      <small>Mobile Number</small>
+                      <p>
+                        {selectedEnquiry.mobile ||
+                          selectedEnquiry.phone ||
+                          "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="detail-item">
+                      <small>Enquiry Date</small>
+                      <p>
+                        {selectedEnquiry.date ||
+                          selectedEnquiry.createdAt ||
+                          "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* SERVICE INFORMATION */}
+              <div className="detail-section">
+
+                <h6 className="detail-section-title">
+                  <i className="bi bi-tools me-2"></i>
+                  Service Information
+                </h6>
+
+                <div className="row g-3">
+
+                  <div className="col-md-6">
+                    <div className="detail-item">
+                      <small>Service Requested</small>
+                      <p>
+                        {selectedEnquiry.service ||
+                          selectedEnquiry.serviceName ||
+                          "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="detail-item">
+                      <small>Estimated Amount</small>
+                      <p className="text-success fw-bold">
+                        {formatAmount(
+                          selectedEnquiry.amount ??
+                          selectedEnquiry.budget
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="detail-item">
+                      <small>Project Name</small>
+                      <p>
+                        {selectedEnquiry.projectName || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* CUSTOMER REQUIREMENTS */}
+              <div className="detail-section">
+
+                <h6 className="detail-section-title">
+                  <i className="bi bi-chat-left-text me-2"></i>
+                  Customer Requirements
+                </h6>
+
+                <div className="requirement-box">
+                  {selectedEnquiry.message ||
+                    selectedEnquiry.description ||
+                    "No requirements or message provided."}
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* MODAL FOOTER */}
+            <div className="enquiry-modal-footer">
+
+              <button
+                className="btn btn-secondary px-4"
+                onClick={() => setShowDetails(false)}
+              >
+                <i className="bi bi-x-circle me-2"></i>
+                Close
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
       )}
+
     </div>
   );
 }

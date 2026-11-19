@@ -1,339 +1,846 @@
 
-import React, { useState } from "react";
-import {
-  FaUserCog,
-  FaLock,
-  FaBell,
-  FaGlobe,
-  FaSave,
- 
-  FaShieldAlt
-} from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
+const API_URL = "http://localhost:8700/admin";
+const SETTINGS_URL = "http://localhost:8700/settings";
 
-function AdminSettings() {
-  const [settings, setSettings] = useState({
-    name: "Admin User",
-    email: "admin@converlink.com",
+function Settings() {
+
+  const [adminId, setAdminId] = useState(null);
+  const [settingsId, setSettingsId] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const [activeTab, setActiveTab] = useState("general");
+
+  const [general, setGeneral] = useState({
+    companyName: "Converlink Engineering Pvt. Ltd.",
+    websiteName: "CONVERLINK",
+    email: "",
+    phone: "",
+    address: ""
+  });
+
+  const [notifications, setNotifications] = useState({
+    emailNotification: true,
+    enquiryNotification: true,
+    orderNotification: true,
+    quotationNotification: true,
+    invoiceNotification: true,
+    projectNotification: true
+  });
+
+  const [preferences, setPreferences] = useState({
+    theme: "light",
     language: "English",
-    timezone: "Asia/Kolkata",
-    emailNotifications: true,
-    enquiryNotifications: true,
-    projectNotifications: false,
-    twoFactor: false
+    dateFormat: "DD/MM/YYYY",
+    itemsPerPage: "10"
+  });
+
+  const [security, setSecurity] = useState({
+    twoFactor: false,
+    loginAlert: true
   });
 
   const [password, setPassword] = useState({
-    current: "",
+    currentPassword: "",
     newPassword: "",
-    confirm: ""
+    confirmPassword: ""
   });
 
-  const [message, setMessage] = useState("");
+  // Load settings
+  useEffect(() => {
 
-  const updateSetting = (e) => {
-    const { name, value, type, checked } = e.target;
+    const fetchSettings = async () => {
 
-    setSettings((previous) => ({
-      ...previous,
-      [name]: type === "checkbox" ? checked : value
+      try {
+
+        setLoading(true);
+        setError("");
+
+        const loginData = JSON.parse(
+          localStorage.getItem("adminLoginData") || "null"
+        );
+
+        if (!loginData?.email) {
+          setError("Admin login information nahi mili.");
+          return;
+        }
+
+        // Fetch admin
+        const adminResponse = await axios.get(API_URL);
+
+        const admin = adminResponse.data.find(
+          (item) => item.email === loginData.email
+        );
+
+        if (!admin) {
+          setError("Admin account nahi mila.");
+          return;
+        }
+
+        setAdminId(admin.id);
+
+        setGeneral((prev) => ({
+          ...prev,
+          email: admin.email || "",
+          phone: admin.phone || "",
+          address: admin.address || ""
+        }));
+
+        // Fetch saved settings
+        const settingsResponse = await axios.get(SETTINGS_URL);
+
+        const savedSettings = settingsResponse.data.find(
+          (item) => String(item.adminId) === String(admin.id)
+        );
+
+        if (savedSettings) {
+
+          setSettingsId(savedSettings.id);
+
+          setGeneral((prev) => ({
+            ...prev,
+            ...savedSettings.general
+          }));
+
+          setNotifications((prev) => ({
+            ...prev,
+            ...savedSettings.notifications
+          }));
+
+          setPreferences((prev) => ({
+            ...prev,
+            ...savedSettings.preferences
+          }));
+
+          setSecurity((prev) => ({
+            ...prev,
+            ...savedSettings.security
+          }));
+
+        }
+
+      } catch (err) {
+
+        console.error("Settings Error:", err);
+
+        setError(
+          "Settings load nahi hui. JSON Server collections check karo."
+        );
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
+    };
+
+    fetchSettings();
+
+  }, []);
+
+  // General input
+  const handleGeneralChange = (e) => {
+
+    const { name, value } = e.target;
+
+    setGeneral((prev) => ({
+      ...prev,
+      [name]: value
     }));
 
-    setMessage("");
   };
 
-  const saveSettings = (e) => {
-    e.preventDefault();
-    setMessage("Settings updated in this demo.");
+  // Notification checkbox
+  const handleNotificationChange = (e) => {
+
+    const { name, checked } = e.target;
+
+    setNotifications((prev) => ({
+      ...prev,
+      [name]: checked
+    }));
+
   };
 
-  const changePassword = (e) => {
+  // Preference input
+  const handlePreferenceChange = (e) => {
+
+    const { name, value } = e.target;
+
+    setPreferences((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+
+  };
+
+  // Security checkbox
+  const handleSecurityChange = (e) => {
+
+    const { name, checked } = e.target;
+
+    setSecurity((prev) => ({
+      ...prev,
+      [name]: checked
+    }));
+
+  };
+
+  // Save settings
+  const handleSave = async (e) => {
+
     e.preventDefault();
 
-    if (!password.current || !password.newPassword || !password.confirm) {
-      setMessage("Please fill in all password fields.");
-      return;
+    try {
+
+      setSaving(true);
+      setError("");
+      setSuccess("");
+
+      const settingsData = {
+        adminId,
+        general,
+        notifications,
+        preferences,
+        security
+      };
+
+      if (settingsId) {
+
+        await axios.patch(
+          `${SETTINGS_URL}/${settingsId}`,
+          settingsData
+        );
+
+      } else {
+
+        const response = await axios.post(
+          SETTINGS_URL,
+          settingsData
+        );
+
+        setSettingsId(response.data.id);
+
+      }
+
+      // Update admin contact details too
+      await axios.patch(`${API_URL}/${adminId}`, {
+        email: general.email,
+        phone: general.phone,
+        address: general.address
+      });
+
+      setSuccess("Settings successfully save ho gayi!");
+
+    } catch (err) {
+
+      console.error("Save Settings Error:", err);
+
+      setError("Settings save nahi hui. JSON Server check karo.");
+
+    } finally {
+
+      setSaving(false);
+
     }
+
+  };
+
+  // Change password
+  const handlePasswordChange = async (e) => {
+
+    e.preventDefault();
+
+    setError("");
+    setSuccess("");
 
     if (password.newPassword.length < 8) {
-      setMessage("New password must contain at least 8 characters.");
+      setError("New password minimum 8 characters ka hona chahiye.");
       return;
     }
 
-    if (password.newPassword !== password.confirm) {
-      setMessage("New password and confirm password do not match.");
+    if (password.newPassword !== password.confirmPassword) {
+      setError("New password aur confirm password match nahi kar rahe.");
       return;
     }
 
-    setMessage("Password form validated. Connect a backend to change your password.");
+    try {
 
-    setPassword({
-      current: "",
-      newPassword: "",
-      confirm: ""
-    });
+      const response = await axios.get(`${API_URL}/${adminId}`);
+
+      if (response.data.pass !== password.currentPassword) {
+        setError("Current password incorrect hai.");
+        return;
+      }
+
+      await axios.patch(`${API_URL}/${adminId}`, {
+        pass: password.newPassword
+      });
+
+      setPassword({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+
+      setSuccess("Password successfully update ho gaya!");
+
+    } catch (err) {
+
+      console.error(err);
+      setError("Password update nahi hua.");
+
+    }
+
   };
 
+  if (loading) {
+
+    return (
+      <div className="container-fluid text-center p-5">
+        <div className="spinner-border text-primary"></div>
+        <p className="mt-2 text-secondary">Loading Settings...</p>
+      </div>
+    );
+
+  }
+
+  const tabs = [
+    { id: "general", label: "General", icon: "bi-gear" },
+    { id: "account", label: "Account", icon: "bi-person" },
+    { id: "notifications", label: "Notifications", icon: "bi-bell" },
+    { id: "security", label: "Security", icon: "bi-shield-lock" },
+    { id: "preferences", label: "Preferences", icon: "bi-sliders" }
+  ];
+
   return (
-    <div className="admin-settings-page">
-      <div className="settings-heading">
-        <div>
-          <h2>Admin Settings</h2>
-          <p>Manage your account preferences and security.</p>
-        </div>
-        <span className="settings-status">
-          <FaShieldAlt /> Administrator
-        </span>
+
+    <div className="container-fluid p-3 p-md-4">
+
+      {/* Heading */}
+      <div className="mb-4">
+
+        <h3 className="fw-bold mb-1" style={{ color: "#102D4F" }}>
+          Settings
+        </h3>
+
+        <p className="text-secondary mb-0">
+          Manage your company, account and dashboard preferences
+        </p>
+
       </div>
 
-      {message && (
-        <div className="settings-message" role="status">
-          {message}
+      {/* Alerts */}
+      {error && (
+        <div className="alert alert-danger alert-dismissible">
+          {error}
+          <button
+            className="btn-close"
+            onClick={() => setError("")}
+          ></button>
         </div>
       )}
 
-      <div className="settings-layout">
-        <aside className="settings-sidebar">
-          <a href="#general" className="settings-nav active">
-            <FaUserCog /> General Settings
-          </a>
-          <a href="#notifications" className="settings-nav">
-            <FaBell /> Notifications
-          </a>
-          <a href="#security" className="settings-nav">
-            <FaLock /> Security
-          </a>
-          <a href="#preferences" className="settings-nav">
-            <FaGlobe /> Preferences
-          </a>
-        </aside>
-
-        <div className="settings-main">
-          <form onSubmit={saveSettings}>
-            <section className="settings-card" id="general">
-              <div className="settings-section-title">
-                <div className="settings-icon">
-                  <FaUserCog />
-                </div>
-                <div>
-                  <h3>General Settings</h3>
-                  <p>Update your administrator account details.</p>
-                </div>
-              </div>
-
-              <div className="settings-form-grid">
-                <div className="settings-field">
-                  <label htmlFor="admin-name">Full Name</label>
-                  <input
-                    id="admin-name"
-                    name="name"
-                    value={settings.name}
-                    onChange={updateSetting}
-                    required
-                  />
-                </div>
-
-                <div className="settings-field">
-                  <label htmlFor="admin-email">Email Address</label>
-                  <input
-                    id="admin-email"
-                    type="email"
-                    name="email"
-                    value={settings.email}
-                    onChange={updateSetting}
-                    required
-                  />
-                </div>
-              </div>
-            </section>
-
-            <section className="settings-card" id="notifications">
-              <div className="settings-section-title">
-                <div className="settings-icon">
-                  <FaBell />
-                </div>
-                <div>
-                  <h3>Notification Settings</h3>
-                  <p>Choose which updates you want to receive.</p>
-                </div>
-              </div>
-
-              <div className="settings-option">
-                <div>
-                  <strong>Email Notifications</strong>
-                  <p>Receive important account updates by email.</p>
-                </div>
-                <label className="settings-switch">
-                  <input
-                    type="checkbox"
-                    name="emailNotifications"
-                    checked={settings.emailNotifications}
-                    onChange={updateSetting}
-                  />
-                  <span></span>
-                </label>
-              </div>
-
-              <div className="settings-option">
-                <div>
-                  <strong>New Enquiries</strong>
-                  <p>Get notified when a new enquiry is submitted.</p>
-                </div>
-                <label className="settings-switch">
-                  <input
-                    type="checkbox"
-                    name="enquiryNotifications"
-                    checked={settings.enquiryNotifications}
-                    onChange={updateSetting}
-                  />
-                  <span></span>
-                </label>
-              </div>
-
-              <div className="settings-option">
-                <div>
-                  <strong>Project Updates</strong>
-                  <p>Receive notifications about project changes.</p>
-                </div>
-                <label className="settings-switch">
-                  <input
-                    type="checkbox"
-                    name="projectNotifications"
-                    checked={settings.projectNotifications}
-                    onChange={updateSetting}
-                  />
-                  <span></span>
-                </label>
-              </div>
-            </section>
-
-            <section className="settings-card" id="security">
-              <div className="settings-section-title">
-                <div className="settings-icon">
-                  <FaLock />
-                </div>
-                <div>
-                  <h3>Security Settings</h3>
-                  <p>Change your account password.</p>
-                </div>
-              </div>
-
-              <div className="settings-form-grid">
-                <div className="settings-field settings-full">
-                  <label htmlFor="current-password">Current Password</label>
-                  <input
-                    id="current-password"
-                    type="password"
-                    autoComplete="current-password"
-                    value={password.current}
-                    onChange={(e) =>
-                      setPassword({ ...password, current: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="settings-field">
-                  <label htmlFor="new-password">New Password</label>
-                  <input
-                    id="new-password"
-                    type="password"
-                    autoComplete="new-password"
-                    value={password.newPassword}
-                    onChange={(e) =>
-                      setPassword({ ...password, newPassword: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="settings-field">
-                  <label htmlFor="confirm-password">Confirm Password</label>
-                  <input
-                    id="confirm-password"
-                    type="password"
-                    autoComplete="new-password"
-                    value={password.confirm}
-                    onChange={(e) =>
-                      setPassword({ ...password, confirm: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="settings-secondary-btn"
-                onClick={changePassword}
-              >
-                <FaLock /> Validate Password Change
-              </button>
-
-              <div className="settings-option settings-two-factor">
-                <div>
-                  <strong>Two-Factor Authentication</strong>
-                  <p>Preference only; actual protection requires backend setup.</p>
-                </div>
-                <label className="settings-switch">
-                  <input
-                    type="checkbox"
-                    name="twoFactor"
-                    checked={settings.twoFactor}
-                    onChange={updateSetting}
-                  />
-                  <span></span>
-                </label>
-              </div>
-            </section>
-
-            <section className="settings-card" id="preferences">
-              <div className="settings-section-title">
-                <div className="settings-icon">
-                  <FaGlobe />
-                </div>
-                <div>
-                  <h3>Preferences</h3>
-                  <p>Set your language and timezone.</p>
-                </div>
-              </div>
-
-              <div className="settings-form-grid">
-                <div className="settings-field">
-                  <label htmlFor="settings-language">Language</label>
-                  <select
-                    id="settings-language"
-                    name="language"
-                    value={settings.language}
-                    onChange={updateSetting}
-                  >
-                    <option>English</option>
-                    <option>Hindi</option>
-                  </select>
-                </div>
-
-                <div className="settings-field">
-                  <label htmlFor="settings-timezone">Timezone</label>
-                  <select
-                    id="settings-timezone"
-                    name="timezone"
-                    value={settings.timezone}
-                    onChange={updateSetting}
-                  >
-                    <option value="Asia/Kolkata">India (IST)</option>
-                    <option value="UTC">UTC</option>
-                  </select>
-                </div>
-              </div>
-            </section>
-
-            <div className="settings-save-row">
-              <button type="submit" className="settings-save-btn">
-                <FaSave /> Save Settings
-              </button>
-            </div>
-          </form>
+      {success && (
+        <div className="alert alert-success alert-dismissible">
+          {success}
+          <button
+            className="btn-close"
+            onClick={() => setSuccess("")}
+          ></button>
         </div>
+      )}
+
+      <div className="row g-4">
+
+        {/* Sidebar */}
+        <div className="col-lg-3">
+
+          <div className="card border-0 shadow-sm">
+
+            <div className="list-group list-group-flush">
+
+              {tabs.map((tab) => (
+
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`list-group-item list-group-item-action py-3 ${
+                    activeTab === tab.id
+                      ? "active"
+                      : ""
+                  }`}
+                  style={
+                    activeTab === tab.id
+                      ? { backgroundColor: "#087FC4", borderColor: "#087FC4" }
+                      : {}
+                  }
+                  onClick={() => setActiveTab(tab.id)}
+                >
+
+                  <i className={`bi ${tab.icon} me-2`}></i>
+
+                  {tab.label}
+
+                  <i className="bi bi-chevron-right float-end"></i>
+
+                </button>
+
+              ))}
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Settings Content */}
+        <div className="col-lg-9">
+
+          <div className="card border-0 shadow-sm">
+
+            <div className="card-body p-4">
+
+              <form onSubmit={handleSave}>
+
+                {/* General Settings */}
+                {activeTab === "general" && (
+
+                  <div>
+
+                    <h5 className="fw-bold mb-1">
+                      General Settings
+                    </h5>
+
+                    <p className="text-secondary mb-4">
+                      Manage company information
+                    </p>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        Company Name
+                      </label>
+
+                      <input
+                        type="text"
+                        name="companyName"
+                        className="form-control"
+                        value={general.companyName}
+                        onChange={handleGeneralChange}
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        Website Name
+                      </label>
+
+                      <input
+                        type="text"
+                        name="websiteName"
+                        className="form-control"
+                        value={general.websiteName}
+                        onChange={handleGeneralChange}
+                      />
+                    </div>
+
+                    <div className="row">
+
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label fw-semibold">
+                          Company Email
+                        </label>
+
+                        <input
+                          type="email"
+                          name="email"
+                          className="form-control"
+                          value={general.email}
+                          onChange={handleGeneralChange}
+                        />
+                      </div>
+
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label fw-semibold">
+                          Contact Number
+                        </label>
+
+                        <input
+                          type="tel"
+                          name="phone"
+                          className="form-control"
+                          value={general.phone}
+                          onChange={handleGeneralChange}
+                        />
+                      </div>
+
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        Company Address
+                      </label>
+
+                      <textarea
+                        name="address"
+                        rows="3"
+                        className="form-control"
+                        value={general.address}
+                        onChange={handleGeneralChange}
+                      ></textarea>
+                    </div>
+
+                  </div>
+
+                )}
+
+                {/* Account Settings */}
+                {activeTab === "account" && (
+
+                  <div>
+
+                    <h5 className="fw-bold mb-1">
+                      Account Settings
+                    </h5>
+
+                    <p className="text-secondary mb-4">
+                      Manage your admin account details
+                    </p>
+
+                    <div className="alert alert-info">
+                      <i className="bi bi-info-circle me-2"></i>
+                      Admin account email aur phone General Settings se update kar sakte ho.
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        Admin Email
+                      </label>
+
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={general.email}
+                        onChange={handleGeneralChange}
+                        name="email"
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        Mobile Number
+                      </label>
+
+                      <input
+                        type="tel"
+                        className="form-control"
+                        value={general.phone}
+                        onChange={handleGeneralChange}
+                        name="phone"
+                      />
+                    </div>
+
+                  </div>
+
+                )}
+
+                {/* Notification Settings */}
+                {activeTab === "notifications" && (
+
+                  <div>
+
+                    <h5 className="fw-bold mb-1">
+                      Notification Settings
+                    </h5>
+
+                    <p className="text-secondary mb-4">
+                      Choose which notifications you want to receive
+                    </p>
+
+                    {[
+                      ["emailNotification", "Email Notifications", "Receive important updates through email"],
+                      ["enquiryNotification", "New Enquiries", "Get notified when a new enquiry arrives"],
+                      ["orderNotification", "Order Updates", "Receive order status updates"],
+                      ["quotationNotification", "Quotation Updates", "Get quotation related notifications"],
+                      ["invoiceNotification", "Invoice Updates", "Receive invoice and payment notifications"],
+                      ["projectNotification", "Project Updates", "Get project progress notifications"]
+                    ].map(([name, title, description]) => (
+
+                      <div
+                        key={name}
+                        className="d-flex justify-content-between align-items-center border-bottom py-3"
+                      >
+
+                        <div>
+                          <h6 className="fw-semibold mb-1">
+                            {title}
+                          </h6>
+
+                          <small className="text-secondary">
+                            {description}
+                          </small>
+                        </div>
+
+                        <div className="form-check form-switch">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            name={name}
+                            checked={notifications[name]}
+                            onChange={handleNotificationChange}
+                          />
+                        </div>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                )}
+
+                {/* Security Settings */}
+                {activeTab === "security" && (
+
+                  <div>
+
+                    <h5 className="fw-bold mb-1">
+                      Security Settings
+                    </h5>
+
+                    <p className="text-secondary mb-4">
+                      Protect your administrator account
+                    </p>
+
+                    <div className="form-check form-switch border-bottom pb-3 mb-3">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        name="twoFactor"
+                        checked={security.twoFactor}
+                        onChange={handleSecurityChange}
+                      />
+
+                      <label className="form-check-label fw-semibold">
+                        Two-Factor Authentication
+                      </label>
+
+                      <p className="small text-secondary mb-0">
+                        Enable an additional verification step (preference only in this demo)
+                      </p>
+                    </div>
+
+                    <div className="form-check form-switch border-bottom pb-3 mb-4">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        name="loginAlert"
+                        checked={security.loginAlert}
+                        onChange={handleSecurityChange}
+                      />
+
+                      <label className="form-check-label fw-semibold">
+                        Login Alerts
+                      </label>
+
+                      <p className="small text-secondary mb-0">
+                        Save your preference for login alerts
+                      </p>
+                    </div>
+
+                    <h6 className="fw-bold mb-3">
+                      Change Password
+                    </h6>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        Current Password
+                      </label>
+
+                      <input
+                        type="password"
+                        className="form-control"
+                        value={password.currentPassword}
+                        onChange={(e) =>
+                          setPassword({
+                            ...password,
+                            currentPassword: e.target.value
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        New Password
+                      </label>
+
+                      <input
+                        type="password"
+                        className="form-control"
+                        value={password.newPassword}
+                        onChange={(e) =>
+                          setPassword({
+                            ...password,
+                            newPassword: e.target.value
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        Confirm New Password
+                      </label>
+
+                      <input
+                        type="password"
+                        className="form-control"
+                        value={password.confirmPassword}
+                        onChange={(e) =>
+                          setPassword({
+                            ...password,
+                            confirmPassword: e.target.value
+                          })
+                        }
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary"
+                      onClick={handlePasswordChange}
+                    >
+                      Update Password
+                    </button>
+
+                  </div>
+
+                )}
+
+                {/* Preferences */}
+                {activeTab === "preferences" && (
+
+                  <div>
+
+                    <h5 className="fw-bold mb-1">
+                      Dashboard Preferences
+                    </h5>
+
+                    <p className="text-secondary mb-4">
+                      Customize your dashboard experience
+                    </p>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        Theme
+                      </label>
+
+                      <select
+                        name="theme"
+                        className="form-select"
+                        value={preferences.theme}
+                        onChange={handlePreferenceChange}
+                      >
+                        <option value="light">Light Mode</option>
+                        <option value="dark">Dark Mode</option>
+                      </select>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        Language
+                      </label>
+
+                      <select
+                        name="language"
+                        className="form-select"
+                        value={preferences.language}
+                        onChange={handlePreferenceChange}
+                      >
+                        <option value="English">English</option>
+                        <option value="Hindi">Hindi</option>
+                      </select>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        Date Format
+                      </label>
+
+                      <select
+                        name="dateFormat"
+                        className="form-select"
+                        value={preferences.dateFormat}
+                        onChange={handlePreferenceChange}
+                      >
+                        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                      </select>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">
+                        Table Rows Per Page
+                      </label>
+
+                      <select
+                        name="itemsPerPage"
+                        className="form-select"
+                        value={preferences.itemsPerPage}
+                        onChange={handlePreferenceChange}
+                      >
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                      </select>
+                    </div>
+
+                  </div>
+
+                )}
+
+                {/* Save */}
+                {activeTab !== "security" && (
+                  <div className="border-top pt-4 mt-4">
+
+                    <button
+                      type="submit"
+                      className="btn text-white px-4"
+                      style={{ backgroundColor: "#087FC4" }}
+                      disabled={saving}
+                    >
+                      <i className="bi bi-check-circle me-2"></i>
+                      {saving ? "Saving..." : "Save Settings"}
+                    </button>
+
+                  </div>
+                )}
+
+              </form>
+
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
+
     </div>
+
   );
+
 }
 
-export default AdminSettings;
+export default Settings;
