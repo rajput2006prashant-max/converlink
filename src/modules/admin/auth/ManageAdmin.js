@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { MdDelete } from "react-icons/md";
@@ -8,7 +7,6 @@ import { CiViewList } from "react-icons/ci";
 const API = "http://localhost:8700/admin";
 
 function ManageAdmins() {
-
   // States
   const [admins, setAdmins] = useState([]);
   const [search, setSearch] = useState("");
@@ -26,7 +24,7 @@ function ManageAdmins() {
     email: "",
     mobile: "",
     role: "Admin",
-    status: "Active"
+    status: "Active",
   });
 
   // Fetch Admin Data
@@ -45,16 +43,14 @@ function ManageAdmins() {
         setAdmins([]);
         setError("Admin data format is incorrect.");
       }
-
     } catch (error) {
       console.log("Admin Fetch Error:", error);
 
       setError(
         error.response?.status === 404
           ? "Admin API not found. Check db.json admin key."
-          : "Admin data load nahi ho raha hai."
+          : "Admin data load nahi ho raha hai.",
       );
-
     } finally {
       setLoading(false);
     }
@@ -70,7 +66,7 @@ function ManageAdmins() {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -81,7 +77,7 @@ function ManageAdmins() {
       email: "",
       mobile: "",
       role: "Admin",
-      status: "Active"
+      status: "Active",
     });
 
     setEditId(null);
@@ -99,18 +95,15 @@ function ManageAdmins() {
 
     try {
       if (editId !== null) {
-
         await axios.patch(`${API}/${editId}`, formData);
 
         alert("Admin Updated Successfully!");
-
       } else {
-
         // Check duplicate email
         const duplicateEmail = admins.some(
           (admin) =>
             String(admin.email || "").toLowerCase() ===
-            formData.email.toLowerCase()
+            formData.email.toLowerCase(),
         );
 
         if (duplicateEmail) {
@@ -127,7 +120,6 @@ function ManageAdmins() {
       resetForm();
 
       await getAdmins();
-
     } catch (error) {
       console.log("Save Admin Error:", error);
       alert("Something went wrong!");
@@ -143,7 +135,7 @@ function ManageAdmins() {
       email: admin.email || "",
       mobile: admin.mobile || admin.phone || "",
       role: admin.role || "Admin",
-      status: admin.status || "Active"
+      status: admin.status || "Active",
     });
 
     setShowForm(true);
@@ -157,14 +149,13 @@ function ManageAdmins() {
 
   // Delete Admin
   const handleDelete = async (admin) => {
-
     if (admin.role === "Super Admin") {
       alert("Super Admin account cannot be deleted here.");
       return;
     }
 
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${admin.name || admin.username}?`
+      `Are you sure you want to delete ${admin.name || admin.username}?`,
     );
 
     if (!confirmDelete) return;
@@ -175,7 +166,6 @@ function ManageAdmins() {
       alert("Admin Deleted Successfully!");
 
       await getAdmins();
-
     } catch (error) {
       console.log("Delete Admin Error:", error);
       alert("Admin Delete Failed!");
@@ -184,25 +174,19 @@ function ManageAdmins() {
 
   // Search Filter
   const filteredAdmins = admins.filter((admin) => {
-
     const searchValue = search.toLowerCase();
 
     return (
       String(admin.name || admin.username || "")
         .toLowerCase()
         .includes(searchValue) ||
-
       String(admin.email || "")
         .toLowerCase()
         .includes(searchValue) ||
-
-      String(admin.mobile || admin.phone || "")
-        .includes(searchValue) ||
-
+      String(admin.mobile || admin.phone || "").includes(searchValue) ||
       String(admin.role || "")
         .toLowerCase()
         .includes(searchValue) ||
-
       String(admin.status || "")
         .toLowerCase()
         .includes(searchValue)
@@ -213,46 +197,37 @@ function ManageAdmins() {
   const totalAdmins = admins.length;
 
   const activeAdmins = admins.filter(
-    (admin) => admin.status === "Active"
+    (admin) => admin.status === "Active",
   ).length;
 
   const inactiveAdmins = admins.filter(
-    (admin) => admin.status === "Inactive"
+    (admin) => admin.status === "Inactive",
   ).length;
 
   const superAdmins = admins.filter(
-    (admin) => admin.role === "Super Admin"
+    (admin) => admin.role === "Super Admin",
   ).length;
 
   return (
     <div className="manage-admins-page">
-
       {/* Heading */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-
         <div>
-          <h4 className="fw-bold mb-1">
-            Manage Admins
-          </h4>
+          <h4 className="fw-bold mb-1">Manage Admins</h4>
 
-          <p className="text-muted mb-0">
+          <p className="fw-bold mb-1" style={{ color: "white" }}>
             Manage company administrator accounts and roles.
           </p>
         </div>
 
-        <button
-          className="btn btn-primary"
-          onClick={handleAdd}
-        >
+        <button className="btn btn-primary" onClick={handleAdd}>
           <i className="bi bi-plus-lg me-2"></i>
           Add New Admin
         </button>
-
       </div>
 
       {/* Summary Cards */}
       <div className="row g-3 mb-4">
-
         <div className="col-xl-3 col-md-6">
           <div className="dashboard-card">
             <p className="card-label">Total Admins</p>
@@ -280,15 +255,15 @@ function ManageAdmins() {
             <h3>{superAdmins}</h3>
           </div>
         </div>
-
       </div>
 
       {/* Admin Table */}
       <div className="dashboard-panel">
-
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-
-          <h5 className="mb-0">
+          <h5
+            className="mb-0"
+            style={{ color: "white", backgroundColor: "#087FC4", width:"190px", borderRadius: "5px", padding:"10px" }}
+          >
             All Administrators
           </h5>
 
@@ -300,19 +275,12 @@ function ManageAdmins() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-
         </div>
 
-        {error && (
-          <div className="alert alert-danger">
-            {error}
-          </div>
-        )}
+        {error && <div className="alert alert-danger">{error}</div>}
 
         <div className="table-responsive">
-
           <table className="table table-hover align-middle">
-
             <thead className="table-light">
               <tr>
                 <th>S.No</th>
@@ -326,30 +294,22 @@ function ManageAdmins() {
             </thead>
 
             <tbody>
-
               {loading ? (
-
                 <tr>
                   <td colSpan="7" className="text-center py-4">
                     <div className="spinner-border spinner-border-sm me-2"></div>
                     Loading Admins...
                   </td>
                 </tr>
-
               ) : filteredAdmins.length === 0 ? (
-
                 <tr>
                   <td colSpan="7" className="text-center py-4">
                     No Admins Found
                   </td>
                 </tr>
-
               ) : (
-
                 filteredAdmins.map((admin, index) => (
-
                   <tr key={admin.id}>
-
                     {/* Serial Number */}
                     <td>{index + 1}</td>
 
@@ -357,46 +317,44 @@ function ManageAdmins() {
                       {admin.name || admin.username || "-"}
                     </td>
 
-                    <td>
-                      {admin.email || "-"}
-                    </td>
+                    <td>{admin.email || "-"}</td>
+
+                    <td>{admin.mobile || admin.phone || "-"}</td>
 
                     <td>
-                      {admin.mobile || admin.phone || "-"}
-                    </td>
-
-                    <td>
-                      <span className={`badge ${
-                        admin.role === "Super Admin"
-                          ? "bg-primary"
-                          : admin.role === "Manager"
-                          ? "bg-info text-dark"
-                          : "bg-secondary"
-                      }`}>
+                      <span
+                        className={`badge ${
+                          admin.role === "Super Admin"
+                            ? "bg-primary"
+                            : admin.role === "Manager"
+                              ? "bg-info text-dark"
+                              : "bg-secondary"
+                        }`}
+                      >
                         {admin.role || "Admin"}
                       </span>
                     </td>
 
                     <td>
-                      <span className={`badge ${
-                        admin.status === "Active"
-                          ? "bg-success"
-                          : "bg-secondary"
-                      }`}>
+                      <span
+                        className={`badge ${
+                          admin.status === "Active"
+                            ? "bg-success"
+                            : "bg-secondary"
+                        }`}
+                      >
                         {admin.status || "Active"}
                       </span>
                     </td>
 
                     <td>
                       <div className="d-flex gap-2">
-
                         <button
                           className="btn btn-sm btn-outline-info"
                           title="View Admin"
                           onClick={() => handleView(admin)}
                         >
                           <CiViewList />
-
                         </button>
 
                         <button
@@ -404,7 +362,7 @@ function ManageAdmins() {
                           title="Edit Admin"
                           onClick={() => handleEdit(admin)}
                         >
-                           <FaEdit/>
+                          <FaEdit />
                         </button>
 
                         <button
@@ -412,45 +370,27 @@ function ManageAdmins() {
                           title="Delete Admin"
                           onClick={() => handleDelete(admin)}
                         >
-                          <MdDelete/>
+                          <MdDelete />
                         </button>
-
                       </div>
                     </td>
-
                   </tr>
-
                 ))
-
               )}
-
             </tbody>
-
           </table>
-
         </div>
 
         <div className="text-muted small">
           Showing {filteredAdmins.length} of {admins.length} admins
         </div>
-
       </div>
 
       {/* Add / Edit Modal */}
       {showForm && (
-
-        <div
-          className="user-modal-backdrop"
-          onClick={() => setShowForm(false)}
-        >
-
-          <div
-            className="user-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-
+        <div className="user-modal-backdrop" onClick={() => setShowForm(false)}>
+          <div className="user-modal" onClick={(e) => e.stopPropagation()}>
             <div className="d-flex justify-content-between align-items-center mb-4">
-
               <h5 className="fw-bold mb-0">
                 {editId !== null ? "Edit Admin" : "Add New Admin"}
               </h5>
@@ -459,11 +399,9 @@ function ManageAdmins() {
                 className="btn-close"
                 onClick={() => setShowForm(false)}
               ></button>
-
             </div>
 
             <form onSubmit={handleSubmit}>
-
               <div className="mb-3">
                 <label className="form-label">Admin Name</label>
 
@@ -518,9 +456,8 @@ function ManageAdmins() {
                   onChange={handleChange}
                   disabled={
                     editId !== null &&
-                    admins.find(
-                      (admin) => String(admin.id) === String(editId)
-                    )?.role === "Super Admin"
+                    admins.find((admin) => String(admin.id) === String(editId))
+                      ?.role === "Super Admin"
                   }
                 >
                   <option value="Admin">Admin</option>
@@ -544,7 +481,6 @@ function ManageAdmins() {
               </div>
 
               <div className="d-flex justify-content-end gap-2">
-
                 <button
                   type="button"
                   className="btn btn-light border"
@@ -556,51 +492,32 @@ function ManageAdmins() {
                   Cancel
                 </button>
 
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                >
+                <button type="submit" className="btn btn-primary">
                   {editId !== null ? "Update Admin" : "Save Admin"}
                 </button>
-
               </div>
-
             </form>
-
           </div>
-
         </div>
-
       )}
 
       {/* View Details Modal */}
       {showDetails && selectedAdmin && (
-
         <div
           className="user-modal-backdrop"
           onClick={() => setShowDetails(false)}
         >
-
-          <div
-            className="user-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-
+          <div className="user-modal" onClick={(e) => e.stopPropagation()}>
             <div className="d-flex justify-content-between align-items-center mb-4">
-
-              <h5 className="fw-bold mb-0">
-                Admin Details
-              </h5>
+              <h5 className="fw-bold mb-0">Admin Details</h5>
 
               <button
                 className="btn-close"
                 onClick={() => setShowDetails(false)}
               ></button>
-
             </div>
 
             <div className="admin-details">
-
               <h5 className="mb-3">
                 {selectedAdmin.name || selectedAdmin.username || "-"}
               </h5>
@@ -614,7 +531,8 @@ function ManageAdmins() {
               </p>
 
               <p>
-                <strong>Mobile:</strong> {selectedAdmin.mobile || selectedAdmin.phone || "-"}
+                <strong>Mobile:</strong>{" "}
+                {selectedAdmin.mobile || selectedAdmin.phone || "-"}
               </p>
 
               <p>
@@ -624,7 +542,6 @@ function ManageAdmins() {
               <p>
                 <strong>Status:</strong> {selectedAdmin.status || "Active"}
               </p>
-
             </div>
 
             <button
@@ -633,13 +550,9 @@ function ManageAdmins() {
             >
               Close
             </button>
-
           </div>
-
         </div>
-
       )}
-
     </div>
   );
 }

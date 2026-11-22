@@ -58,7 +58,7 @@ function TotalProject() {
     <div className="container-fluid p-4">
 
       <h3 className="fw-bold mb-1">Total Projects</h3>
-      <p className="text-secondary">
+      <p className="text-primary">
         Manage and track your projects
       </p>
 
@@ -117,7 +117,7 @@ function TotalProject() {
           <div className="table-responsive">
             <table className="table table-hover align-middle">
 
-              <thead className="table-light">
+              <thead className="table-primary">
                 <tr>
                   <th>S.No</th>
                   <th>Client Name</th>

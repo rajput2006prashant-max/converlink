@@ -41,7 +41,13 @@ function Contact() {
           Contact Us
         </h2>
 
-        <p className="text-secondary">
+        <p className="text-secondary"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+                 width:"440px",
+              }}>
           Have a question? Contact the Converlink Engineering team.
         </p>
       </div>

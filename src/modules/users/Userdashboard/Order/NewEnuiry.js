@@ -212,7 +212,7 @@ function NewEnquiry() {
           New Enquiries
         </h3>
 
-        <p className="text-secondary">
+        <p className="text-primary">
           View and manage your customer enquiries
         </p>
       </div>
@@ -348,7 +348,7 @@ function NewEnquiry() {
                 }}
               >
 
-                <thead className="table-light">
+                <thead className="table-blue ">
                   <tr>
                     <th >S.No</th>
                     <th >Client Name</th>
@@ -505,7 +505,7 @@ function NewEnquiry() {
 
         {/* TABLE FOOTER */}
         {!loading && !error && (
-          <div className="card-footer bg-white text-secondary">
+          <div className="card-footer bg-primarytext-secondary">
             Showing {filteredEnquiries.length} of {enquiries.length} enquiries
           </div>
         )}

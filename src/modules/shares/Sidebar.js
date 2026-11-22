@@ -1,277 +1,178 @@
-// import React from "react";
-// import { Link } from "react-router-dom";
-
-// function Sidebar() {
-//   return (
-//     <div
-//       className="d-flex flex-column p-3 text-white vh-100"
-//    style={{
-//     width: "260px",
-//     backgroundColor: "#102D4F",
-//     position: "fixed",
-//     top: 84,
-//     left: 0,
-//     height: "100vh",
-//     color: "white",
-//     overflowY: "auto",
-//     zIndex: 1000
-//   }}
-//     >
-//       <h4 className="mb-4 border-bottom pb-3">
-//         <i className="bi bi-building text-info me-2"></i>
-//         CONVERLINK
-//       </h4>
-
-//       <p className="text-info fw-bold small">MAIN MENU</p>
-
-//       <nav className="nav nav-pills flex-column gap-2">
-
-//         <Link to="home" className="nav-link text-white">
-//           <i className="bi bi-house me-2"></i> Home
-//         </Link>
-
-//           <Link to="about" className="nav-link text-white">
-//           <i className="bi bi-tools me-2"></i> About
-//         </Link>
-
-//         <Link to="services" className="nav-link text-white">
-//           <i className="bi bi-tools me-2"></i> Services
-//         </Link>
-
-//         <Link to="project" className="nav-link text-white">
-//           <i className="bi bi-building me-2"></i> Projects
-//         </Link>
-
-//         <Link to="enquiries" className="nav-link text-white">
-//           <i className="bi bi-envelope me-2"></i> Enquiries
-//         </Link>
-
-//  <Link to="contact" className="nav-link text-white">
-//           <i className="bi bi-envelope me-2"></i> Contact
-//         </Link>
-
-// <Link to="/landing" className="nav-link text-white">
-//           <i className="bi bi-envelope me-2"></i> Dashboard
-//         </Link>
-
-//              <Link to="profile" className="nav-link text-white">
-//           <i className="bi bi-envelope me-2"></i> My Profile
-//         </Link>
-
-//         <Link to="setting" className="nav-link text-white">
-//           <i className="bi bi-envelope me-2"></i> Setitings
-//         </Link>
-
-//   <Link to="/" className="nav-link text-white">
-//           <i className="bi bi-envelope me-2"></i>Logout
-//         </Link>
-
-//       </nav>
-
-//       <div className="mt-auto border-top pt-3">
-//         <Link to="/login" className="nav-link text-danger">
-//           <i className="bi bi-box-arrow-right me-2"></i>
-//           Logout
-//         </Link>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default Sidebar;
 
 import React from "react";
 import { Link } from "react-router-dom";
+import { useGlobalSettings } from "../../Context/SettingsContext";
 
 export default function Sidebar() {
+  const { theme, language } = useGlobalSettings();
+
+  const isDark = theme === "dark";
+  const isHindi = language === "Hindi";
+
+  const sidebarColor = isDark ? "#101820" : "#102D4F";
+  const textColor = "#ffffff";
+
+  const text = {
+    home: isHindi ? "होम" : "Home",
+    overview: isHindi ? "अवलोकन" : "Overview",
+    about: isHindi ? "हमारे बारे में" : "About",
+    contact: isHindi ? "संपर्क करें" : "Contact Us",
+    dashboard: isHindi ? "डैशबोर्ड" : "Dashboard",
+    services: isHindi ? "सेवाएं देखें" : "Explore Services",
+    projects: isHindi ? "मेरे प्रोजेक्ट" : "My Projects",
+    props: "Props",
+    activity: isHindi ? "हाल की गतिविधियां" : "Recent Activity",
+    orders: isHindi ? "ऑर्डर" : "Orders",
+    enquiry: isHindi ? "नई पूछताछ" : "New Enquiry",
+    totalProject: isHindi ? "कुल प्रोजेक्ट" : "Total Project",
+    pending: isHindi ? "लंबित ऑर्डर" : "Pending Orders",
+    progress: isHindi ? "प्रगति पर" : "In Progress",
+    completed: isHindi ? "पूरे हुए प्रोजेक्ट" : "Completed Project",
+    cancelled: isHindi ? "रद्द प्रोजेक्ट" : "Cancelled Project",
+    account: isHindi ? "अकाउंट" : "Account",
+    profile: isHindi ? "मेरी प्रोफाइल" : "My Profile",
+    messages: isHindi ? "मेरे संदेश" : "My Messages",
+    notifications: isHindi ? "सूचनाएं" : "Notifications",
+    settings: isHindi ? "सेटिंग्स" : "Settings",
+    logout: isHindi ? "लॉगआउट" : "Logout"
+  };
+
+  const buttonStyle = {
+    color: textColor,
+    backgroundColor: "transparent",
+    border: "none"
+  };
+
+  const linkStyle = {
+    display: "block",
+    color: "#ffffff",
+    textDecoration: "none",
+    padding: "9px 15px",
+    borderRadius: "6px"
+  };
+
   return (
     <div
-      className="flex-shrink-0 p-3 text-white"
+      className={`user-sidebar ${isDark ? "user-sidebar-dark" : "user-sidebar-light"}`}
       style={{
         width: "262px",
-        height: "680px",
+        height: "calc(100vh - 84px)",
         position: "fixed",
         top: "84px",
-        left: "",
-
-        backgroundColor: "#102D4F",
+        left: 0,
+        backgroundColor: sidebarColor,
+        color: textColor,
         overflowY: "auto",
-        zIndex: "1000",
+        zIndex: 1000,
+        transition: "background-color 0.3s ease"
       }}
     >
-      {/* Logo */}
-      <Link
-        to="/"
-        className="d-flex align-items-center pb-3 mb-3 text-white text-decoration-none border-bottom border-secondary"
-      >
-        <span className="fs-5 fw-bold">CONVERLINK</span>
-      </Link>
+      <div className="p-3">
 
-      <ul className="list-unstyled ps-0">
-        {/* Home */}
-        <li className="mb-2">
-          <button
-            className="btn btn-toggle text-white w-100 text-start"
-            data-bs-toggle="collapse"
-            data-bs-target="#home-collapse"
-            aria-expanded="true"
-          >
-            Home
-          </button>
+        {/* Logo */}
+        <Link
+          to="/"
+          className="d-flex align-items-center pb-3 mb-3 text-decoration-none border-bottom border-secondary"
+          style={{ color: textColor }}
+        >
+          <span className="fs-5 fw-bold">CONVERLINK</span>
+        </Link>
 
-          <div className="collapse show" id="home-collapse">
-            <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
-              <li>
-                <Link to="/" className="sidebar-link">
-                  Overview
-                </Link>
-              </li>
-              <li>
-                <Link to="about" className="sidebar-link">
-                  About{" "}
-                </Link>
-              </li>
-              <li>
-                <Link to="contact" className="sidebar-link">
-                  Contact Us
-                </Link>
-              </li>
-              
-            </ul>
-          </div>
-        </li>
+        <ul className="list-unstyled ps-0">
 
-        {/* Dashboard */}
-        <li className="mb-2">
-          <button
-            className="btn btn-toggle text-white w-100 text-start collapsed"
-            data-bs-toggle="collapse"
-            data-bs-target="#dashboard-collapse"
-            aria-expanded="false"
-          >
-            Dashboard
-          </button>
-
-          <div className="collapse" id="dashboard-collapse">
-            <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
-              <li>
-                <Link to="/landing" className="sidebar-link">
-                  Overview
-                </Link>
-              </li>
-              <li>
-                <Link to="services" className="sidebar-link">
-                  Explore Services
-                </Link>
-              </li>
-              <li>
-                <Link to="project" className="sidebar-link">
-                  My Projects
-                </Link>
-              </li>
-              <li>
-                <Link to="props" className="sidebar-link">
-                  props
-                </Link>
-              </li>
-              <li>
-                <Link to="*" className="sidebar-link">
-                  Recent Activity
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </li>
-
-        {/* Orders */}
-        <li className="mb-2">
-          <button
-            className="btn btn-toggle text-white w-100 text-start collapsed"
-            data-bs-toggle="collapse"
-            data-bs-target="#orders-collapse"
-            aria-expanded="false"
-          >
-            Orders
-          </button>
-
-          <div className="collapse" id="orders-collapse">
-            <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
-              <li>
-                <Link to="newenquiry" className="sidebar-link">
-                  New Enquiry
-                </Link>
-              </li>
-              <li>
-                <Link to="totalproject" className="sidebar-link">
-                  Total project
-                </Link>
-              </li>
-              <li>
-                <Link to="pendingorders" className="sidebar-link">
-                  Pending Orders
-                </Link>
-              </li>
-              <li>
-                <Link to="inprogress" className="sidebar-link">
-                  In Progress
-                </Link>
-              </li>
-              <li>
-                <Link to="completedproject" className="sidebar-link">
-                  Completed project
-                </Link>
-              </li>
-              <li>
-                <Link to="*" className="sidebar-link">
-                  Cancelled project
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </li>
-
-        {/* Account */}
-        <li className="mb-2">
-          <button
-            className="btn btn-toggle text-white w-100 text-start collapsed"
-            data-bs-toggle="collapse"
-            data-bs-target="#account-collapse"
-            aria-expanded="false"
+          {/* Home */}
+          <li className="mb-2">
+            <button
+              className="btn btn-toggle w-100 text-start"
+              style={buttonStyle}
+              data-bs-toggle="collapse"
+              data-bs-target="#home-collapse"
+              aria-expanded="true"
             >
-            Account
-          </button>
+              {text.home}
+            </button>
 
-          <div className="collapse" id="account-collapse">
-            <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
-              <li>
-                <Link to="profile" className="sidebar-link">
-                  My Profile
-                </Link>
-              </li>
-              <li>
-                <Link to="message" className="sidebar-link">
-                  My Messages
-                </Link>
-              </li>
-              <li>
-                <Link to="notification" className="sidebar-link">
-                  Notifications
-                </Link>
-              </li>
-              <li>
-                <Link to="setting" className="sidebar-link">
-                  Settings
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="sidebar-link">
-                  Logout
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </li>
-      </ul>
+            <div className="collapse show" id="home-collapse">
+              <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
+                <li><Link to="/" style={linkStyle}>{text.overview}</Link></li>
+                <li><Link to="about" style={linkStyle}>{text.about}</Link></li>
+                <li><Link to="contact" style={linkStyle}>{text.contact}</Link></li>
+              </ul>
+            </div>
+          </li>
+
+          {/* Dashboard */}
+          <li className="mb-2">
+            <button
+              className="btn btn-toggle w-100 text-start collapsed"
+              style={buttonStyle}
+              data-bs-toggle="collapse"
+              data-bs-target="#dashboard-collapse"
+              aria-expanded="false"
+            >
+              {text.dashboard}
+            </button>
+
+            <div className="collapse" id="dashboard-collapse">
+              <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
+                <li><Link to="/landing" style={linkStyle}>{text.overview}</Link></li>
+                <li><Link to="services" style={linkStyle}>{text.services}</Link></li>
+                <li><Link to="project" style={linkStyle}>{text.projects}</Link></li>
+                <li><Link to="props" style={linkStyle}>{text.props}</Link></li>
+                <li><Link to="*" style={linkStyle}>{text.activity}</Link></li>
+              </ul>
+            </div>
+          </li>
+
+          {/* Orders */}
+          <li className="mb-2">
+            <button
+              className="btn btn-toggle w-100 text-start collapsed"
+              style={buttonStyle}
+              data-bs-toggle="collapse"
+              data-bs-target="#orders-collapse"
+              aria-expanded="false"
+            >
+              {text.orders}
+            </button>
+
+            <div className="collapse" id="orders-collapse">
+              <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
+                <li><Link to="newenquiry" style={linkStyle}>{text.enquiry}</Link></li>
+                <li><Link to="totalproject" style={linkStyle}>{text.totalProject}</Link></li>
+                <li><Link to="pendingorders" style={linkStyle}>{text.pending}</Link></li>
+                <li><Link to="inprogress" style={linkStyle}>{text.progress}</Link></li>
+                <li><Link to="completedproject" style={linkStyle}>{text.completed}</Link></li>
+                <li><Link to="*" style={linkStyle}>{text.cancelled}</Link></li>
+              </ul>
+            </div>
+          </li>
+
+          {/* Account */}
+          <li className="mb-2">
+            <button
+              className="btn btn-toggle w-100 text-start collapsed"
+              style={buttonStyle}
+              data-bs-toggle="collapse"
+              data-bs-target="#account-collapse"
+              aria-expanded="false"
+            >
+              {text.account}
+            </button>
+
+            <div className="collapse" id="account-collapse">
+              <ul className="btn-toggle-nav list-unstyled fw-normal pb-2 small">
+                <li><Link to="profile" style={linkStyle}>{text.profile}</Link></li>
+                <li><Link to="message" style={linkStyle}>{text.messages}</Link></li>
+                <li><Link to="notification" style={linkStyle}>{text.notifications}</Link></li>
+                <li><Link to="setting" style={linkStyle}>{text.settings}</Link></li>
+                <li><Link to="/" style={linkStyle}>{text.logout}</Link></li>
+              </ul>
+            </div>
+          </li>
+
+        </ul>
+      </div>
     </div>
   );
 }

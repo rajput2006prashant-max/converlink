@@ -22,7 +22,7 @@ function PendingOrder() {
     <div className="container-fluid p-4">
 
       <h3 className="fw-bold mb-1">Pending Orders</h3>
-      <p className="text-secondary">
+      <p className="text-primary">
         Manage your pending projects and orders
       </p>
 
@@ -65,7 +65,7 @@ function PendingOrder() {
 
             <table className="table table-hover align-middle">
 
-              <thead className="table-light">
+              <thead className="table-primary">
                 <tr>
                   <th>S.No</th>
                   <th>Project Name</th>

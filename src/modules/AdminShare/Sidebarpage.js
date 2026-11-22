@@ -1,238 +1,7 @@
 
-// import React, { useState } from "react";
-// import { NavLink } from "react-router-dom";
-
-// import {
-//   FaTachometerAlt,
-//   FaTools,
-//   FaProjectDiagram,
-//   FaEnvelope,
-//   FaUsers,
-//   FaUserCircle,
-//   FaCog,
-//   FaSignOutAlt,
-//   FaBuilding,
-//   FaChevronDown
-// } from "react-icons/fa";
-
-// function Sidebarpage() {
-
-//   const [openMenu, setOpenMenu] = useState("");
-
-//   const toggleMenu = (menu) => {
-//     setOpenMenu(openMenu === menu ? "" : menu);
-//   };
-
-//   const menuItems = [
-//     {
-//       title: "Manage Services",
-//       icon: <FaTools />,
-//       key: "services",
-//       children: [
-//         { title: "Add Services", path: "ManageServices" },
-//         { title: "View Services", path: "ManageServices" }
-//       ]
-//     },
-//     {
-//       title: "Manage Projects",
-//       icon: <FaProjectDiagram />,
-//       key: "projects",
-//       children: [
-//         { title: "Total Projects", path: "ManageProject" },
-//         { title: "Pending Projects", path: "ManageProject" },
-//         { title: "In Progress", path: "ManageProject" },
-//         { title: "Completed Projects", path: "ManageProject" },
-//         { title: "Cancelled Projects", path: "ManageProject" }
-//       ]
-//     },
-//     {
-//       title: "Enquiries",
-//       icon: <FaEnvelope />,
-//       key: "enquiries",
-//       children: [
-//         { title: "New Enquiries", path: "Enquiries" },
-//         { title: "Approved Enquiries", path: "Enquiries" }
-//       ]
-//     },
-//     {
-//       title: "Manage Users",
-//       icon: <FaUsers />,
-//       key: "users",
-//       children: [
-//         { title: "All Users", path: "ManageUser" },
-//         { title: "Active Users", path: "ManageUser" }
-//       ]
-//     }
-//   ];
-
-//   return (
-//     <aside
-//       className="admin-sidebar"
-//       style={{
-//         width: "260px",
-//         backgroundColor: "#102D4F",
-//         position: "fixed",
-//         top: "98px",
-//         left: 0,
-//         height: "calc(100vh - 98px)",
-//         color: "white",
-//         overflowY: "auto",
-//         zIndex: 1000,
-//         paddingBottom: "20px"
-//       }}
-//     >
-
-//       {/* Sidebar Heading */}
-//       <div className="sidebar-heading">
-//         <FaBuilding className="sidebar-logo bg-primary" />
-
-//         <div>
-//           <h5>Admin Panel</h5>
-//           <small>Converlink Engineering</small>
-//         </div>
-//       </div>
-
-//       <p className="sidebar-label">MAIN MENU</p>
-
-//       <nav className="sidebar-menu">
-
-//         {/* Dashboard */}
-//         <NavLink
-//           to="/adminlandingpage"
-//           end
-//           className={({ isActive }) =>
-//             `sidebar-link ${isActive ? "active" : ""}`
-//           }
-//         >
-//           <span className="sidebar-icon">
-//             <FaTachometerAlt />
-//           </span>
-//           <span>Dashboard</span>
-//         </NavLink>
-
-//         {/* Dropdown Menus */}
-//         {menuItems.map((item) => (
-
-//           <div key={item.key}>
-
-//             <button
-//               type="button"
-//               onClick={() => toggleMenu(item.key)}
-//               className="sidebar-link w-100 border-0 text-start"
-//               style={{
-//                 backgroundColor:
-//                   openMenu === item.key ? "#087FC4" : "transparent",
-//                 color: "white",
-//                 cursor: "pointer"
-//               }}
-//             >
-
-//               <span className="sidebar-icon">
-//                 {item.icon}
-//               </span>
-
-//               <span>{item.title}</span>
-
-//               <FaChevronDown
-//                 className="ms-auto"
-//                 style={{
-//                   transform:
-//                     openMenu === item.key
-//                       ? "rotate(180deg)"
-//                       : "rotate(0deg)",
-//                   transition: "0.3s"
-//                 }}
-//               />
-
-//             </button>
-
-//             {/* Dropdown Submenu */}
-//             {openMenu === item.key && (
-
-//               <div
-//                 style={{
-//                   backgroundColor: "#173C60",
-//                   padding: "5px 0"
-//                 }}
-//               >
-
-//                 {item.children.map((child, index) => (
-
-//                   <NavLink
-//                     key={index}
-//                     to={child.path}
-//                     className="sidebar-link"
-//                     style={{
-//                       paddingLeft: "55px",
-//                       fontSize: "13px"
-//                     }}
-//                   >
-//                     {child.title}
-//                   </NavLink>
-
-//                 ))}
-
-//               </div>
-
-//             )}
-
-//           </div>
-
-//         ))}
-
-//         {/* My Profile */}
-//         <NavLink
-//           to="MyProfile"
-//           className="sidebar-link"
-//         >
-//           <span className="sidebar-icon">
-//             <FaUserCircle />
-//           </span>
-//           <span>My Profile</span>
-//         </NavLink>
-
-//         {/* Settings */}
-//         <NavLink
-//           to="Settings"
-//           className="sidebar-link"
-//         >
-//           <span className="sidebar-icon">
-//             <FaCog />
-//           </span>
-//           <span>Settings</span>
-//         </NavLink>
-
-//       </nav>
-
-//       {/* Logout */}
-//       <div className="sidebar-bottom">
-
-//         <NavLink
-//           to="/admin-login"
-//           className="sidebar-link logout-link"
-//         >
-//           <span className="sidebar-icon">
-//             <FaSignOutAlt />
-//           </span>
-
-//           <span>Logout</span>
-//         </NavLink>
-
-//         <div className="sidebar-footer">
-//           <small>© 2026 Converlink Engineering</small>
-//         </div>
-
-//       </div>
-
-//     </aside>
-//   );
-// }
-
-// export default Sidebarpage;
-
-
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { useGlobalSettings } from "../../Context/SettingsContext";
 
 import {
   FaBuilding,
@@ -253,77 +22,125 @@ import {
   FaSignOutAlt
 } from "react-icons/fa";
 
+
+
 function AdminSidebar({ closeSidebar }) {
+
+  const { theme, language } = useGlobalSettings();
+
+  const isDark = theme === "dark";
+
+  const translations = {
+    English: {
+      dashboard: "Dashboard",
+      users: "Manage Users",
+      admins: "Manage Admins",
+      services: "Manage Services",
+      projects: "Manage Projects",
+      enquiries: "New Enquiries",
+      orders: "Manage Orders",
+      quotations: "Quotations",
+      invoices: "Invoices",
+      messages: "Messages",
+      notifications: "Notifications",
+      reports: "Reports",
+      profile: "My Profile",
+      settings: "Settings",
+      logout: "Logout",
+      menu: "MAIN MENU"
+    },
+
+    Hindi: {
+      dashboard: "डैशबोर्ड",
+      users: "यूजर्स प्रबंधित करें",
+      admins: "एडमिन प्रबंधित करें",
+      services: "सेवाएं प्रबंधित करें",
+      projects: "प्रोजेक्ट प्रबंधित करें",
+      enquiries: "नई पूछताछ",
+      orders: "ऑर्डर प्रबंधित करें",
+      quotations: "कोटेशन",
+      invoices: "इनवॉइस",
+      messages: "संदेश",
+      notifications: "सूचनाएं",
+      reports: "रिपोर्ट",
+      profile: "मेरी प्रोफाइल",
+      settings: "सेटिंग्स",
+      logout: "लॉगआउट",
+      menu: "मुख्य मेनू"
+    }
+  };
+
+  const t = translations[language] || translations.English;
 
   const menuItems = [
     {
-      name: "Dashboard",
+      name: t.dashboard,
       path: "/adminlandingpage",
       icon: <FaHome />,
       end: true
     },
     {
-      name: "Manage Users",
+      name: t.users,
       path: "/adminlandingpage/ManageUser",
       icon: <FaUsers />
     },
     {
-      name: "Manage Admins",
+      name: t.admins,
       path: "/adminlandingpage/ManageAdmin",
       icon: <FaUserShield />
     },
     {
-      name: "Manage Services",
+      name: t.services,
       path: "/adminlandingpage/ManageServices",
       icon: <FaTools />
     },
     {
-      name: "Manage Projects",
+      name: t.projects,
       path: "/adminlandingpage/ManageProject",
       icon: <FaProjectDiagram />
     },
     {
-      name: "New Enquiries",
+      name: t.enquiries,
       path: "/adminlandingpage/Enquiries",
       icon: <FaClipboardList />
     },
     {
-      name: "Manage Orders",
+      name: t.orders,
       path: "/adminlandingpage/ManageOrder",
       icon: <FaShoppingCart />
     },
     {
-      name: "Quotations",
+      name: t.quotations,
       path: "/adminlandingpage/Quotations",
       icon: <FaFileInvoice />
     },
     {
-      name: "Invoices",
+      name: t.invoices,
       path: "/adminlandingpage/Invoices",
       icon: <FaReceipt />
     },
     {
-      name: "Messages",
+      name: t.messages,
       path: "/adminlandingpage/Message",
       icon: <FaComments />
     },
     {
-      name: "Notifications",
+      name: t.notifications,
       path: "/adminlandingpage/Notification",
       icon: <FaBell />
     },
     {
-      name: "Reports",
+      name: t.reports,
       path: "/adminlandingpage/reports",
       icon: <FaChartLine />
     },
     {
-      name: "My Profile",
+      name: t.profile,
       path: "/adminlandingpage/MyProfile",
       icon: <FaUser />
     },
     {
-      name: "Settings",
+      name: t.settings,
       path: "/adminlandingpage/Settings",
       icon: <FaCog />
     }
@@ -336,17 +153,14 @@ function AdminSidebar({ closeSidebar }) {
   };
 
   return (
-
     <aside
-      className="admin-sidebar"
+      className={`admin-sidebar ${isDark ? "dark-sidebar" : "light-sidebar"}`}
       style={{
         width: "260px",
-        backgroundColor: "#102D4F",
         position: "fixed",
         top: "98px",
         left: 0,
         height: "calc(100vh - 98px)",
-        color: "white",
         overflowY: "auto",
         zIndex: 1000,
         paddingBottom: "20px",
@@ -356,7 +170,6 @@ function AdminSidebar({ closeSidebar }) {
     >
 
       {/* COMPANY BRAND */}
-
       <div className="sidebar-brand d-flex align-items-center gap-3 p-3">
 
         <FaBuilding className="brand-icon fs-3" />
@@ -369,9 +182,8 @@ function AdminSidebar({ closeSidebar }) {
       </div>
 
       {/* MAIN MENU */}
-
       <div className="sidebar-heading px-3 py-2">
-        MAIN MENU
+        {t.menu}
       </div>
 
       <div className="sidebar-menu px-2">
@@ -403,36 +215,26 @@ function AdminSidebar({ closeSidebar }) {
       </div>
 
       {/* LOGOUT */}
-
       <div className="sidebar-bottom mt-auto px-2">
 
-      <button
-  className="sidebar-link logout-btn w-100"
-  onClick={handleLogout}
-  style={{
-    backgroundColor: "transparent",
-    color: "white",
-    border: "none",
-    textAlign: "left",
-    outline: "none",
-    boxShadow: "none"
-  }}
->
+        <button
+          className="sidebar-link logout-btn w-100"
+          onClick={handleLogout}
+          type="button"
+        >
 
           <span className="sidebar-icon">
             <FaSignOutAlt />
           </span>
 
-          <span>Logout</span>
+          <span>{t.logout}</span>
 
         </button>
 
       </div>
 
     </aside>
-
   );
 }
 
 export default AdminSidebar;
-

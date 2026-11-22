@@ -9,18 +9,47 @@ import {
   FaUserCircle
 } from "react-icons/fa";
 
+import { useGlobalSettings } from "../../Context/SettingsContext";
+
 function Headerpage() {
+  const { theme, language, settings } = useGlobalSettings();
+
+  const isDark = theme === "dark";
+  const isHindi = language === "Hindi";
+
+  const companyName = settings?.general?.websiteName || "CONVERLINK";
+  const subtitle = settings?.general?.companyName || "Converlink Engineering Pvt. Ltd.";
+
+  const text = {
+    account: isHindi ? "खाता" : "Account",
+    search: isHindi ? "खोजें..." : "Search...",
+    notifications: isHindi ? "सूचनाएं" : "Notifications",
+    messages: isHindi ? "संदेश" : "Messages",
+    userLogin: isHindi ? "यूजर लॉगिन" : "User Login",
+    profile: isHindi ? "मेरी प्रोफाइल" : "My Profile",
+    dashboard: isHindi ? "डैशबोर्ड" : "Dashboard",
+    settings: isHindi ? "सेटिंग्स" : "Settings",
+    logout: isHindi ? "लॉगआउट" : "Logout"
+  };
+
+  const headerColor = isDark ? "#101820" : "#102D4F";
+  const inputColor = isDark ? "#263449" : "#ffffff";
+
   return (
     <header
       className="shadow"
       style={{
-        backgroundColor: "#102D4F",
+        backgroundColor: headerColor,
         position: "sticky",
         top: 0,
-        zIndex: 999
+        zIndex: 999,
+        transition: "0.3s"
       }}
     >
-      <nav className="navbar">
+      <nav
+        className="navbar"
+        style={{ backgroundColor: headerColor }}
+      >
         <div className="container-fluid px-4">
 
           {/* Company Logo */}
@@ -28,14 +57,12 @@ function Headerpage() {
             to="/"
             className="navbar-brand d-flex align-items-center gap-2 text-white fw-bold"
           >
-            <FaBuilding
-              style={{ color: "#38C8F5", fontSize: "32px" }}
-            />
+            <FaBuilding style={{ color: "#38C8F5", fontSize: "32px" }} />
 
             <span>
-              CONVERLINK
+              {companyName}
               <small className="d-block text-white-50">
-                ENGINEERING PVT. LTD.
+                {subtitle}
               </small>
             </span>
           </Link>
@@ -48,7 +75,11 @@ function Headerpage() {
               <input
                 type="text"
                 className="form-control border-0"
-                placeholder="Search..."
+                placeholder={text.search}
+                style={{
+                  backgroundColor: inputColor,
+                  color: isDark ? "#ffffff" : "#212529"
+                }}
               />
 
               <span
@@ -66,16 +97,10 @@ function Headerpage() {
             <Link
               to="/landing/notification"
               className="position-relative text-white"
-              title="Notifications"
+              title={text.notifications}
             >
               <FaBell size={21} />
-              <span
-                className="position-absolute top-0 start-100 translate-middle badge rounded-pill"
-                style={{
-                  backgroundColor: "#38C8F5",
-                  color: "#102D4F"
-                }}
-              >
+              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info text-dark">
                 3
               </span>
             </Link>
@@ -84,7 +109,7 @@ function Headerpage() {
             <Link
               to="/landing/message"
               className="position-relative text-white"
-              title="Messages"
+              title={text.messages}
             >
               <FaEnvelope size={21} />
               <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -105,56 +130,69 @@ function Headerpage() {
                 aria-expanded="false"
               >
                 <FaUserCircle className="me-2" />
-                Account
+                {text.account}
               </button>
 
-              <ul className="dropdown-menu dropdown-menu-end shadow border-0">
-
-                {/* User Login */}
+              <ul
+                className="dropdown-menu dropdown-menu-end shadow"
+                style={{
+                  backgroundColor: isDark ? "#1e293b" : "#ffffff",
+                  borderColor: isDark ? "#475569" : "#dee2e6"
+                }}
+              >
                 <li>
-                  <Link className="dropdown-item py-2" to="/landing/user-login">
+                  <Link
+                    className="dropdown-item py-2"
+                    style={{ color: isDark ? "#ffffff" : "#212529" }}
+                    to="/landing/user-login"
+                  >
                     <FaUserCircle className="me-2 text-primary" />
-                    User Login
+                    {text.userLogin}
                   </Link>
                 </li>
 
-                {/* User Register */}
-             
-                <li>
-                  <hr className="dropdown-divider" />
-                </li>
+                <li><hr className="dropdown-divider" /></li>
 
-                {/* Profile */}
                 <li>
-                  <Link className="dropdown-item py-2" to="/landing/profile">
-                    My Profile
-                  </Link>
-                </li>
-                <li>
-                  <Link className="dropdown-item py-2" to="/landing">
-                    Dashboard
-                  </Link>
-                </li>
-                
-
-                {/* Settings */}
-                <li>
-                  <Link className="dropdown-item py-2" to="/landing/setting">
-                    Settings
+                  <Link
+                    className="dropdown-item py-2"
+                    style={{ color: isDark ? "#ffffff" : "#212529" }}
+                    to="/landing/profile"
+                  >
+                    {text.profile}
                   </Link>
                 </li>
 
                 <li>
-                  <hr className="dropdown-divider" />
-                </li>
-
-                {/* Logout */}
-                <li>
-                  <Link className="dropdown-item py-2 text-danger" to="/">
-                    Logout
+                  <Link
+                    className="dropdown-item py-2"
+                    style={{ color: isDark ? "#ffffff" : "#212529" }}
+                    to="/landing"
+                  >
+                    {text.dashboard}
                   </Link>
                 </li>
 
+                <li>
+                  <Link
+                    className="dropdown-item py-2"
+                    style={{ color: isDark ? "#ffffff" : "#212529" }}
+                    to="/landing/setting"
+                  >
+                    {text.settings}
+                  </Link>
+                </li>
+
+                <li><hr className="dropdown-divider" /></li>
+
+                <li>
+                  <Link
+                    className="dropdown-item py-2 text-danger"
+                    to="/"
+                  >
+                    {text.logout}
+                  </Link>
+                </li>
               </ul>
             </div>
 

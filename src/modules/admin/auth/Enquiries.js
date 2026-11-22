@@ -287,7 +287,12 @@ function ManageEnquiries() {
             Manage Enquiries
           </h3>
 
-          <p className="text-muted mb-0">
+          <p className="text-muted mb-0"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
             View and manage customer enquiries.
           </p>
         </div>
@@ -308,7 +313,12 @@ function ManageEnquiries() {
 
         <div className="col-md-3 col-sm-6">
           <div className="card dashboard-card shadow-sm border-0 h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">
                 Total Enquiries
               </p>
@@ -319,7 +329,12 @@ function ManageEnquiries() {
 
         <div className="col-md-3 col-sm-6">
           <div className="card dashboard-card shadow-sm border-0 h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">Pending</p>
               <h3 className="fw-bold text-warning mb-0">
                 {pending}
@@ -330,7 +345,12 @@ function ManageEnquiries() {
 
         <div className="col-md-3 col-sm-6">
           <div className="card dashboard-card shadow-sm border-0 h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">Contacted</p>
               <h3 className="fw-bold text-primary mb-0">
                 {contacted}
@@ -341,7 +361,12 @@ function ManageEnquiries() {
 
         <div className="col-md-3 col-sm-6">
           <div className="card dashboard-card shadow-sm border-0 h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">Approved</p>
               <h3 className="fw-bold text-success mb-0">
                 {approved}

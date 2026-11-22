@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { ProjectProvider } from "./Context/ProjectContext";
 import { Provider } from 'react-redux';
+import { SettingsProvider } from "./Context/SettingsContext";
 import { Myactionstore } from './redux/Mystore';
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -66,6 +67,7 @@ function App() {
   return (
     <ProjectProvider>
       <Provider  store={Myactionstore}>
+        <SettingsProvider>
     <Routes>
       {/* Welcome */}
       <Route path="/" element={<Welcome />} />
@@ -134,6 +136,7 @@ function App() {
       {/* Invalid URL */}
       <Route path="*" element={<Errorpage />} />
     </Routes>
+    </SettingsProvider>
      </Provider>
     </ProjectProvider>
    

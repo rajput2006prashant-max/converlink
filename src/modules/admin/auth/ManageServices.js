@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { MdDelete } from "react-icons/md";
@@ -16,7 +15,7 @@ const emptyForm = {
   status: "Active",
   benefits: "",
   workIncludes: "",
-  process: ""
+  process: "",
 };
 
 function ManageServices() {
@@ -54,7 +53,7 @@ function ManageServices() {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -79,7 +78,7 @@ function ManageServices() {
       status: service.status || "Active",
       benefits: (service.benefits || []).join("\n"),
       workIncludes: (service.workIncludes || []).join("\n"),
-      process: (service.process || []).join("\n")
+      process: (service.process || []).join("\n"),
     });
 
     setShowModal(true);
@@ -87,7 +86,10 @@ function ManageServices() {
 
   // Convert textarea lines into arrays
   const convertToArray = (value) =>
-    value.split("\n").map((item) => item.trim()).filter(Boolean);
+    value
+      .split("\n")
+      .map((item) => item.trim())
+      .filter(Boolean);
 
   // Add / Update
   const handleSubmit = async (e) => {
@@ -107,7 +109,7 @@ function ManageServices() {
         benefits: convertToArray(formData.benefits),
         workIncludes: convertToArray(formData.workIncludes),
         process: convertToArray(formData.process),
-        rating: 5
+        rating: 5,
       };
 
       if (editId !== null) {
@@ -150,25 +152,28 @@ function ManageServices() {
   const filteredServices = services.filter((service) =>
     `${service.title} ${service.category} ${service.description}`
       .toLowerCase()
-      .includes(search.toLowerCase())
+      .includes(search.toLowerCase()),
   );
 
   const activeServices = services.filter(
-    (service) => service.status === "Active"
+    (service) => service.status === "Active",
   ).length;
 
   const inactiveServices = services.filter(
-    (service) => service.status === "Inactive"
+    (service) => service.status === "Inactive",
   ).length;
 
   return (
     <div className="container-fluid py-3">
-
       {/* Heading */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
           <h3 className="fw-bold">Manage Services</h3>
-          <p className="text-muted mb-0">
+
+          <p
+            className="text-muted mb-0"
+            style={{ color: "white", backgroundColor: "#087FC4", width:"310px", borderRadius: "5px", padding:"10px" }}
+          >
             Add, edit and manage company services.
           </p>
         </div>
@@ -182,9 +187,9 @@ function ManageServices() {
       {/* Cards */}
       <div className="row g-3 mb-4">
         <div className="col-md-4">
-          <div className="card border-0 shadow-sm">
+          <div className="card border-0 shadow-sm" >
             <div className="card-body">
-              <p className="text-muted">Total Services</p>
+              <p className="text-muted" style={{ color: "white", backgroundColor: "#087FC4", width:"120px", borderRadius: "5px", padding:"10px" }}>Total Services</p>
               <h3 className="fw-bold">{services.length}</h3>
             </div>
           </div>
@@ -193,7 +198,7 @@ function ManageServices() {
         <div className="col-md-4">
           <div className="card border-0 shadow-sm">
             <div className="card-body">
-              <p className="text-muted">Active Services</p>
+              <p className="text-muted"  style={{ color: "white", backgroundColor: "#087FC4", width:"130px", borderRadius: "5px", padding:"10px" }}>Active Services</p>
               <h3 className="fw-bold text-success">{activeServices}</h3>
             </div>
           </div>
@@ -202,7 +207,7 @@ function ManageServices() {
         <div className="col-md-4">
           <div className="card border-0 shadow-sm">
             <div className="card-body">
-              <p className="text-muted">Inactive Services</p>
+              <p className="text-muted" style={{ color: "white", backgroundColor: "#087FC4", width:"140px", borderRadius: "5px", padding:"10px" }}>Inactive Services</p>
               <h3 className="fw-bold text-danger">{inactiveServices}</h3>
             </div>
           </div>
@@ -324,7 +329,7 @@ function ManageServices() {
           style={{
             background: "rgba(0,0,0,0.6)",
             zIndex: 9999,
-            overflowY: "auto"
+            overflowY: "auto",
           }}
         >
           <div
@@ -333,7 +338,7 @@ function ManageServices() {
               width: "100%",
               maxWidth: "650px",
               maxHeight: "90vh",
-              overflowY: "auto"
+              overflowY: "auto",
             }}
           >
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -498,8 +503,8 @@ function ManageServices() {
                   {saving
                     ? "Saving..."
                     : editId !== null
-                    ? "Update Service"
-                    : "Save Service"}
+                      ? "Update Service"
+                      : "Save Service"}
                 </button>
               </div>
             </form>

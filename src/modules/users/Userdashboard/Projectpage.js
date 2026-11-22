@@ -62,7 +62,7 @@ function Project() {
           <h2 className="fw-bold mb-2" style={{ color: "#102D4F" }}>
             Our Projects
           </h2>
-          <p className="text-secondary mb-0">
+          <p className="text-primary mb-0">
             Explore our electrical, maintenance, installation and interior projects.
           </p>
         </div>

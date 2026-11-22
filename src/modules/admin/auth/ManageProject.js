@@ -166,11 +166,16 @@ function ManageProjects() {
       {/* Heading */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
-          <h3 className="fw-bold mb-1">
+          <h2 className="fw-bold mb-1">
             Manage Projects
-          </h3>
+          </h2>
 
-          <p className="text-muted mb-0">
+          <p className="text-muted mb-0"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
             View and manage all customer enquiries and projects.
           </p>
         </div>
@@ -190,7 +195,12 @@ function ManageProjects() {
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">Total Enquiries</p>
               <h3 className="fw-bold mb-0">
                 {projects.length}
@@ -201,7 +211,12 @@ function ManageProjects() {
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">New</p>
               <h3 className="fw-bold text-warning mb-0">
                 {newCount}
@@ -212,7 +227,12 @@ function ManageProjects() {
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">Approved</p>
               <h3 className="fw-bold text-success mb-0">
                 {approvedCount}
@@ -223,7 +243,12 @@ function ManageProjects() {
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">In Progress</p>
               <h3 className="fw-bold text-primary mb-0">
                 {progressCount}
@@ -234,7 +259,12 @@ function ManageProjects() {
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">Completed</p>
               <h3 className="fw-bold text-info mb-0">
                 {completedCount}
@@ -245,7 +275,12 @@ function ManageProjects() {
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">Rejected</p>
               <h3 className="fw-bold text-danger mb-0">
                 {rejectedCount}

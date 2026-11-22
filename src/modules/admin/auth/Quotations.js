@@ -235,7 +235,12 @@ function ManageQuotations() {
       <div className="d-flex justify-content-between align-items-center flex-wrap mb-4">
         <div>
           <h3 className="fw-bold mb-1">Manage Quotations</h3>
-          <p className="text-muted mb-0">
+          <p className="text-muted mb-0"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
             Create and manage customer quotations
           </p>
         </div>
@@ -255,7 +260,12 @@ function ManageQuotations() {
 
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-1">Total Quotations</p>
               <h3 className="fw-bold">{quotations.length}</h3>
               <i className="bi bi-file-earmark-text text-primary fs-4"></i>
@@ -265,7 +275,12 @@ function ManageQuotations() {
 
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-1">Draft Quotations</p>
               <h3 className="fw-bold text-warning">{draftCount}</h3>
               <i className="bi bi-pencil-square text-warning fs-4"></i>
@@ -275,7 +290,12 @@ function ManageQuotations() {
 
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-1">Sent Quotations</p>
               <h3 className="fw-bold text-primary">{sentCount}</h3>
               <i className="bi bi-send text-primary fs-4"></i>
@@ -285,7 +305,12 @@ function ManageQuotations() {
 
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-1">Accepted Quotations</p>
               <h3 className="fw-bold text-success">{acceptedCount}</h3>
               <i className="bi bi-check-circle text-success fs-4"></i>
@@ -297,7 +322,12 @@ function ManageQuotations() {
 
       {/* TOTAL VALUE */}
       <div className="card border-0 shadow-sm mb-4">
-        <div className="card-body">
+        <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
           <p className="text-muted mb-1">Total Quotation Value</p>
           <h3 className="fw-bold text-primary mb-0">
             ₹{totalQuotationValue.toLocaleString("en-IN")}

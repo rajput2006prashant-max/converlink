@@ -215,7 +215,12 @@ function Notifications() {
           <h3 className="fw-bold mb-1" style={{ color: "#102D4F" }}>
             Notifications
           </h3>
-          <p className="text-muted mb-0">
+          <p className="text-muted mb-0"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
             Manage and send notifications to users
           </p>
         </div>
@@ -239,7 +244,12 @@ function Notifications() {
       <div className="row g-3 mb-4">
         <div className="col-md-4">
           <div className="card border-0 shadow-sm">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted">Total Notifications</p>
               <h3 className="fw-bold">{notifications.length}</h3>
             </div>
@@ -248,7 +258,12 @@ function Notifications() {
 
         <div className="col-md-4">
           <div className="card border-0 shadow-sm">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted">Unread</p>
               <h3 className="fw-bold text-danger">{unreadCount}</h3>
             </div>
@@ -257,7 +272,12 @@ function Notifications() {
 
         <div className="col-md-4">
           <div className="card border-0 shadow-sm">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted">Read</p>
               <h3 className="fw-bold text-success">{readCount}</h3>
             </div>
@@ -323,10 +343,12 @@ function Notifications() {
                 key={item.id}
                 className="border rounded p-3 mb-3 d-flex gap-3 align-items-start"
                 style={{
-                  backgroundColor: item.read ? "#fff" : "#f0f7ff",
+                  backgroundColor: item.read ? "#087FC4" : "#087FC4",
                   borderLeft: item.read
                     ? "4px solid #ddd"
-                    : "4px solid #087FC4"
+                    : "4px solid #087FC4",
+                      borderRadius: "10px",
+    color: "black",
                 }}
               >
                 <div style={{ fontSize: "28px" }}>
@@ -353,14 +375,14 @@ function Notifications() {
 
                 <div className="d-flex flex-column gap-2">
                   <button
-                    className="btn btn-sm btn-outline-success"
+                    className="btn btn-sm btn-outline-success bg-primary"
                     onClick={() => toggleRead(item)}
                   >
                     {item.read ? "Unread" : "Mark Read"}
                   </button>
 
                   <button
-                    className="btn btn-sm btn-outline-danger"
+                    className="btn btn-sm btn-outline-danger "
                     onClick={() => handleDelete(item.id)}
                   >
                     Delete
@@ -400,7 +422,13 @@ function Notifications() {
               />
             </div>
 
-            <div className="card-body">
+            <div className="card-body"
+            style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <form onSubmit={handleSubmit}>
 
                 <div className="mb-3">

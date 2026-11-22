@@ -7960,3 +7960,529 @@
   background-color: #087FC4;
   color: white !important;
 }
+
+
+
+/*------------------------------------------- admin setting css---------------------------------------------------------------------------- */
+
+
+
+/* Admin Layout */
+.admin-layout {
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.admin-main-content {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Light Theme */
+.admin-layout.light-theme {
+  background-color: #f5f7fb;
+  color: #212529;
+}
+
+/* Dark Theme */
+.admin-layout.dark-theme {
+  background-color: #121a24;
+  color: #f1f5f9;
+}
+
+.dark-theme .card {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+
+.dark-theme .table {
+  --bs-table-bg: #1e293b;
+  --bs-table-color: #f1f5f9;
+  --bs-table-border-color: #334155;
+}
+
+.dark-theme .form-control,
+.dark-theme .form-select {
+  background-color: #263548;
+  color: white;
+  border-color: #475569;
+}
+
+.dark-theme .form-control::placeholder {
+  color: #cbd5e1;
+}
+
+.dark-theme .text-secondary {
+  color: #cbd5e1 !important;
+}
+
+
+
+/*------------------------------------------ admin header page */
+
+
+
+
+
+/* Header Theme */
+.admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: background-color 0.3s ease;
+}
+
+.admin-header.light-header {
+  background-color: #102D4F;
+}
+
+.admin-header.dark-header {
+  background-color: #101820;
+}
+
+.header-search {
+  border: 1px solid #ced4da;
+}
+
+.dark-header .header-search {
+  background-color: #263548;
+  color: white;
+  border-color: #475569;
+}
+
+.dark-header .header-search::placeholder {
+  color: #cbd5e1;
+}
+
+/* Dark Dropdown */
+.dark-dropdown {
+  background-color: #1e293b;
+}
+
+.dark-dropdown .dropdown-item {
+  color: #f1f5f9;
+}
+
+.dark-dropdown .dropdown-item:hover {
+  background-color: #334155;
+  color: white;
+}
+
+.dark-dropdown .dropdown-header {
+  color: #38C8F5;
+}
+
+.dark-dropdown .dropdown-divider {
+  border-color: #475569;
+}
+
+
+
+/*-------------------------------------------- admin sidebar page------------------------------ */
+
+
+
+/* SIDEBAR COMMON */
+.admin-sidebar {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* LIGHT SIDEBAR */
+.admin-sidebar.light-sidebar {
+  background-color: #102D4F;
+  color: white;
+}
+
+/* DARK SIDEBAR */
+.admin-sidebar.dark-sidebar {
+  background-color: #101820;
+  color: #f1f5f9;
+}
+
+/* BRAND */
+.admin-sidebar .sidebar-brand {
+  color: white;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.admin-sidebar .brand-icon {
+  color: #38C8F5;
+}
+
+/* HEADING */
+.admin-sidebar .sidebar-heading {
+  color: #38C8F5;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* MENU LINKS */
+.admin-sidebar .sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 5px;
+  color: white;
+  text-decoration: none;
+  border-radius: 7px;
+  transition: 0.3s;
+}
+
+/* HOVER */
+.admin-sidebar .sidebar-link:hover {
+  background-color: #087FC4;
+  color: white;
+}
+
+/* ACTIVE */
+.admin-sidebar .sidebar-link.active {
+  background-color: #087FC4;
+  color: white;
+}
+
+/* ICON */
+.admin-sidebar .sidebar-icon {
+  font-size: 17px;
+  min-width: 22px;
+}
+
+/* LOGOUT */
+.admin-sidebar .logout-btn {
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* DARK HOVER */
+.admin-sidebar.dark-sidebar .sidebar-link:hover,
+.admin-sidebar.dark-sidebar .sidebar-link.active {
+  background-color: #087FC4;
+  color: white;
+}
+
+
+/*---------------------------------- admin footer page------------------------ */
+
+
+
+/* FOOTER COMMON */
+.admin-footer {
+  width: 100%;
+  margin-top: auto;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* LIGHT FOOTER */
+.admin-footer.light-footer {
+  background-color: #102D4F;
+  color: #ffffff;
+}
+
+/* DARK FOOTER */
+.admin-footer.dark-footer {
+  background-color: #101820;
+  color: #f1f5f9;
+}
+
+/* BRAND */
+.admin-footer .footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-footer .footer-logo {
+  color: #38C8F5;
+  font-size: 35px;
+}
+
+.admin-footer .footer-brand h5 {
+  margin: 0;
+  font-weight: bold;
+  color: white;
+}
+
+.admin-footer .footer-brand span {
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+/* DESCRIPTION */
+.admin-footer .footer-description {
+  color: #cbd5e1;
+  line-height: 1.7;
+}
+
+/* TITLES */
+.admin-footer .footer-title {
+  color: #38C8F5;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* LINKS */
+.admin-footer .footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-footer .footer-links li {
+  margin-bottom: 12px;
+}
+
+.admin-footer .footer-links a {
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.admin-footer .footer-links a:hover {
+  color: #38C8F5;
+  padding-left: 5px;
+}
+
+/* CONTACT */
+.admin-footer .footer-contact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: #cbd5e1;
+}
+
+.admin-footer .footer-contact svg {
+  color: #38C8F5;
+  min-width: 17px;
+}
+
+/* SOCIAL */
+.admin-footer .footer-socials {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.admin-footer .footer-socials a {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  background-color: #087FC4;
+  color: white;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.admin-footer .footer-socials a:hover {
+  background-color: #38C8F5;
+  color: #102D4F;
+  transform: translateY(-3px);
+}
+
+/* BOTTOM */
+.admin-footer .footer-bottom {
+  padding: 18px 0;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  color: #cbd5e1;
+}
+
+/* BACK TO TOP */
+.admin-footer .footer-top-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 9px 15px;
+  background-color: #38C8F5;
+  color: #102D4F;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-footer .footer-top-btn:hover {
+  background-color: #087FC4;
+  color: white;
+}
+
+
+/*-------------------------------------- admin dashboard page ----------------------------------*/
+
+/*
+/* ================= ADMIN LIGHT THEME ================= */
+
+.admin-layout.light-theme {
+  background: #f8f9fa !important;
+  color: #212529 !important;
+  min-height: 100vh;
+}
+
+/* ================= ADMIN DARK THEME ================= */
+
+.admin-layout.dark-theme {
+  background: #151c2c !important;
+  color: #ffffff !important;
+  min-height: 100vh;
+}
+
+.admin-layout.dark-theme .admin-main-content {
+  background: #151c2c !important;
+  color: #ffffff !important;
+}
+
+/* ALL HEADINGS */
+.admin-layout.dark-theme .admin-main-content h1,
+.admin-layout.dark-theme .admin-main-content h2,
+.admin-layout.dark-theme .admin-main-content h3,
+.admin-layout.dark-theme .admin-main-content h4,
+.admin-layout.dark-theme .admin-main-content h5,
+.admin-layout.dark-theme .admin-main-content h6 {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* USER LIST HEADING */
+.admin-layout.dark-theme .admin-main-content h5.fw-bold {
+  color: #ffffff !important;
+}
+
+/* TEXT */
+.admin-layout.dark-theme .admin-main-content p,
+.admin-layout.dark-theme .admin-main-content label,
+.admin-layout.dark-theme .admin-main-content span {
+  color: #e0e6ed;
+}
+
+/* BOOTSTRAP TEXT OVERRIDE */
+.admin-layout.dark-theme .admin-main-content .text-dark,
+.admin-layout.dark-theme .admin-main-content .text-body,
+.admin-layout.dark-theme .admin-main-content .text-secondary {
+  color: #ffffff !important;
+}
+
+/* CARDS */
+.admin-layout.dark-theme .admin-main-content .card {
+  background: #202c40 !important;
+  color: #ffffff !important;
+  border-color: #34445c !important;
+}
+
+/* TABLE */
+.admin-layout.dark-theme .admin-main-content .table th,
+.admin-layout.dark-theme .admin-main-content .table td {
+  background: #202c40 !important;
+  color: #ffffff !important;
+  border-color: #34445c !important;
+}
+
+
+
+
+
+
+
+
+/* ADMIN USER LIST HEADING - LIGHT MODE ------------------------------------------------*/
+
+
+
+
+
+
+.admin-layout.light-theme .admin-user-heading {
+  color: #212529 !important;
+}
+
+/* ADMIN USER LIST HEADING - DARK MODE */
+.admin-layout.dark-theme .admin-user-heading {
+  color: #ffffff !important;
+}
+
+/* ADMIN TABLE HEADER */
+.admin-layout.dark-theme .card-header {
+  background-color: #202c40 !important;
+  border-color: #34445c !important;
+}
+
+
+
+/*--------------------------------------------------------- admine side bar css */
+/* ============================= */
+/* ADMIN SIDEBAR LIGHT MODE */
+/* ============================= */
+
+.admin-sidebar.light-sidebar {
+  background-color: #102D4F !important;
+  color: white !important;
+}
+
+/* ============================= */
+/* ADMIN SIDEBAR DARK MODE */
+/* ============================= */
+
+.admin-sidebar.dark-sidebar {
+  background-color: #000000 !important;
+  color: white !important;
+}
+
+/* BRAND TEXT */
+.admin-sidebar.dark-sidebar .sidebar-brand,
+.admin-sidebar.dark-sidebar .sidebar-brand h5,
+.admin-sidebar.dark-sidebar .sidebar-brand small {
+  color: white !important;
+}
+
+/* MENU HEADING */
+.admin-sidebar.dark-sidebar .sidebar-heading {
+  color: #aaaaaa !important;
+}
+
+/* MENU LINKS */
+.admin-sidebar.dark-sidebar .sidebar-link {
+  color: white !important;
+  background-color: transparent;
+}
+
+/* HOVER */
+.admin-sidebar.dark-sidebar .sidebar-link:hover {
+  background-color: #252525 !important;
+  color: #38C8F5 !important;
+}
+
+/* ACTIVE LINK */
+.admin-sidebar.dark-sidebar .sidebar-link.active {
+  background-color: #087FC4 !important;
+  color: white !important;
+}
+
+/* LOGOUT */
+.admin-sidebar.dark-sidebar .logout-btn {
+  color: white !important;
+}
+
+
+
+/* USER SIDEBAR DARK MODE */
+.user-sidebar-dark {
+  background-color: #101820 !important;
+}
+
+/* USER SIDEBAR LIGHT MODE */
+.user-sidebar-light {
+  background-color: #102D4F !important;
+}
+                 /*---------------------------------- User dashboard css --------------------------------------*/
+
+
+
+/* =====================================
+   USER DASHBOARD THEME
+===================================== */
+

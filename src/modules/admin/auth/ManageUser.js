@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { MdDelete } from "react-icons/md";
@@ -20,7 +19,7 @@ function ManageUsers() {
     phone: "",
     gender: "",
     role: "user",
-    comments: ""
+    comments: "",
   };
 
   const [formData, setFormData] = useState(initialForm);
@@ -40,8 +39,8 @@ function ManageUsers() {
       console.error("GET ERROR:", err);
       setError(
         err.response?.data?.message ||
-        err.message ||
-        "Users data load nahi ho raha hai."
+          err.message ||
+          "Users data load nahi ho raha hai.",
       );
     } finally {
       setLoading(false);
@@ -58,7 +57,7 @@ function ManageUsers() {
 
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -101,7 +100,7 @@ function ManageUsers() {
       phone: user.phone || "",
       gender: user.gender || "",
       role: user.role || "user",
-      comments: user.comments || ""
+      comments: user.comments || "",
     });
 
     setShowForm(true);
@@ -110,7 +109,7 @@ function ManageUsers() {
   // 5. DELETE USER
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
-      "Kya aap is user ko delete karna chahte hain?"
+      "Kya aap is user ko delete karna chahte hain?",
     );
 
     if (!confirmDelete) return;
@@ -132,10 +131,18 @@ function ManageUsers() {
     const searchValue = search.toLowerCase();
 
     return (
-      String(user.username || "").toLowerCase().includes(searchValue) ||
-      String(user.email || "").toLowerCase().includes(searchValue) ||
-      String(user.phone || "").toLowerCase().includes(searchValue) ||
-      String(user.role || "").toLowerCase().includes(searchValue)
+      String(user.username || "")
+        .toLowerCase()
+        .includes(searchValue) ||
+      String(user.email || "")
+        .toLowerCase()
+        .includes(searchValue) ||
+      String(user.phone || "")
+        .toLowerCase()
+        .includes(searchValue) ||
+      String(user.role || "")
+        .toLowerCase()
+        .includes(searchValue)
     );
   });
 
@@ -154,19 +161,26 @@ function ManageUsers() {
 
   return (
     <div className="container-fluid p-3">
-
       {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center flex-wrap mb-4">
         <div>
-          <h3 className="fw-bold mb-1">Manage Users</h3>
-          <p className="text-muted mb-0">
+          <h3
+            className="fw-bold mb-1"
+           style={{ color: "black", backgroundColor: "#087FC4", width:"210px", borderRadius: "5px", padding:"10px" }}
+          >
+            Manage Users
+          </h3>
+          <p
+            className="text-muted mb-0"
+            style={{ color: "white", backgroundColor: "white", width:"230px", borderRadius: "5px", padding:"10px" }}
+          >
             Manage all registered users
           </p>
         </div>
 
         <button
           className="btn text-white mt-2"
-          style={{ backgroundColor: "#087FC4" }}
+          style={{ backgroundColor: "#087FC4", }}
           onClick={handleAddNew}
         >
           <i className="bi bi-plus-lg me-2"></i>
@@ -176,10 +190,17 @@ function ManageUsers() {
 
       {/* SUMMARY CARDS */}
       <div className="row g-3 mb-4">
-
         <div className="col-md-4">
           <div className="card border-0 shadow-sm">
-            <div className="card-body">
+            <div
+              className="card-body"
+              style={{
+                
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px"
+              }}
+            >
               <p className="text-muted mb-1">Total Users</p>
               <h3 className="fw-bold mb-0">{users.length}</h3>
             </div>
@@ -188,10 +209,18 @@ function ManageUsers() {
 
         <div className="col-md-4">
           <div className="card border-0 shadow-sm">
-            <div className="card-body">
+            <div
+              className="card-body"
+              style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}
+            >
               <p className="text-muted mb-1">User Accounts</p>
               <h3 className="fw-bold text-success mb-0">
-                {users.filter(user => user.role === "user").length}
+                {users.filter((user) => user.role === "user").length}
               </h3>
             </div>
           </div>
@@ -199,24 +228,39 @@ function ManageUsers() {
 
         <div className="col-md-4">
           <div className="card border-0 shadow-sm">
-            <div className="card-body">
+            <div
+              className="card-body"
+              style={{
+              
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}
+            >
               <p className="text-muted mb-1">Other Roles</p>
               <h3 className="fw-bold text-primary mb-0">
-                {users.filter(user => user.role !== "user").length}
+                {users.filter((user) => user.role !== "user").length}
               </h3>
             </div>
           </div>
         </div>
-
       </div>
 
       {/* USER TABLE */}
       <div className="card border-0 shadow-sm">
-
         <div className="card-header bg-white py-3">
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-
-            <h5 className="fw-bold mb-0">User List</h5>
+            <h5
+              className="fw-bold mb-0"
+              style={{
+                color: "white",
+                backgroundColor: "#087FC4",
+                padding: "10px",
+                 borderRadius: "5px"
+              }}
+            >
+              User List
+            </h5>
 
             <div className="d-flex gap-2">
               <input
@@ -235,12 +279,10 @@ function ManageUsers() {
                 <i className="bi bi-arrow-clockwise"></i>
               </button>
             </div>
-
           </div>
         </div>
 
         <div className="card-body p-0">
-
           {loading ? (
             <div className="text-center py-5">
               <div className="spinner-border text-primary"></div>
@@ -258,9 +300,7 @@ function ManageUsers() {
             </div>
           ) : (
             <div className="table-responsive">
-
               <table className="table table-hover align-middle mb-0">
-
                 <thead className="table-light">
                   <tr>
                     <th>S.No</th>
@@ -275,24 +315,18 @@ function ManageUsers() {
                 </thead>
 
                 <tbody>
-
                   {filteredUsers.length > 0 ? (
                     filteredUsers.map((user, index) => (
                       <tr key={user.id}>
-
                         <td>{index + 1}</td>
 
-                        <td className="fw-semibold">
-                          {user.username || "-"}
-                        </td>
+                        <td className="fw-semibold">{user.username || "-"}</td>
 
                         <td>{user.email || "-"}</td>
 
                         <td>{user.phone || "-"}</td>
 
-                        <td>
-                          {user.gender || "-"}
-                        </td>
+                        <td>{user.gender || "-"}</td>
 
                         <td>
                           <span className="badge bg-primary">
@@ -300,19 +334,16 @@ function ManageUsers() {
                           </span>
                         </td>
 
-                        <td>
-                          {user.comments || "-"}
-                        </td>
+                        <td>{user.comments || "-"}</td>
 
                         <td>
                           <div className="d-flex gap-2">
-
                             <button
                               className="btn btn-sm btn-outline-primary"
                               onClick={() => handleEdit(user)}
                               title="Edit"
                             >
-                                <MdDelete/>
+                              <FaEdit />
                             </button>
 
                             <button
@@ -320,12 +351,10 @@ function ManageUsers() {
                               onClick={() => handleDelete(user.id)}
                               title="Delete"
                             >
-                               <FaEdit/>
+                              <MdDelete />
                             </button>
-
                           </div>
                         </td>
-
                       </tr>
                     ))
                   ) : (
@@ -335,20 +364,15 @@ function ManageUsers() {
                       </td>
                     </tr>
                   )}
-
                 </tbody>
-
               </table>
-
             </div>
           )}
-
         </div>
 
         <div className="card-footer bg-white text-muted">
           Showing {filteredUsers.length} of {users.length} users
         </div>
-
       </div>
 
       {/* ADD / EDIT FORM */}
@@ -358,21 +382,23 @@ function ManageUsers() {
           style={{
             backgroundColor: "rgba(0,0,0,0.5)",
             zIndex: 1050,
-            padding: "15px"
+            padding: "15px",
           }}
         >
-
           <div
             className="card border-0 shadow"
-            style={{ width: "550px", maxWidth: "100%", maxHeight: "90vh", overflowY: "auto" }}
+            style={{
+              width: "550px",
+              maxWidth: "100%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
           >
-
-            <div className="card-header text-white d-flex justify-content-between align-items-center"
+            <div
+              className="card-header text-white d-flex justify-content-between align-items-center"
               style={{ backgroundColor: "#102D4F" }}
             >
-              <h5 className="mb-0">
-                {editId ? "Edit User" : "Add New User"}
-              </h5>
+              <h5 className="mb-0">{editId ? "Edit User" : "Add New User"}</h5>
 
               <button
                 className="btn-close btn-close-white"
@@ -381,9 +407,7 @@ function ManageUsers() {
             </div>
 
             <div className="card-body">
-
               <form onSubmit={handleSubmit}>
-
                 <div className="mb-3">
                   <label className="form-label">User Name *</label>
                   <input
@@ -464,7 +488,6 @@ function ManageUsers() {
                 </div>
 
                 <div className="d-flex justify-content-end gap-2">
-
                   <button
                     type="button"
                     className="btn btn-secondary"
@@ -480,18 +503,12 @@ function ManageUsers() {
                   >
                     {editId ? "Update User" : "Save User"}
                   </button>
-
                 </div>
-
               </form>
-
             </div>
-
           </div>
-
         </div>
       )}
-
     </div>
   );
 }

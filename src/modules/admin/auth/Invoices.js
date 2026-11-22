@@ -203,7 +203,12 @@ function ManageInvoices() {
           <h3 className="fw-bold mb-1" style={{ color: "#102D4F" }}>
             Manage Invoices
           </h3>
-          <p className="text-muted mb-0">
+          <p className="text-muted mb-0"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
             Create and manage all company invoices
           </p>
         </div>
@@ -221,8 +226,18 @@ function ManageInvoices() {
       <div className="row g-3 mb-4">
         <div className="col-md-6 col-xl-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <p className="text-muted mb-2">Total Invoices</p>
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
+              <p className="text-muted mb-2"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>Total Invoices</p>
               <h3 className="fw-bold" style={{ color: "#102D4F" }}>
                 {invoices.length}
               </h3>
@@ -232,7 +247,12 @@ function ManageInvoices() {
 
         <div className="col-md-6 col-xl-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">Total Invoice Value</p>
               <h4 className="fw-bold text-primary">
                 {formatAmount(totalValue)}
@@ -243,7 +263,12 @@ function ManageInvoices() {
 
         <div className="col-md-6 col-xl-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">Paid Amount</p>
               <h4 className="fw-bold text-success">
                 {formatAmount(paidAmount)}
@@ -254,7 +279,12 @@ function ManageInvoices() {
 
         <div className="col-md-6 col-xl-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-2">Pending Invoices</p>
               <h3 className="fw-bold text-warning">
                 {pendingCount}

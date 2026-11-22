@@ -199,7 +199,12 @@ function ManageOrders() {
       <div className="d-flex justify-content-between align-items-center flex-wrap mb-4">
         <div>
           <h3 className="fw-bold mb-1">Manage Orders</h3>
-          <p className="text-muted mb-0">
+          <p className="text-muted mb-0"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
             Manage and track all customer orders
           </p>
         </div>
@@ -219,7 +224,12 @@ function ManageOrders() {
 
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-1">Total Orders</p>
               <h3 className="fw-bold">{orders.length}</h3>
               <i className="bi bi-cart text-primary fs-4"></i>
@@ -229,7 +239,12 @@ function ManageOrders() {
 
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-1">Pending Orders</p>
               <h3 className="fw-bold text-warning">{pendingOrders}</h3>
               <i className="bi bi-clock-history text-warning fs-4"></i>
@@ -239,7 +254,12 @@ function ManageOrders() {
 
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-1">Completed Orders</p>
               <h3 className="fw-bold text-success">{completedOrders}</h3>
               <i className="bi bi-check-circle text-success fs-4"></i>
@@ -249,7 +269,12 @@ function ManageOrders() {
 
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
+            <div className="card-body"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+              }}>
               <p className="text-muted mb-1">Total Order Amount</p>
               <h3 className="fw-bold text-primary">
                 ₹{totalAmount.toLocaleString("en-IN")}

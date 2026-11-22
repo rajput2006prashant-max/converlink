@@ -15,8 +15,8 @@ function MyProfile() {
     role: "admin"
   });
 
-  const [adminId, setAdminId] = useState(null);
-  const [profileRecordId, setProfileRecordId] = useState(null);
+  const [adminId, setAdminId] = useState("");
+  const [profileRecordId, setProfileRecordId] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,7 +25,6 @@ function MyProfile() {
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
   const [photo, setPhoto] = useState("");
 
   const [passwordData, setPasswordData] = useState({
@@ -39,9 +38,9 @@ function MyProfile() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // ==================================
-  // FETCH LOGGED-IN ADMIN PROFILE
-  // ==================================
+  // =====================================
+  // FETCH ADMIN PROFILE
+  // =====================================
 
   const fetchProfile = async () => {
     try {
@@ -52,36 +51,57 @@ function MyProfile() {
         localStorage.getItem("adminLoginData") || "null"
       );
 
-      if (!loginData || !loginData.id) {
+      if (!loginData?.id) {
         setError("Admin login information nahi mili. Please login again.");
         return;
       }
 
+      const currentAdminId = String(loginData.id);
+
+      // Fetch admin account
       const adminResponse = await axios.get(
-        `${ADMIN_API}/${loginData.id}`
+        `${ADMIN_API}/${encodeURIComponent(currentAdminId)}`
       );
 
       const admin = adminResponse.data;
 
-      setAdminId(admin.id);
+      setAdminId(currentAdminId);
 
-      const profileResponse = await axios.get(PROFILE_API, {
-        params: {
-          adminId: String(admin.id)
-        }
-      });
+      // Fetch all admin profiles
+      const profileResponse = await axios.get(PROFILE_API);
 
+      // Find profile using adminId OR profile record id
       const savedProfile = profileResponse.data.find(
-        (item) => String(item.adminId) === String(admin.id)
+        (item) =>
+          String(item.adminId) === currentAdminId ||
+          String(item.id) === currentAdminId
       );
 
       if (savedProfile) {
+        // Automatically correct old mismatched adminId
+        if (String(savedProfile.adminId) !== currentAdminId) {
+          await axios.patch(
+            `${PROFILE_API}/${savedProfile.id}`,
+            {
+              adminId: currentAdminId
+            }
+          );
+        }
+
         setProfileRecordId(savedProfile.id);
 
         setProfile({
-          username: savedProfile.username || admin.username || admin.name || "",
+          username:
+            savedProfile.username ||
+            admin.username ||
+            admin.name ||
+            "",
           email: savedProfile.email || admin.email || "",
-          phone: savedProfile.phone || admin.phone || admin.mobile || "",
+          phone:
+            savedProfile.phone ||
+            admin.phone ||
+            admin.mobile ||
+            "",
           gender: savedProfile.gender || admin.gender || "",
           address: savedProfile.address || "",
           role: savedProfile.role || admin.role || "admin"
@@ -89,7 +109,7 @@ function MyProfile() {
 
         setPhoto(savedProfile.profileImage || "");
       } else {
-        setProfileRecordId(null);
+        setProfileRecordId("");
 
         setProfile({
           username: admin.username || admin.name || "",
@@ -103,8 +123,10 @@ function MyProfile() {
         setPhoto("");
       }
     } catch (err) {
-      console.error("Fetch Profile Error:", err);
-      setError("Profile load nahi hui. JSON Server check karo.");
+      console.error("FETCH PROFILE ERROR:", err);
+      setError(
+        "Profile load nahi hui. JSON Server aur admin data check karo."
+      );
     } finally {
       setLoading(false);
     }
@@ -114,9 +136,9 @@ function MyProfile() {
     fetchProfile();
   }, []);
 
-  // ==================================
+  // =====================================
   // INPUT CHANGE
-  // ==================================
+  // =====================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -127,17 +149,23 @@ function MyProfile() {
     }));
   };
 
-  // ==================================
-  // COMPRESS AND UPLOAD PROFILE PHOTO
-  // ==================================
+  // =====================================
+  // PROFILE PHOTO UPLOAD AND COMPRESS
+  // =====================================
 
   const handlePhoto = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
 
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
       setError("Please valid image select karo.");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Photo maximum 10 MB ki select karo.");
       e.target.value = "";
       return;
     }
@@ -149,7 +177,6 @@ function MyProfile() {
 
       image.onload = () => {
         const canvas = document.createElement("canvas");
-
         const maxSize = 400;
 
         let width = image.width;
@@ -193,7 +220,6 @@ function MyProfile() {
 
       image.onerror = () => {
         setError("Image process nahi ho payi.");
-        e.target.value = "";
       };
 
       image.src = event.target.result;
@@ -201,15 +227,14 @@ function MyProfile() {
 
     reader.onerror = () => {
       setError("Image read nahi ho payi.");
-      e.target.value = "";
     };
 
     reader.readAsDataURL(file);
   };
 
-  // ==================================
+  // =====================================
   // REMOVE PHOTO
-  // ==================================
+  // =====================================
 
   const removePhoto = () => {
     setPhoto("");
@@ -217,9 +242,9 @@ function MyProfile() {
     setSuccess("");
   };
 
-  // ==================================
-  // SAVE PROFILE IN JSON SERVER
-  // ==================================
+  // =====================================
+  // SAVE PROFILE
+  // =====================================
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -246,24 +271,30 @@ function MyProfile() {
         phone: profile.phone.trim(),
         gender: profile.gender,
         address: profile.address.trim(),
-        role: profile.role,
+        role: profile.role || "admin",
         profileImage: photo
       };
 
-      // Check existing profile
-      const checkResponse = await axios.get(PROFILE_API, {
-        params: {
-          adminId: String(adminId)
+      let recordId = profileRecordId;
+
+      // If record ID is not known, search existing profile
+      if (!recordId) {
+        const response = await axios.get(PROFILE_API);
+
+        const existingProfile = response.data.find(
+          (item) =>
+            String(item.adminId) === String(adminId) ||
+            String(item.id) === String(adminId)
+        );
+
+        if (existingProfile) {
+          recordId = existingProfile.id;
         }
-      });
+      }
 
-      const existingProfile = checkResponse.data.find(
-        (item) => String(item.adminId) === String(adminId)
-      );
-
-      if (existingProfile) {
+      if (recordId) {
         const updateResponse = await axios.patch(
-          `${PROFILE_API}/${existingProfile.id}`,
+          `${PROFILE_API}/${recordId}`,
           profileData
         );
 
@@ -285,7 +316,9 @@ function MyProfile() {
 
       setError(
         err.response
-          ? `Server Error ${err.response.status}: ${JSON.stringify(err.response.data)}`
+          ? `Server Error ${err.response.status}: ${JSON.stringify(
+              err.response.data
+            )}`
           : "JSON Server connect nahi ho raha. Port 8700 check karo."
       );
     } finally {
@@ -293,9 +326,9 @@ function MyProfile() {
     }
   };
 
-  // ==================================
+  // =====================================
   // CANCEL EDIT
-  // ==================================
+  // =====================================
 
   const handleCancel = async () => {
     setEditMode(false);
@@ -305,9 +338,9 @@ function MyProfile() {
     await fetchProfile();
   };
 
-  // ==================================
-  // CHANGE ADMIN PASSWORD
-  // ==================================
+  // =====================================
+  // CHANGE PASSWORD
+  // =====================================
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -336,7 +369,7 @@ function MyProfile() {
       setPasswordSaving(true);
 
       const response = await axios.get(
-        `${ADMIN_API}/${adminId}`
+        `${ADMIN_API}/${encodeURIComponent(adminId)}`
       );
 
       const admin = response.data;
@@ -352,7 +385,7 @@ function MyProfile() {
       }
 
       await axios.patch(
-        `${ADMIN_API}/${adminId}`,
+        `${ADMIN_API}/${encodeURIComponent(adminId)}`,
         {
           pass: passwordData.newPassword
         }
@@ -371,16 +404,16 @@ function MyProfile() {
 
       setSuccess("Password successfully update ho gaya!");
     } catch (err) {
-      console.error("Password Error:", err);
+      console.error("PASSWORD ERROR:", err);
       setError("Password update nahi hua.");
     } finally {
       setPasswordSaving(false);
     }
   };
 
-  // ==================================
+  // =====================================
   // LOADING
-  // ==================================
+  // =====================================
 
   if (loading) {
     return (
@@ -391,9 +424,9 @@ function MyProfile() {
     );
   }
 
-  // ==================================
+  // =====================================
   // MAIN UI
-  // ==================================
+  // =====================================
 
   return (
     <div className="container-fluid p-3 p-md-4">
@@ -456,7 +489,7 @@ function MyProfile() {
       {adminId && (
         <div className="row g-4">
 
-          {/* PROFILE CARD */}
+          {/* LEFT PROFILE CARD */}
 
           <div className="col-lg-4">
             <div className="card border-0 shadow-sm h-100">
@@ -493,7 +526,7 @@ function MyProfile() {
                 </div>
 
                 <h4 className="fw-bold mb-1">
-                  {profile.username}
+                  {profile.username || "Admin"}
                 </h4>
 
                 <p className="mb-2">{profile.email}</p>
@@ -757,6 +790,8 @@ function MyProfile() {
                     className="mt-4"
                   >
 
+                    {/* CURRENT PASSWORD */}
+
                     <div className="mb-3">
                       <label className="form-label fw-semibold">
                         Current Password
@@ -789,6 +824,8 @@ function MyProfile() {
                       </div>
                     </div>
 
+                    {/* NEW PASSWORD */}
+
                     <div className="mb-3">
                       <label className="form-label fw-semibold">
                         New Password
@@ -820,6 +857,8 @@ function MyProfile() {
                         </button>
                       </div>
                     </div>
+
+                    {/* CONFIRM PASSWORD */}
 
                     <div className="mb-3">
                       <label className="form-label fw-semibold">

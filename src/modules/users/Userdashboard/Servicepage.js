@@ -148,7 +148,7 @@ function Services() {
               Engineering Services Built Around Your Needs
             </h2>
 
-            <p className="text-secondary mt-3 lh-lg">
+            <p className="text-primary mt-3 lh-lg ">
               At Converlink Engineering, we focus on providing
               practical and customized solutions for residential
               and commercial projects.
@@ -162,14 +162,14 @@ function Services() {
                   <h2 className="fw-bold text-primary">
                     {String(serviceData.length).padStart(2, "0")}
                   </h2>
-                  <p className="text-secondary mb-0">Core Services</p>
+                  <p className="text-dark mb-0">Core Services</p>
                 </div>
               </div>
 
               <div className="col-6">
                 <div className="bg-white rounded-4 shadow-sm p-4 h-100">
                   <h2 className="fw-bold text-primary">360°</h2>
-                  <p className="text-secondary mb-0">Project Approach</p>
+                  <p className="text-dark mb-0">Project Approach</p>
                 </div>
               </div>
             </div>
@@ -193,7 +193,7 @@ function Services() {
               Explore Our Services
             </h2>
 
-            <p className="text-secondary">
+            <p className="text-dark">
               Find the right solution for your next project.
             </p>
           </div>
@@ -294,7 +294,7 @@ function Services() {
 
                         <h4
                           className="fw-bold mt-2"
-                          style={{ color: "#102D4F" }}
+                          style={{ color: "blue" }}
                         >
                           {service.title}
                         </h4>
@@ -304,7 +304,7 @@ function Services() {
                         </p>
 
                         <div className="mt-auto pt-3 border-top d-flex align-items-center justify-content-between gap-2">
-                          <span className="fw-semibold text-dark">
+                          <span className="fw-semibold text-sussues">
                             {service.price || "Custom Quote"}
                           </span>
 
@@ -351,7 +351,7 @@ function Services() {
           </h2>
         </div>
 
-        <div className="row g-4">
+        <div className="row g-4 ">
           {[
             {
               icon: "✓",
@@ -375,14 +375,21 @@ function Services() {
             },
           ].map((item, index) => (
             <div className="col-sm-6 col-lg-3" key={index}>
-              <div className="bg-white rounded-4 shadow-sm p-4 h-100 text-center">
+              <div className=" rounded-4 shadow-sm p-4 h-100 text-center"style={{
+               
+                backgroundColor: " #087FC4",
+                padding: "10px",
+                 borderRadius: "5px",
+                 color:"black",
+                
+              }}>
                 <div className="fs-1 text-info mb-3">
                   {item.icon}
                 </div>
 
                 <h5 className="fw-bold">{item.title}</h5>
 
-                <p className="text-secondary mb-0">
+                <p className="text-dark mb-0">
                   {item.desc}
                 </p>
               </div>
