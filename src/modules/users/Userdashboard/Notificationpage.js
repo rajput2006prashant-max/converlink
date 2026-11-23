@@ -11,7 +11,8 @@ import {
   FaEnvelope,
   FaUserCheck,
   FaBullhorn,
-  FaArrowLeft
+  FaArrowLeft,
+  FaTimes
 } from "react-icons/fa";
 
 const API = "http://localhost:8700/notifications";
@@ -20,37 +21,32 @@ function Notificationpage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedNotification, setSelectedNotification] = useState(null);
 
   const loginData = JSON.parse(
     localStorage.getItem("userLoginData") || "null"
   );
 
-  const userId = loginData?.id;
+  const userId = String(
+    loginData?.userId || loginData?.id || ""
+  );
 
-  // Fetch only logged-in user's notifications
+  // Fetch Notifications
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
-      setError("");
-
-      if (!userId) {
-        setNotifications([]);
-        setError("Please login to view notifications.");
-        return;
-      }
 
       const response = await axios.get(API);
 
       const userNotifications = response.data.filter(
-        (item) => String(item.userId) === String(userId)
+        (item) => String(item.userId) === userId
       );
 
       setNotifications(userNotifications);
-
+      setError("");
     } catch (err) {
-      console.error("Notification Error:", err);
-      setNotifications([]);
-      setError("Notifications load nahi ho payi.");
+      console.error(err);
+      setError("Notifications load nahi ho pa rahi hain.");
     } finally {
       setLoading(false);
     }
@@ -60,12 +56,13 @@ function Notificationpage() {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Mark one notification read
+  // Mark Single Notification as Read
   const markRead = async (id) => {
     try {
-      await axios.patch(`${API}/${id}`, {
-        read: true
-      });
+      await axios.patch(
+        `${API}/${encodeURIComponent(id)}`,
+        { read: true }
+      );
 
       setNotifications((prev) =>
         prev.map((item) =>
@@ -75,214 +72,348 @@ function Notificationpage() {
         )
       );
 
+      setSelectedNotification((prev) =>
+        prev && String(prev.id) === String(id)
+          ? { ...prev, read: true }
+          : prev
+      );
     } catch (err) {
-      console.error(err);
-      alert("Notification update nahi hui.");
+      console.error("Read Error:", err);
+      alert("Notification read nahi hui.");
     }
   };
 
-  // Mark all read
+  // Open Notification
+  const openNotification = async (item) => {
+    setSelectedNotification(item);
+
+    if (item.read !== true) {
+      await markRead(item.id);
+    }
+  };
+
+  // Mark All as Read
   const markAllRead = async () => {
     try {
-      const unread = notifications.filter(
-        (item) => !item.read
+      const unreadNotifications = notifications.filter(
+        (item) => item.read !== true
       );
 
       await Promise.all(
-        unread.map((item) =>
-          axios.patch(`${API}/${item.id}`, {
-            read: true
-          })
+        unreadNotifications.map((item) =>
+          axios.patch(
+            `${API}/${encodeURIComponent(item.id)}`,
+            { read: true }
+          )
         )
       );
 
       setNotifications((prev) =>
         prev.map((item) => ({ ...item, read: true }))
       );
-
     } catch (err) {
       console.error(err);
       alert("Notifications update nahi hui.");
     }
   };
 
-  // Delete notification
+  // Delete Notification
   const deleteNotification = async (id) => {
-    if (!window.confirm("Delete this notification?")) return;
+    const confirmDelete = window.confirm(
+      "Kya aap notification delete karna chahte hain?"
+    );
+
+    if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API}/${id}`);
-
-      setNotifications((prev) =>
-        prev.filter(
-          (item) => String(item.id) !== String(id)
-        )
+      await axios.delete(
+        `${API}/${encodeURIComponent(id)}`
       );
 
+      setNotifications((prev) =>
+        prev.filter((item) => String(item.id) !== String(id))
+      );
+
+      if (
+        selectedNotification &&
+        String(selectedNotification.id) === String(id)
+      ) {
+        setSelectedNotification(null);
+      }
     } catch (err) {
       console.error(err);
       alert("Notification delete nahi hui.");
     }
   };
 
+  // Unread Count
   const unreadCount = notifications.filter(
-    (item) => !item.read
+    (item) => item.read !== true
   ).length;
 
-  const getIcon = (type) => {
+  // Notification Icon
+  const getNotificationIcon = (type) => {
     switch (type) {
-      case "Invoice":
-        return <FaEnvelope />;
-      case "Project":
+      case "service":
         return <FaTools />;
-      case "Enquiry":
+
+      case "message":
+        return <FaEnvelope />;
+
+      case "user":
         return <FaUserCheck />;
-      case "General":
+
+      case "announcement":
         return <FaBullhorn />;
+
       default:
         return <FaBell />;
     }
   };
 
   return (
-    <div className="notification-page">
-      <div className="container py-5">
+    <div className="container-fluid py-4">
 
-        <Link to="/landing/home" className="notification-back">
-          <FaArrowLeft /> Back to Home
-        </Link>
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
 
-        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 my-4">
-          <div>
-            <h2>
-              <FaBell /> Notifications
-            </h2>
-            <p className="text-muted">
-              Stay updated with Converlink Engineering.
-            </p>
-          </div>
+        <div>
+          <h3 className="fw-bold mb-1">
+            <FaBell className="me-2 text-primary" />
+            My Notifications
+          </h3>
 
-          <div className="badge bg-primary fs-6">
-            {unreadCount} Unread
-          </div>
+          <p className="text-muted mb-0">
+            Manage all your notifications here.
+          </p>
         </div>
 
+        <Link
+          to="/landing/home"
+          className="btn btn-outline-primary"
+        >
+          <FaArrowLeft className="me-2" />
+          Back
+        </Link>
+
+      </div>
+
+      {/* Notification Summary */}
+      <div className="card border-0 shadow-sm mb-4">
+        <div className="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+          <div>
+            <h5 className="fw-bold mb-1">
+              All Notifications
+            </h5>
+
+            <span className="text-muted">
+              Total: {notifications.length} |
+              Unread: {unreadCount}
+            </span>
+          </div>
+
+          <button
+            className="btn btn-primary"
+            onClick={markAllRead}
+            disabled={unreadCount === 0}
+          >
+            <FaCheckDouble className="me-2" />
+            Mark All as Read
+          </button>
+
+        </div>
+      </div>
+
+      {/* Notification List */}
+      {loading ? (
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary"></div>
+          <p className="mt-2">Loading notifications...</p>
+        </div>
+      ) : error ? (
+        <div className="alert alert-danger">
+          {error}
+        </div>
+      ) : notifications.length === 0 ? (
         <div className="card border-0 shadow-sm">
+          <div className="card-body text-center py-5">
+            <FaBell size={40} className="text-muted mb-3" />
 
-          <div className="card-body">
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-              <h5>All Notifications</h5>
+            <h5>No Notifications Found</h5>
 
-              <button
-                className="btn btn-sm btn-outline-success"
-                onClick={markAllRead}
-                disabled={unreadCount === 0}
-              >
-                <FaCheckDouble /> Mark All as Read
-              </button>
-            </div>
+            <p className="text-muted mb-0">
+              You don't have any notifications yet.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="d-flex flex-column gap-3">
 
-            {loading ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" />
-                <p className="mt-2">Loading notifications...</p>
-              </div>
-            ) : error ? (
-              <div className="alert alert-danger">
-                {error}
-                <button
-                  className="btn btn-sm btn-primary ms-3"
-                  onClick={fetchNotifications}
-                >
-                  Try Again
-                </button>
-              </div>
-            ) : notifications.length > 0 ? (
+          {notifications.map((item) => (
+            <div
+              key={item.id}
+              className={`card border-0 shadow-sm ${
+                item.read ? "bg-white" : "bg-dark text-white"
+              }`}
+            >
+              <div className="card-body">
 
-              notifications
-                .slice()
-                .sort(
-                  (a, b) =>
-                    new Date(b.date) - new Date(a.date)
-                )
-                .map((item) => (
+                <div className="d-flex justify-content-between align-items-start flex-wrap gap-3">
+
                   <div
-                    key={item.id}
-                    className={`d-flex align-items-start gap-3 p-3 mb-3 rounded border ${
-                      item.read ? "bg-white" : "bg-light"
-                    }`}
+                    className="d-flex gap-3 flex-grow-1"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => openNotification(item)}
                   >
+
                     <div
-                      className="rounded-circle d-flex justify-content-center align-items-center flex-shrink-0"
+                      className={`rounded-circle d-flex align-items-center justify-content-center ${
+                        item.read
+                          ? "bg-primary text-white"
+                          : "bg-info text-dark"
+                      }`}
                       style={{
                         width: "45px",
                         height: "45px",
-                        backgroundColor: "#e5f2fb",
-                        fontSize: "20px",
-                        color: "#087FC4"
+                        minWidth: "45px"
                       }}
                     >
-                      {getIcon(item.type)}
+                      {getNotificationIcon(item.type)}
                     </div>
 
                     <div className="flex-grow-1">
-                      <div className="d-flex align-items-center gap-2 flex-wrap">
-                        <h6 className="fw-bold mb-1">
-                          {item.title}
+
+                      <div className="d-flex align-items-center flex-wrap gap-2">
+
+                        <h6 className="fw-bold mb-1 ">
+                          {item.title || "Notification"}
                         </h6>
 
                         {!item.read && (
-                          <span className="badge bg-danger">
+                          <span className="badge bg-danger ">
                             New
                           </span>
                         )}
+
                       </div>
 
-                      <p className="mb-2 text-muted">
+                      <p
+                        className={`mb-2 ${
+                          item.read ? "text-primary" : "text-white-50"
+                        }`}
+                      >
                         {item.message}
                       </p>
 
-                      <small className="text-secondary">
-                        {item.date
-                          ? new Date(item.date).toLocaleString("en-IN")
-                          : ""}
-                      </small>
-                    </div>
-
-                    <div className="d-flex flex-column gap-2">
-                      {!item.read && (
-                        <button
-                          className="btn btn-sm btn-outline-success"
-                          title="Mark as read"
-                          onClick={() => markRead(item.id)}
-                        >
-                          <FaCheckDouble />
-                        </button>
-                      )}
-
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        title="Delete"
-                        onClick={() => deleteNotification(item.id)}
+                      <small
+                        className={
+                          item.read ? "text-primary" : "text-white-50"
+                        }
                       >
-                        <FaTrash />
-                      </button>
+                        {item.date || item.createdAt || ""}
+                      </small>
+
                     </div>
                   </div>
-                ))
 
-            ) : (
-              <div className="text-center py-5">
-                <FaBell className="fs-1 text-secondary" />
-                <h5 className="mt-3">You're all caught up!</h5>
-                <p className="text-muted">
-                  You have no notifications.
-                </p>
+                  <div className="d-flex gap-2">
+
+                    <button
+                      className="btn btn-success btn-sm"
+                      onClick={() => openNotification(item)}
+                    >
+                      <FaCheckDouble className="me-1" />
+                      Read
+                    </button>
+
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => deleteNotification(item.id)}
+                    >
+                      <FaTrash className="me-1" />
+                      Delete
+                    </button>
+
+                  </div>
+
+                </div>
               </div>
-            )}
+            </div>
+          ))}
+
+        </div>
+      )}
+
+      {/* Notification Detail Popup */}
+      {selectedNotification && (
+        <div
+          className="modal show d-block"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.65)",
+            zIndex: 1055
+          }}
+          tabIndex="-1"
+          onClick={() => setSelectedNotification(null)}
+        >
+
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+
+            <div className="modal-content border-0 shadow">
+
+              <div className="modal-header">
+                <h5 className="modal-title fw-bold">
+                  <FaBell className="text-primary me-2" />
+                  Notification Details
+                </h5>
+
+                <button
+                  className="btn-close"
+                  onClick={() => setSelectedNotification(null)}
+                ></button>
+              </div>
+
+              <div className="modal-body">
+
+                <h5 className="fw-bold mb-3 ">
+                  {selectedNotification.title || "Notification"}
+                </h5>
+
+                <p className="mb-3 ">
+                  {selectedNotification.message}
+                </p>
+
+                <small className="text-muted d-block mb-3">
+                  {selectedNotification.date ||
+                    selectedNotification.createdAt ||
+                    ""}
+                </small>
+
+                <span className="badge bg-success ">
+                  <FaCheckDouble className="me-1" />
+                  Read
+                </span>
+
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setSelectedNotification(null)}
+                >
+                  <FaTimes className="me-1" />
+                  Close
+                </button>
+              </div>
+
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
     </div>
   );
 }

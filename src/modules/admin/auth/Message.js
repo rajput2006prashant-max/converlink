@@ -18,11 +18,17 @@ import {
   FaSearch,
   FaArrowLeft,
   FaSync,
-  FaEnvelope
+  FaEnvelope,
+  FaEllipsisV,
+  FaEye,
+  FaBan,
+  FaUserCheck,
+  FaUser
 } from "react-icons/fa";
 
 const API = "http://localhost:8700/messages";
 const USER_API = "http://localhost:8700/user";
+const PROFILE_API = "http://localhost:8700/userprofile";
 const STATUS_API = "http://localhost:8700/chatstatus";
 const ADMIN_PROFILE_API = "http://localhost:8700/adminprofile";
 
@@ -40,8 +46,74 @@ const getAdminLoginData = () => {
   }
 };
 
+// =====================================
+// USER AVATAR COMPONENT
+// =====================================
+
+function UserAvatar({ user, size = 43 }) {
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [
+    user?.profilePhoto,
+    user?.senderPhoto,
+    user?.profileImage,
+    user?.photo,
+    user?.image
+  ]);
+
+  const photo =
+    user?.profilePhoto ||
+    user?.senderPhoto ||
+    user?.profileImage ||
+    user?.photo ||
+    user?.image ||
+    "";
+
+  const username =
+    user?.username ||
+    user?.senderName ||
+    "User";
+
+  return (
+    <div
+      className="rounded-circle overflow-hidden d-flex justify-content-center align-items-center flex-shrink-0"
+      style={{
+        width: size,
+        height: size,
+        minWidth: size,
+        backgroundColor: "#087FC4",
+        color: "#fff",
+        fontWeight: "bold",
+        fontSize: size * 0.42
+      }}
+    >
+      {photo && !imageError ? (
+        <img
+          src={photo}
+          alt={username}
+          onError={() => setImageError(true)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover"
+          }}
+        />
+      ) : (
+        username.charAt(0).toUpperCase()
+      )}
+    </div>
+  );
+}
+
+// =====================================
+// ADMIN MESSAGE COMPONENT
+// =====================================
+
 function ManageMessages() {
   const adminLoginData = getAdminLoginData();
+
   const adminId = adminLoginData?.id
     ? String(adminLoginData.id)
     : "";
@@ -51,10 +123,10 @@ function ManageMessages() {
   // =====================================
 
   const [users, setUsers] = useState([]);
+  const [userProfiles, setUserProfiles] = useState([]);
   const [messages, setMessages] = useState([]);
 
   const [selectedUser, setSelectedUser] = useState(null);
-
   const [adminProfile, setAdminProfile] = useState(null);
 
   const [reply, setReply] = useState("");
@@ -69,6 +141,11 @@ function ManageMessages() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+
+  // NEW STATES
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showUserDetails, setShowUserDetails] = useState(false);
+  const [userActionLoading, setUserActionLoading] = useState(false);
 
   // =====================================
   // ADMIN DETAILS
@@ -86,7 +163,10 @@ function ManageMessages() {
     "";
 
   const adminPhoto =
-    adminProfile?.profileImage || "";
+    adminProfile?.profileImage ||
+    adminProfile?.photo ||
+    adminProfile?.image ||
+    "";
 
   // =====================================
   // ADMIN AVATAR
@@ -109,6 +189,11 @@ function ManageMessages() {
           <img
             src={adminPhoto}
             alt={adminName}
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              e.currentTarget.parentElement.textContent =
+                adminName.charAt(0).toUpperCase();
+            }}
             style={{
               width: "100%",
               height: "100%",
@@ -123,6 +208,52 @@ function ManageMessages() {
   };
 
   // =====================================
+  // GET USER PROFILE
+  // =====================================
+
+  const getUserProfile = (user) => {
+    if (!user) return null;
+
+    return userProfiles.find(
+      (item) =>
+        String(item.userId) === String(user.id)
+    ) || null;
+  };
+
+  // =====================================
+  // GET USER PROFILE PHOTO
+  // =====================================
+
+  const getUserPhoto = (user) => {
+    if (!user) return "";
+
+    const profile = getUserProfile(user);
+
+    return (
+      profile?.profileImage ||
+      profile?.photo ||
+      profile?.image ||
+      user.profileImage ||
+      user.photo ||
+      user.image ||
+      ""
+    );
+  };
+
+  // =====================================
+  // GET USER DETAILS WITH PHOTO
+  // =====================================
+
+  const getUserWithPhoto = (user) => {
+    if (!user) return null;
+
+    return {
+      ...user,
+      profilePhoto: getUserPhoto(user)
+    };
+  };
+
+  // =====================================
   // FETCH ADMIN PROFILE
   // =====================================
 
@@ -130,43 +261,18 @@ function ManageMessages() {
     if (!adminId) return;
 
     try {
-      // First search by adminId
       const response = await axios.get(
-        ADMIN_PROFILE_API,
-        {
-          params: {
-            adminId: adminId
-          }
-        }
+        ADMIN_PROFILE_API
       );
 
-      let savedProfile = response.data.find(
-        (item) => String(item.adminId) === adminId
+      const savedProfile = response.data.find(
+        (item) =>
+          String(item.adminId) === adminId ||
+          String(item.id) === adminId
       );
-
-      // If old profile has incorrect adminId,
-      // find it by profile record ID as a fallback.
-      if (!savedProfile) {
-        const allProfiles = await axios.get(ADMIN_PROFILE_API);
-
-        savedProfile = allProfiles.data.find(
-          (item) => String(item.id) === adminId
-        );
-
-        // Correct the old adminId automatically
-        if (savedProfile) {
-          const updateResponse = await axios.patch(
-            `${ADMIN_PROFILE_API}/${savedProfile.id}`,
-            {
-              adminId: adminId
-            }
-          );
-
-          savedProfile = updateResponse.data;
-        }
-      }
 
       setAdminProfile(savedProfile || null);
+
     } catch (err) {
       console.error("ADMIN PROFILE ERROR:", err);
       setAdminProfile(null);
@@ -213,55 +319,68 @@ function ManageMessages() {
         } else {
           await axios.post(STATUS_API, data);
         }
+
       } catch (err) {
-        console.error("Typing status update failed:", err);
+        console.error(
+          "Typing status update failed:",
+          err
+        );
       }
     },
     [selectedUser]
   );
 
   // =====================================
-  // FETCH USERS AND MESSAGES
+  // FETCH USERS, PROFILES AND MESSAGES
   // =====================================
 
   const fetchData = useCallback(async () => {
     try {
-      const [userResponse, messageResponse, statusResponse] =
-        await Promise.all([
-          axios.get(USER_API),
-          axios.get(API),
-          selectedUser
-            ? axios.get(
-                `${STATUS_API}?userId=${encodeURIComponent(
-                  selectedUser.id
-                )}`
-              )
-            : Promise.resolve({ data: [] })
-        ]);
+      const [
+        userResponse,
+        messageResponse,
+        profileResponse,
+        statusResponse
+      ] = await Promise.all([
+        axios.get(USER_API),
+        axios.get(API),
+        axios.get(PROFILE_API),
+        selectedUser
+          ? axios.get(
+              `${STATUS_API}?userId=${encodeURIComponent(
+                selectedUser.id
+              )}`
+            )
+          : Promise.resolve({ data: [] })
+      ]);
 
-      setUsers(userResponse.data);
+      setUsers(userResponse.data || []);
+      setUserProfiles(profileResponse.data || []);
 
-      let allMessages = messageResponse.data;
+      let allMessages = messageResponse.data || [];
 
       const selectedUserId = selectedUser
         ? String(selectedUser.id)
         : null;
 
-      // Update user messages to delivered / seen
-      const statusUpdates = allMessages.filter((item) => {
-        if (item.sender !== "user") return false;
+      // UPDATE USER MESSAGES TO DELIVERED / SEEN
 
-        if (item.status === "seen") return false;
+      const statusUpdates = allMessages.filter(
+        (item) => {
+          if (item.sender !== "user") return false;
 
-        if (
-          selectedUserId &&
-          String(item.userId) === selectedUserId
-        ) {
-          return true;
+          if (item.status === "seen") return false;
+
+          if (
+            selectedUserId &&
+            String(item.userId) === selectedUserId
+          ) {
+            return true;
+          }
+
+          return item.status === "sent";
         }
-
-        return item.status === "sent";
-      });
+      );
 
       await Promise.all(
         statusUpdates.map((item) => {
@@ -269,9 +388,14 @@ function ManageMessages() {
             selectedUserId &&
             String(item.userId) === selectedUserId;
 
-          return axios.patch(`${API}/${item.id}`, {
-            status: isSelected ? "seen" : "delivered"
-          });
+          return axios.patch(
+            `${API}/${item.id}`,
+            {
+              status: isSelected
+                ? "seen"
+                : "delivered"
+            }
+          );
         })
       );
 
@@ -281,7 +405,9 @@ function ManageMessages() {
         );
 
         allMessages = allMessages.map((item) => {
-          if (!updatedIds.includes(String(item.id))) {
+          if (
+            !updatedIds.includes(String(item.id))
+          ) {
             return item;
           }
 
@@ -291,18 +417,22 @@ function ManageMessages() {
 
           return {
             ...item,
-            status: isSelected ? "seen" : "delivered"
+            status: isSelected
+              ? "seen"
+              : "delivered"
           };
         });
       }
 
       allMessages.sort(
-        (a, b) => new Date(a.date) - new Date(b.date)
+        (a, b) =>
+          new Date(a.date) - new Date(b.date)
       );
 
       setMessages(allMessages);
 
-      // User typing status
+      // USER TYPING STATUS
+
       if (statusResponse.data.length > 0) {
         const status = statusResponse.data[0];
 
@@ -319,11 +449,14 @@ function ManageMessages() {
       }
 
       setError("");
+
     } catch (err) {
       console.error("FETCH DATA ERROR:", err);
+
       setError(
         "Data load nahi hua. JSON Server check karo."
       );
+
     } finally {
       setLoading(false);
     }
@@ -336,7 +469,10 @@ function ManageMessages() {
   useEffect(() => {
     fetchData();
 
-    const interval = setInterval(fetchData, 3000);
+    const interval = setInterval(
+      fetchData,
+      3000
+    );
 
     return () => clearInterval(interval);
   }, [fetchData]);
@@ -347,6 +483,10 @@ function ManageMessages() {
 
   const openChat = async (user) => {
     setSelectedUser(user);
+
+    setShowUserMenu(false);
+    setShowUserDetails(false);
+
     setMessageSearch("");
     setFilterDate("");
     setReply("");
@@ -387,6 +527,7 @@ function ManageMessages() {
           return item;
         })
       );
+
     } catch (err) {
       console.error("Chat open error:", err);
     }
@@ -403,6 +544,198 @@ function ManageMessages() {
     setReply("");
     setAttachment(null);
     setUserTyping(false);
+    setShowUserMenu(false);
+    setShowUserDetails(false);
+  };
+
+  // =====================================
+  // BLOCK / UNBLOCK USER
+  // =====================================
+
+  const toggleBlockUser = async () => {
+    if (!selectedUser || userActionLoading) return;
+
+    const currentlyBlocked = Boolean(selectedUser.blocked);
+
+    const confirmAction = window.confirm(
+      currentlyBlocked
+        ? "Kya aap is user ko unblock karna chahte hain?"
+        : "Kya aap is user ko block karna chahte hain?"
+    );
+
+    if (!confirmAction) return;
+
+    try {
+      setUserActionLoading(true);
+
+      const updatedData = {
+        blocked: !currentlyBlocked
+      };
+
+      const response = await axios.patch(
+        `${USER_API}/${encodeURIComponent(selectedUser.id)}`,
+        updatedData
+      );
+
+      const updatedUser = {
+        ...selectedUser,
+        ...response.data
+      };
+
+      setUsers((previous) =>
+        previous.map((user) =>
+          String(user.id) === String(selectedUser.id)
+            ? updatedUser
+            : user
+        )
+      );
+
+      setSelectedUser(updatedUser);
+      setShowUserMenu(false);
+
+      alert(
+        currentlyBlocked
+          ? "User successfully unblocked."
+          : "User successfully blocked."
+      );
+
+    } catch (err) {
+      console.error("BLOCK USER ERROR:", err);
+      alert("User block/unblock nahi hua.");
+    } finally {
+      setUserActionLoading(false);
+    }
+  };
+
+  // =====================================
+  // DELETE USER AND RELATED DATA
+  // =====================================
+
+  const deleteUser = async () => {
+    if (!selectedUser || userActionLoading) return;
+
+    const confirmDelete = window.confirm(
+      `Kya aap ${selectedUser.username || "is user"} ko permanently delete karna chahte hain?\n\nIs user ke messages aur profile data bhi delete ho jayenge.`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      setUserActionLoading(true);
+
+      const userId = String(selectedUser.id);
+
+      // FETCH RELATED DATA
+
+      const [
+        messageResponse,
+        profileResponse,
+        statusResponse
+      ] = await Promise.all([
+        axios.get(API),
+        axios.get(PROFILE_API),
+        axios.get(STATUS_API)
+      ]);
+
+      // FIND USER MESSAGES
+
+      const relatedMessages = (
+        messageResponse.data || []
+      ).filter(
+        (item) => String(item.userId) === userId
+      );
+
+      // FIND USER PROFILES
+
+      const relatedProfiles = (
+        profileResponse.data || []
+      ).filter(
+        (item) => String(item.userId) === userId
+      );
+
+      // FIND USER CHAT STATUS
+
+      const relatedStatuses = (
+        statusResponse.data || []
+      ).filter(
+        (item) => String(item.userId) === userId
+      );
+
+      // DELETE RELATED MESSAGES
+
+      await Promise.all(
+        relatedMessages.map((item) =>
+          axios.delete(
+            `${API}/${encodeURIComponent(item.id)}`
+          )
+        )
+      );
+
+      // DELETE USER PROFILES
+
+      await Promise.all(
+        relatedProfiles.map((item) =>
+          axios.delete(
+            `${PROFILE_API}/${encodeURIComponent(item.id)}`
+          )
+        )
+      );
+
+      // DELETE CHAT STATUS
+
+      await Promise.all(
+        relatedStatuses.map((item) =>
+          axios.delete(
+            `${STATUS_API}/${encodeURIComponent(item.id)}`
+          )
+        )
+      );
+
+      // DELETE USER
+
+      await axios.delete(
+        `${USER_API}/${encodeURIComponent(userId)}`
+      );
+
+      // UPDATE FRONTEND STATES
+
+      setUsers((previous) =>
+        previous.filter(
+          (user) => String(user.id) !== userId
+        )
+      );
+
+      setUserProfiles((previous) =>
+        previous.filter(
+          (profile) => String(profile.userId) !== userId
+        )
+      );
+
+      setMessages((previous) =>
+        previous.filter(
+          (message) => String(message.userId) !== userId
+        )
+      );
+
+      setSelectedUser(null);
+      setReply("");
+      setAttachment(null);
+      setUserTyping(false);
+      setShowUserMenu(false);
+      setShowUserDetails(false);
+
+      alert("User aur uska related data successfully delete ho gaya.");
+
+    } catch (err) {
+      console.error("DELETE USER ERROR:", err);
+
+      alert(
+        "User delete nahi hua. JSON Server aur API data check karo."
+      );
+
+    } finally {
+      setUserActionLoading(false);
+    }
   };
 
   // =====================================
@@ -471,6 +804,11 @@ function ManageMessages() {
       return;
     }
 
+    if (selectedUser.blocked) {
+      alert("Ye user blocked hai. Unblock karne ke baad hi reply bhejein.");
+      return;
+    }
+
     if (!reply.trim() && !attachment) {
       alert("Message ya attachment add karo.");
       return;
@@ -501,11 +839,15 @@ function ManageMessages() {
         status: "sent"
       };
 
-      const response = await axios.post(API, newMessage);
+      const response = await axios.post(
+        API,
+        newMessage
+      );
 
       setMessages((previous) =>
         [...previous, response.data].sort(
-          (a, b) => new Date(a.date) - new Date(b.date)
+          (a, b) =>
+            new Date(a.date) - new Date(b.date)
         )
       );
 
@@ -513,13 +855,15 @@ function ManageMessages() {
       setAttachment(null);
 
       await updateTyping(false);
+
     } catch (err) {
       console.error("SEND MESSAGE ERROR:", err);
 
       alert(
         err.response?.data?.message ||
-          "Message send nahi hua. JSON Server check karo."
+        "Message send nahi hua. JSON Server check karo."
       );
+
     } finally {
       setSending(false);
     }
@@ -541,14 +885,19 @@ function ManageMessages() {
     }
 
     try {
-      await axios.delete(`${API}/${item.id}`);
+      await axios.delete(
+        `${API}/${encodeURIComponent(item.id)}`
+      );
 
       setMessages((previous) =>
         previous.filter(
-          (message) => String(message.id) !== String(item.id)
+          (message) =>
+            String(message.id) !== String(item.id)
         )
       );
+
     } catch (err) {
+      console.error("DELETE MESSAGE ERROR:", err);
       alert("Message delete nahi hua.");
     }
   };
@@ -583,7 +932,9 @@ function ManageMessages() {
   const formatSize = (size) => {
     if (!size) return "";
 
-    return (size / (1024 * 1024)).toFixed(2) + " MB";
+    return (
+      size / (1024 * 1024)
+    ).toFixed(2) + " MB";
   };
 
   // =====================================
@@ -668,23 +1019,26 @@ function ManageMessages() {
   // MESSAGE SEARCH AND DATE FILTER
   // =====================================
 
-  const filteredMessages = selectedMessages.filter((item) => {
-    const matchesSearch = [
-      item.message,
-      item.attachment?.name,
-      item.senderName
-    ]
-      .join(" ")
-      .toLowerCase()
-      .includes(messageSearch.toLowerCase());
+  const filteredMessages = selectedMessages.filter(
+    (item) => {
+      const matchesSearch = [
+        item.message,
+        item.attachment?.name,
+        item.senderName
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(messageSearch.toLowerCase());
 
-    const matchesDate = filterDate
-      ? new Date(item.date).toLocaleDateString("en-CA") ===
-        filterDate
-      : true;
+      const matchesDate = filterDate
+        ? new Date(item.date).toLocaleDateString(
+            "en-CA"
+          ) === filterDate
+        : true;
 
-    return matchesSearch && matchesDate;
-  });
+      return matchesSearch && matchesDate;
+    }
+  );
 
   // =====================================
   // FILTER USERS
@@ -720,7 +1074,8 @@ function ManageMessages() {
 
   const getLastMessage = (userId) => {
     const userMessages = messages.filter(
-      (item) => String(item.userId) === String(userId)
+      (item) =>
+        String(item.userId) === String(userId)
     );
 
     return userMessages[userMessages.length - 1];
@@ -760,12 +1115,14 @@ function ManageMessages() {
             Manage Messages
           </h3>
 
-          <p className="text-muted mb-0"style={{
-               
-                backgroundColor: " #087FC4",
-                padding: "10px",
-                 borderRadius: "5px",
-              }}>
+          <p
+            className="text-white mb-0"
+            style={{
+              backgroundColor: "#087FC4",
+              padding: "10px",
+              borderRadius: "5px"
+            }}
+          >
             Manage customer conversations
           </p>
         </div>
@@ -841,7 +1198,9 @@ function ManageMessages() {
                   className="form-control"
                   placeholder="Search users..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) =>
+                    setSearch(e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -865,11 +1224,17 @@ function ManageMessages() {
               ) : (
                 filteredUsers.map((user) => {
                   const lastMessage = getLastMessage(user.id);
-                  const unreadCount = getUnreadCount(user.id);
+
+                  const unreadCount =
+                    getUnreadCount(user.id);
 
                   const active =
                     selectedUser &&
-                    String(selectedUser.id) === String(user.id);
+                    String(selectedUser.id) ===
+                      String(user.id);
+
+                  const userWithPhoto =
+                    getUserWithPhoto(user);
 
                   return (
                     <button
@@ -884,22 +1249,14 @@ function ManageMessages() {
                       }}
                     >
                       <div className="d-flex align-items-center gap-2">
-                        <div
-                          className="rounded-circle d-flex justify-content-center align-items-center flex-shrink-0"
-                          style={{
-                            width: "43px",
-                            height: "43px",
-                            backgroundColor: "#087FC4",
-                            color: "#fff",
-                            fontWeight: "bold"
-                          }}
-                        >
-                          {(user.username || "U")
-                            .charAt(0)
-                            .toUpperCase()}
-                        </div>
+
+                        <UserAvatar
+                          user={userWithPhoto}
+                          size={43}
+                        />
 
                         <div className="flex-grow-1 overflow-hidden">
+
                           <div className="d-flex justify-content-between gap-2">
                             <strong className="text-truncate">
                               {user.username || "User"}
@@ -924,6 +1281,12 @@ function ManageMessages() {
                             <small className="text-muted">
                               {formatDate(lastMessage.date)}
                             </small>
+                          )}
+
+                          {user.blocked && (
+                            <span className="badge bg-danger mt-1">
+                              Blocked
+                            </span>
                           )}
                         </div>
                       </div>
@@ -969,19 +1332,10 @@ function ManageMessages() {
                     <FaArrowLeft />
                   </button>
 
-                  <div
-                    className="rounded-circle d-flex justify-content-center align-items-center flex-shrink-0"
-                    style={{
-                      width: "43px",
-                      height: "43px",
-                      backgroundColor: "#087FC4",
-                      fontWeight: "bold"
-                    }}
-                  >
-                    {(selectedUser.username || "U")
-                      .charAt(0)
-                      .toUpperCase()}
-                  </div>
+                  <UserAvatar
+                    user={getUserWithPhoto(selectedUser)}
+                    size={43}
+                  />
 
                   <div className="flex-grow-1 overflow-hidden">
                     <h6 className="mb-1 text-truncate">
@@ -995,9 +1349,99 @@ function ManageMessages() {
                     </small>
                   </div>
 
-                  <span className="badge bg-success">
-                    Customer
-                  </span>
+                  {/* USER STATUS AND THREE DOTS */}
+
+                  <div className="d-flex align-items-center gap-2 flex-shrink-0">
+
+                    {selectedUser.blocked ? (
+                      <span className="badge bg-danger">
+                        Blocked
+                      </span>
+                    ) : (
+                      <span className="badge bg-success">
+                        Customer
+                      </span>
+                    )}
+
+                    <div
+                      className="position-relative"
+                      onBlur={(e) => {
+                        if (
+                          !e.currentTarget.contains(
+                            e.relatedTarget
+                          )
+                        ) {
+                          setShowUserMenu(false);
+                        }
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className="btn btn-light btn-sm"
+                        title="User Options"
+                        onClick={() =>
+                          setShowUserMenu((previous) => !previous)
+                        }
+                      >
+                        <FaEllipsisV />
+                      </button>
+
+                      {showUserMenu && (
+                        <div
+                          className="position-absolute end-0 mt-2 bg-white shadow rounded py-2"
+                          style={{
+                            width: "205px",
+                            zIndex: 1050
+                          }}
+                        >
+                          <button
+                            type="button"
+                            className="dropdown-item px-3 py-2 text-dark"
+                            onClick={() => {
+                              setShowUserDetails(true);
+                              setShowUserMenu(false);
+                            }}
+                          >
+                            <FaEye className="me-2 text-primary" />
+                            View User Details
+                          </button>
+
+                          <hr className="my-2" />
+
+                          <button
+                            type="button"
+                            className="dropdown-item px-3 py-2 text-dark"
+                            disabled={userActionLoading}
+                            onClick={toggleBlockUser}
+                          >
+                            {selectedUser.blocked ? (
+                              <>
+                                <FaUserCheck className="me-2 text-success" />
+                                Unblock User
+                              </>
+                            ) : (
+                              <>
+                                <FaBan className="me-2 text-warning" />
+                                Block User
+                              </>
+                            )}
+                          </button>
+
+                          <hr className="my-2" />
+
+                          <button
+                            type="button"
+                            className="dropdown-item px-3 py-2 text-danger"
+                            disabled={userActionLoading}
+                            onClick={deleteUser}
+                          >
+                            <FaTrash className="me-2" />
+                            Delete User
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* SEARCH */}
@@ -1048,7 +1492,8 @@ function ManageMessages() {
                     </div>
                   ) : (
                     filteredMessages.map((item) => {
-                      const isAdmin = item.sender === "admin";
+                      const isAdmin =
+                        item.sender === "admin";
 
                       const messageAdminName =
                         item.senderName &&
@@ -1059,6 +1504,17 @@ function ManageMessages() {
                       const messageAdminPhoto =
                         item.senderPhoto || adminPhoto;
 
+                      const messageUser =
+                        users.find(
+                          (user) =>
+                            String(user.id) ===
+                            String(item.userId)
+                        ) || selectedUser;
+
+                      const userPhoto =
+                        item.senderPhoto ||
+                        getUserPhoto(messageUser);
+
                       return (
                         <div
                           key={item.id}
@@ -1068,21 +1524,18 @@ function ManageMessages() {
                               : "justify-content-start"
                           }`}
                         >
+
                           {!isAdmin && (
-                            <div
-                              className="rounded-circle d-flex justify-content-center align-items-center me-2 flex-shrink-0"
-                              style={{
-                                width: "32px",
-                                height: "32px",
-                                backgroundColor: "#087FC4",
-                                color: "#fff",
-                                fontWeight: "bold"
+                            <UserAvatar
+                              user={{
+                                ...messageUser,
+                                profilePhoto: userPhoto,
+                                senderName:
+                                  item.senderName ||
+                                  messageUser?.username
                               }}
-                            >
-                              {(selectedUser.username || "U")
-                                .charAt(0)
-                                .toUpperCase()}
-                            </div>
+                              size={32}
+                            />
                           )}
 
                           <div
@@ -1100,6 +1553,7 @@ function ManageMessages() {
                             }}
                           >
                             <div className="d-flex align-items-center gap-2 mb-2">
+
                               {isAdmin && (
                                 <div
                                   className="rounded-circle overflow-hidden d-flex justify-content-center align-items-center flex-shrink-0"
@@ -1116,6 +1570,14 @@ function ManageMessages() {
                                     <img
                                       src={messageAdminPhoto}
                                       alt={messageAdminName}
+                                      onError={(e) => {
+                                        e.currentTarget.style.display =
+                                          "none";
+                                        e.currentTarget.parentElement.textContent =
+                                          messageAdminName
+                                            .charAt(0)
+                                            .toUpperCase();
+                                      }}
                                       style={{
                                         width: "100%",
                                         height: "100%",
@@ -1139,13 +1601,19 @@ function ManageMessages() {
                               </small>
                             </div>
 
-                            <div style={{ whiteSpace: "pre-wrap" }}>
+                            <div
+                              style={{
+                                whiteSpace: "pre-wrap",
+                                overflowWrap: "anywhere"
+                              }}
+                            >
                               {item.message}
                             </div>
 
                             {renderAttachment(item.attachment)}
 
                             <div className="d-flex justify-content-end align-items-center gap-2 mt-2">
+
                               <small
                                 style={{
                                   fontSize: "11px",
@@ -1170,7 +1638,9 @@ function ManageMessages() {
                                   type="button"
                                   className="btn btn-sm p-0 text-white"
                                   title="Delete message"
-                                  onClick={() => deleteMessage(item)}
+                                  onClick={() =>
+                                    deleteMessage(item)
+                                  }
                                 >
                                   <FaTrash size={11} />
                                 </button>
@@ -1192,6 +1662,7 @@ function ManageMessages() {
                 {/* MESSAGE INPUT */}
 
                 <div className="p-3 border-top">
+
                   {/* EMOJIS */}
 
                   <div className="d-flex gap-2 mb-2 flex-wrap">
@@ -1238,6 +1709,7 @@ function ManageMessages() {
 
                   <form onSubmit={sendMessage}>
                     <div className="d-flex gap-2 align-items-end">
+
                       <label
                         className="btn btn-light border mb-0 py-3"
                         title="Attach file"
@@ -1255,19 +1727,29 @@ function ManageMessages() {
                       <textarea
                         className="form-control"
                         rows="2"
-                        placeholder="Write your reply..."
+                        placeholder={
+                          selectedUser.blocked
+                            ? "This user is blocked"
+                            : "Write your reply..."
+                        }
                         value={reply}
+                        disabled={selectedUser.blocked}
                         onChange={(e) => {
                           setReply(e.target.value);
-                          updateTyping(Boolean(e.target.value.trim()));
+
+                          updateTyping(
+                            Boolean(e.target.value.trim())
+                          );
                         }}
                       />
 
                       <button
                         type="submit"
                         className="btn text-white py-3 px-4"
-                        style={{ backgroundColor: "#087FC4" }}
-                        disabled={sending}
+                        style={{
+                          backgroundColor: "#087FC4"
+                        }}
+                        disabled={sending || selectedUser.blocked}
                       >
                         {sending ? "..." : <FaPaperPlane />}
                       </button>
@@ -1283,6 +1765,161 @@ function ManageMessages() {
           </div>
         </div>
       </div>
+
+      {/* =====================================
+          USER DETAILS MODAL
+      ===================================== */}
+
+      {showUserDetails && selectedUser && (
+        <div
+          className="modal d-block"
+          tabIndex="-1"
+          role="dialog"
+          aria-modal="true"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.6)",
+            zIndex: 2000
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowUserDetails(false);
+            }
+          }}
+        >
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+
+              {/* MODAL HEADER */}
+
+              <div
+                className="modal-header text-white"
+                style={{ backgroundColor: "#102D4F" }}
+              >
+                <h5 className="modal-title">
+                  <FaUser className="me-2" />
+                  User Details
+                </h5>
+
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowUserDetails(false)}
+                />
+              </div>
+
+              {/* MODAL BODY */}
+
+              <div className="modal-body">
+
+                <div className="text-center mb-4">
+                  <div className="d-flex justify-content-center">
+                    <UserAvatar
+                      user={getUserWithPhoto(selectedUser)}
+                      size={95}
+                    />
+                  </div>
+
+                  <h5 className="mt-3 mb-1">
+                    {selectedUser.username || "N/A"}
+                  </h5>
+
+                  <span
+                    className={`badge ${
+                      selectedUser.blocked
+                        ? "bg-danger"
+                        : "bg-success"
+                    }`}
+                  >
+                    {selectedUser.blocked
+                      ? "Blocked"
+                      : "Active"}
+                  </span>
+                </div>
+
+                <div className="row g-3">
+
+                  {[
+                    {
+                      label: "User ID",
+                      value: selectedUser.id
+                    },
+                    {
+                      label: "Full Name",
+                      value: selectedUser.username
+                    },
+                    {
+                      label: "Email",
+                      value: selectedUser.email
+                    },
+                    {
+                      label: "Phone",
+                      value: selectedUser.phone
+                    },
+                    {
+                      label: "Gender",
+                      value: selectedUser.gender
+                    },
+                    {
+                      label: "Address",
+                      value:
+                        getUserProfile(selectedUser)?.address ||
+                        selectedUser.address
+                    },
+                    {
+                      label: "Role",
+                      value: selectedUser.role
+                    },
+                    {
+                      label: "Comments",
+                      value: selectedUser.comments
+                    }
+                  ].map((detail) => (
+                    <div
+                      className="col-md-6"
+                      key={detail.label}
+                    >
+                      <div className="border rounded p-3 h-100">
+                        <small className="text-muted d-block mb-1">
+                          {detail.label}
+                        </small>
+
+                        <strong className="text-break">
+                          {detail.value || "Not Available"}
+                        </strong>
+                      </div>
+                    </div>
+                  ))}
+
+                </div>
+              </div>
+
+              {/* MODAL FOOTER */}
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowUserDetails(false)}
+                >
+                  Close
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-outline-primary"
+                  onClick={() => {
+                    setShowUserDetails(false);
+                    setShowUserMenu(true);
+                  }}
+                >
+                  User Options
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

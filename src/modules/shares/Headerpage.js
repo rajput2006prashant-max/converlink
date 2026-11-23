@@ -1,6 +1,8 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+
 import {
   FaBuilding,
   FaSearch,
@@ -17,8 +19,22 @@ function Headerpage() {
   const isDark = theme === "dark";
   const isHindi = language === "Hindi";
 
-  const companyName = settings?.general?.websiteName || "CONVERLINK";
-  const subtitle = settings?.general?.companyName || "Converlink Engineering Pvt. Ltd.";
+  const [messageCount, setMessageCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  // Logged-in User Details
+  const userData = JSON.parse(
+    localStorage.getItem("userLoginData") || "{}"
+  );
+
+  const userId = userData.userId || userData.id;
+
+  const companyName =
+    settings?.general?.websiteName || "CONVERLINK";
+
+  const subtitle =
+    settings?.general?.companyName ||
+    "Converlink Engineering Pvt. Ltd.";
 
   const text = {
     account: isHindi ? "खाता" : "Account",
@@ -32,8 +48,161 @@ function Headerpage() {
     logout: isHindi ? "लॉगआउट" : "Logout"
   };
 
+  // Header Colors
   const headerColor = isDark ? "#101820" : "#102D4F";
   const inputColor = isDark ? "#263449" : "#ffffff";
+
+  // Fetch Unread Messages
+  useEffect(() => {
+    if (!userId) {
+      setMessageCount(0);
+      return;
+    }
+
+    const fetchUnreadMessages = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8700/messages",
+          { params: { userId } }
+        );
+
+        const unreadMessages = response.data.filter((msg) => {
+          const isCurrentUser =
+            String(msg.userId) === String(userId);
+
+          const isAdminMessage =
+            String(msg.sender).trim().toLowerCase() === "admin";
+
+          const isUnread = msg.status
+            ? String(msg.status).trim().toLowerCase() !== "seen"
+            : msg.read === false;
+
+          return isCurrentUser && isAdminMessage && isUnread;
+        });
+
+        setMessageCount(unreadMessages.length);
+
+      } catch (error) {
+        console.log("Unread Message Error:", error);
+      }
+    };
+
+    fetchUnreadMessages();
+
+    const interval = setInterval(fetchUnreadMessages, 3000);
+
+    return () => clearInterval(interval);
+  }, [userId]);
+
+  // Fetch Unread Notifications
+  useEffect(() => {
+    if (!userId) {
+      setNotificationCount(0);
+      return;
+    }
+
+    const fetchUnreadNotifications = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8700/notifications",
+          { params: { userId } }
+        );
+
+        const unreadNotifications = response.data.filter(
+          (notification) =>
+            String(notification.userId) === String(userId) &&
+            notification.read === false
+        );
+
+        setNotificationCount(unreadNotifications.length);
+
+      } catch (error) {
+        console.log("Unread Notification Error:", error);
+      }
+    };
+
+    fetchUnreadNotifications();
+
+    const interval = setInterval(
+      fetchUnreadNotifications,
+      3000
+    );
+
+    return () => clearInterval(interval);
+  }, [userId]);
+
+  // Mark Messages as Seen
+  const handleMessagesClick = async () => {
+    if (!userId) return;
+
+    try {
+      const response = await axios.get(
+        "http://localhost:8700/messages",
+        { params: { userId } }
+      );
+
+      const unreadMessages = response.data.filter((msg) => {
+        return (
+          String(msg.userId) === String(userId) &&
+          String(msg.sender).trim().toLowerCase() === "admin" &&
+          (
+            msg.status
+              ? String(msg.status).trim().toLowerCase() !== "seen"
+              : msg.read === false
+          )
+        );
+      });
+
+      setMessageCount(0);
+
+      await Promise.all(
+        unreadMessages.map((msg) =>
+          axios.patch(
+            `http://localhost:8700/messages/${msg.id}`,
+            {
+              status: "seen",
+              read: true
+            }
+          )
+        )
+      );
+
+    } catch (error) {
+      console.log("Mark Message Seen Error:", error);
+    }
+  };
+
+  // Mark Notifications as Read
+  const handleNotificationsClick = async () => {
+    if (!userId) return;
+
+    try {
+      const response = await axios.get(
+        "http://localhost:8700/notifications",
+        { params: { userId } }
+      );
+
+      const unreadNotifications = response.data.filter(
+        (notification) =>
+          String(notification.userId) === String(userId) &&
+          notification.read === false
+      );
+
+      setNotificationCount(0);
+
+      await Promise.all(
+        unreadNotifications.map((notification) =>
+          axios.patch(
+            `http://localhost:8700/notifications/${notification.id}`,
+            { read: true }
+          )
+        )
+      );
+
+    } catch (error) {
+      console.log("Mark Notification Read Error:", error);
+    }
+  };
 
   return (
     <header
@@ -57,7 +226,12 @@ function Headerpage() {
             to="/"
             className="navbar-brand d-flex align-items-center gap-2 text-white fw-bold"
           >
-            <FaBuilding style={{ color: "#38C8F5", fontSize: "32px" }} />
+            <FaBuilding
+              style={{
+                color: "#38C8F5",
+                fontSize: "32px"
+              }}
+            />
 
             <span>
               {companyName}
@@ -71,7 +245,10 @@ function Headerpage() {
           <div className="d-flex align-items-center gap-3 gap-md-4">
 
             {/* Search */}
-            <div className="input-group" style={{ maxWidth: "220px" }}>
+            <div
+              className="input-group"
+              style={{ maxWidth: "220px" }}
+            >
               <input
                 type="text"
                 className="form-control border-0"
@@ -96,25 +273,49 @@ function Headerpage() {
             {/* Notifications */}
             <Link
               to="/landing/notification"
+              onClick={handleNotificationsClick}
               className="position-relative text-white"
               title={text.notifications}
             >
               <FaBell size={21} />
-              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info text-dark">
-                3
-              </span>
+
+              {notificationCount > 0 && (
+                <span
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style={{
+                    fontSize: "11px",
+                    minWidth: "19px"
+                  }}
+                >
+                  {notificationCount > 99
+                    ? "99+"
+                    : notificationCount}
+                </span>
+              )}
             </Link>
 
             {/* Messages */}
             <Link
               to="/landing/message"
+              onClick={handleMessagesClick}
               className="position-relative text-white"
               title={text.messages}
             >
               <FaEnvelope size={21} />
-              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                2
-              </span>
+
+              {messageCount > 0 && (
+                <span
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style={{
+                    fontSize: "11px",
+                    minWidth: "19px"
+                  }}
+                >
+                  {messageCount > 99
+                    ? "99+"
+                    : messageCount}
+                </span>
+              )}
             </Link>
 
             {/* Account Dropdown */}
@@ -143,7 +344,9 @@ function Headerpage() {
                 <li>
                   <Link
                     className="dropdown-item py-2"
-                    style={{ color: isDark ? "#ffffff" : "#212529" }}
+                    style={{
+                      color: isDark ? "#ffffff" : "#212529"
+                    }}
                     to="/landing/user-login"
                   >
                     <FaUserCircle className="me-2 text-primary" />
@@ -151,12 +354,16 @@ function Headerpage() {
                   </Link>
                 </li>
 
-                <li><hr className="dropdown-divider" /></li>
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
 
                 <li>
                   <Link
                     className="dropdown-item py-2"
-                    style={{ color: isDark ? "#ffffff" : "#212529" }}
+                    style={{
+                      color: isDark ? "#ffffff" : "#212529"
+                    }}
                     to="/landing/profile"
                   >
                     {text.profile}
@@ -166,7 +373,9 @@ function Headerpage() {
                 <li>
                   <Link
                     className="dropdown-item py-2"
-                    style={{ color: isDark ? "#ffffff" : "#212529" }}
+                    style={{
+                      color: isDark ? "#ffffff" : "#212529"
+                    }}
                     to="/landing"
                   >
                     {text.dashboard}
@@ -176,14 +385,18 @@ function Headerpage() {
                 <li>
                   <Link
                     className="dropdown-item py-2"
-                    style={{ color: isDark ? "#ffffff" : "#212529" }}
+                    style={{
+                      color: isDark ? "#ffffff" : "#212529"
+                    }}
                     to="/landing/setting"
                   >
                     {text.settings}
                   </Link>
                 </li>
 
-                <li><hr className="dropdown-divider" /></li>
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
 
                 <li>
                   <Link

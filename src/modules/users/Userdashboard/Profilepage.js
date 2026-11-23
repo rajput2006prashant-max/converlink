@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -23,66 +24,78 @@ function MyProfile() {
     phone: "",
     gender: "",
     address: "",
-    role: "User"
+    role: "user"
   });
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Login user data
+  // Login User Data
   const loginData = JSON.parse(
     localStorage.getItem("userLoginData") || "null"
   );
 
-  // Load user and saved profile
+  const userId = loginData?.id || loginData?.userId;
+
+  // ==============================
+  // LOAD USER PROFILE
+  // ==============================
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        if (!loginData || !loginData.id) {
+        if (!userId) {
           setMessage("Please login first.");
           setLoading(false);
           return;
         }
 
-        // Get user details
+        // Get user details from user database
         const userResponse = await axios.get(
-          `${USER_API}/${loginData.id}`
+          `${USER_API}/${encodeURIComponent(userId)}`
         );
 
         const user = userResponse.data;
 
-        // Default details from user login
-        setProfile({
-          username: user.username || user.name || loginData.username || "",
-          email: user.email || loginData.email || "",
-          phone: user.phone || user.mobile || loginData.phone || "",
-          gender: "",
-          address: "",
-          role: user.role || loginData.role || "User"
-        });
+        // Default user details
+        let userProfile = {
+          username: user.username || user.name || "",
+          email: user.email || "",
+          phone: user.phone || user.mobile || "",
+          gender: user.gender || "",
+          address: user.address || "",
+          role: user.role || "user"
+        };
+
+        let savedImage = user.profileImage || "";
 
         // Get saved profile
         const profileResponse = await axios.get(PROFILE_API);
 
         const savedProfile = profileResponse.data.find(
-          (item) => String(item.userId) === String(loginData.id)
+          (item) => String(item.userId) === String(userId)
         );
 
         if (savedProfile) {
           setProfileId(savedProfile.id);
 
-          setProfile({
-            username: savedProfile.username || user.username || "",
-            email: savedProfile.email || user.email || "",
-            phone: savedProfile.phone || user.phone || "",
-            gender: savedProfile.gender || "",
-            address: savedProfile.address || "",
-            role: savedProfile.role || "User"
-          });
+          userProfile = {
+            username: savedProfile.username || userProfile.username,
+            email: savedProfile.email || userProfile.email,
+            phone: savedProfile.phone || userProfile.phone,
+            gender: savedProfile.gender || userProfile.gender,
+            address: savedProfile.address || userProfile.address,
+            role: savedProfile.role || userProfile.role
+          };
 
-          setProfilePic(savedProfile.profileImage || "");
+          savedImage =
+            savedProfile.profileImage || savedImage;
         }
+
+        setProfile(userProfile);
+        setProfilePic(savedImage);
+
       } catch (error) {
         console.error("Profile loading error:", error);
         setMessage("Profile load nahi ho payi.");
@@ -92,9 +105,12 @@ function MyProfile() {
     };
 
     fetchProfile();
-  }, []);
+  }, [userId]);
 
-  // Input change
+  // ==============================
+  // INPUT CHANGE
+  // ==============================
+
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -104,7 +120,10 @@ function MyProfile() {
     }));
   };
 
-  // Compress image before saving
+  // ==============================
+  // IMAGE COMPRESS
+  // ==============================
+
   const compressImage = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -116,13 +135,19 @@ function MyProfile() {
           const canvas = document.createElement("canvas");
 
           const maxWidth = 400;
+
           const scale = Math.min(
             1,
             maxWidth / image.width
           );
 
-          canvas.width = Math.round(image.width * scale);
-          canvas.height = Math.round(image.height * scale);
+          canvas.width = Math.round(
+            image.width * scale
+          );
+
+          canvas.height = Math.round(
+            image.height * scale
+          );
 
           const context = canvas.getContext("2d");
 
@@ -151,7 +176,10 @@ function MyProfile() {
     });
   };
 
-  // Upload profile image
+  // ==============================
+  // UPLOAD PROFILE IMAGE
+  // ==============================
+
   const handleImageChange = async (event) => {
     const file = event.target.files[0];
 
@@ -166,29 +194,40 @@ function MyProfile() {
       const compressedImage = await compressImage(file);
 
       setProfilePic(compressedImage);
-      setMessage("Photo selected. Click Save Profile.");
+
+      setMessage(
+        "Photo selected. Ab Save Profile par click karein."
+      );
     } catch (error) {
       console.error(error);
       setMessage("Image upload nahi ho payi.");
     }
+
+    event.target.value = "";
   };
 
-  // Save profile data in JSON Server
+  // ==============================
+  // SAVE PROFILE IN BOTH DATABASES
+  // ==============================
+
   const handleSaveProfile = async () => {
-    if (!loginData || !loginData.id) {
+    if (!userId) {
       setMessage("Please login first.");
       return;
     }
 
-    if (!profile.username.trim() || !profile.email.trim()) {
+    if (
+      !profile.username.trim() ||
+      !profile.email.trim()
+    ) {
       setMessage("Name aur email required hain.");
       return;
     }
 
     const profileData = {
-      userId: String(loginData.id),
-      username: profile.username,
-      email: profile.email,
+      userId: String(userId),
+      username: profile.username.trim(),
+      email: profile.email.trim(),
       phone: profile.phone,
       gender: profile.gender,
       address: profile.address,
@@ -200,34 +239,68 @@ function MyProfile() {
       setSaving(true);
       setMessage("");
 
+      // STEP 1: Save or update userprofile database
+
       if (profileId) {
-        // Update existing profile
         await axios.patch(
-          `${PROFILE_API}/${profileId}`,
+          `${PROFILE_API}/${encodeURIComponent(profileId)}`,
           profileData
         );
       } else {
-        // Create new profile
-        const response = await axios.post(
+        const profileResponse = await axios.post(
           PROFILE_API,
           profileData
         );
 
-        setProfileId(response.data.id);
+        setProfileId(profileResponse.data.id);
       }
+
+      // STEP 2: Update main user database
+
+      const userUpdateResponse = await axios.patch(
+        `${USER_API}/${encodeURIComponent(userId)}`,
+        {
+          username: profile.username.trim(),
+          email: profile.email.trim(),
+          phone: profile.phone,
+          gender: profile.gender,
+          address: profile.address,
+          profileImage: profilePic
+        }
+      );
+
+      // STEP 3: Update localStorage data
+
+      const updatedLoginData = {
+        ...loginData,
+        ...userUpdateResponse.data,
+        id: userId
+      };
+
+      localStorage.setItem(
+        "userLoginData",
+        JSON.stringify(updatedLoginData)
+      );
 
       setMessage("Profile successfully saved!");
 
     } catch (error) {
-      console.error("Profile save error:", error);
+      console.error(
+        "Profile save error:",
+        error.response?.data || error.message
+      );
 
       setMessage(
-        "Profile save nahi hui. Image size kam karke dobara try karein."
+        "Profile save nahi hui. Console check karein."
       );
     } finally {
       setSaving(false);
     }
   };
+
+  // ==============================
+  // LOADING
+  // ==============================
 
   if (loading) {
     return (
@@ -238,23 +311,29 @@ function MyProfile() {
     );
   }
 
+  // ==============================
+  // UI
+  // ==============================
+
   return (
     <div className="account-section">
 
       <div className="account-card">
 
         <h2>My Account</h2>
+
         <p className="account-subtitle">
           Manage your profile
         </p>
 
-        {/* Profile Picture */}
+        {/* PROFILE PICTURE */}
+
         <div className="profile-picture">
 
           {profilePic ? (
             <img
               src={profilePic}
-              alt="Profile"
+              alt="User Profile"
             />
           ) : (
             <FaUser className="default-user-icon" />
@@ -294,7 +373,8 @@ function MyProfile() {
           Change Profile Picture
         </button>
 
-        {/* Profile Details */}
+        {/* PROFILE DETAILS */}
+
         <div className="container mt-4 text-start">
 
           <div className="mb-3">
@@ -372,6 +452,8 @@ function MyProfile() {
             />
           </div>
 
+          {/* SAVE BUTTON */}
+
           <button
             type="button"
             className="btn btn-primary w-100"
@@ -390,7 +472,8 @@ function MyProfile() {
         </div>
       </div>
 
-      {/* Social Media Links */}
+      {/* SOCIAL MEDIA LINKS */}
+
       <div className="profile-social-section">
 
         <h3>Connect With Me</h3>
