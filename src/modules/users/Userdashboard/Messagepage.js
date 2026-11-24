@@ -91,6 +91,11 @@ function UserMessage() {
   const [attachment, setAttachment] = useState(null);
   const [showEmoji, setShowEmoji] = useState(false);
 
+  // BLOCK USER STATE
+  const [isBlocked, setIsBlocked] = useState(
+    Boolean(loginData?.blocked)
+  );
+
   const chatBodyRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -127,6 +132,11 @@ function UserMessage() {
 
       const userProfile = profiles.find(
         (item) => String(item.userId) === userId
+      );
+
+      // CHECK USER BLOCK STATUS
+      setIsBlocked(
+        Boolean(currentUser?.blocked)
       );
 
       const adminLogin = JSON.parse(
@@ -172,7 +182,12 @@ function UserMessage() {
     } catch (error) {
       console.error("Profile Error:", error);
     }
-  }, [userId]);
+  }, [
+    userId,
+    loginData?.email,
+    loginData?.profileImage,
+    loginData?.username
+  ]);
 
   // FETCH MESSAGES
   const fetchMessages = useCallback(async () => {
@@ -232,7 +247,7 @@ function UserMessage() {
 
     const profileInterval = setInterval(
       fetchProfilePhotos,
-      15000
+      5000
     );
 
     return () => {
@@ -260,12 +275,20 @@ function UserMessage() {
 
   // SELECT EMOJI
   const selectEmoji = (emoji) => {
+    if (isBlocked) return;
+
     setReply((previous) => previous + emoji);
     setShowEmoji(false);
   };
 
   // ATTACHMENT
   const handleAttachment = (e) => {
+    if (isBlocked) {
+      alert("Admin ne aapko block kiya hai. Aap message nahi bhej sakte.");
+      e.target.value = "";
+      return;
+    }
+
     const file = e.target.files?.[0];
 
     if (!file) return;
@@ -305,6 +328,11 @@ function UserMessage() {
   // SEND MESSAGE
   const sendMessage = async (e) => {
     e.preventDefault();
+
+    if (isBlocked) {
+      alert("Admin ne aapko block kiya hai. Aap message nahi bhej sakte.");
+      return;
+    }
 
     if (!reply.trim() && !attachment) return;
 
@@ -500,6 +528,15 @@ function UserMessage() {
           </div>
         </div>
 
+        {/* BLOCKED USER WARNING */}
+        {isBlocked && (
+          <div className="alert alert-danger rounded-0 mb-0 text-center">
+            <strong>Account Blocked!</strong>
+            <br />
+            Admin ne aapko block kiya hai. Aap abhi message ya attachment send nahi kar sakte.
+          </div>
+        )}
+
         {/* CHAT AREA */}
         <div
           ref={chatBodyRef}
@@ -644,7 +681,7 @@ function UserMessage() {
         )}
 
         {/* EMOJI PICKER */}
-        {showEmoji && (
+        {showEmoji && !isBlocked && (
           <div className="px-3 pt-2 bg-white border-top">
             <div className="d-flex flex-wrap gap-2">
               {EMOJIS.map((emoji, index) => (
@@ -672,6 +709,7 @@ function UserMessage() {
                 className="btn btn-outline-secondary"
                 onClick={() => setShowEmoji(!showEmoji)}
                 title="Emoji"
+                disabled={isBlocked}
               >
                 <FaSmile />
               </button>
@@ -681,6 +719,7 @@ function UserMessage() {
                 className="btn btn-outline-secondary"
                 onClick={() => fileInputRef.current?.click()}
                 title="Attach File"
+                disabled={isBlocked}
               >
                 <FaPaperclip />
               </button>
@@ -691,15 +730,20 @@ function UserMessage() {
                 hidden
                 accept="image/*,.pdf,.doc,.docx,.txt"
                 onChange={handleAttachment}
+                disabled={isBlocked}
               />
 
               <input
                 type="text"
                 className="form-control"
-                placeholder="Type your message..."
+                placeholder={
+                  isBlocked
+                    ? "You are blocked by Admin"
+                    : "Type your message..."
+                }
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
-                disabled={loading || !userId}
+                disabled={loading || !userId || isBlocked}
               />
 
               <button
@@ -708,6 +752,7 @@ function UserMessage() {
                 style={{ backgroundColor: "#087FC4" }}
                 disabled={
                   loading ||
+                  isBlocked ||
                   (!reply.trim() && !attachment) ||
                   !userId
                 }
@@ -726,3 +771,4 @@ function UserMessage() {
 }
 
 export default UserMessage;
+  

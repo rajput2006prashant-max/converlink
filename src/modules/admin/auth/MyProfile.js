@@ -58,7 +58,6 @@ function MyProfile() {
 
       const currentAdminId = String(loginData.id);
 
-      // Fetch admin account
       const adminResponse = await axios.get(
         `${ADMIN_API}/${encodeURIComponent(currentAdminId)}`
       );
@@ -67,10 +66,8 @@ function MyProfile() {
 
       setAdminId(currentAdminId);
 
-      // Fetch all admin profiles
       const profileResponse = await axios.get(PROFILE_API);
 
-      // Find profile using adminId OR profile record id
       const savedProfile = profileResponse.data.find(
         (item) =>
           String(item.adminId) === currentAdminId ||
@@ -78,7 +75,6 @@ function MyProfile() {
       );
 
       if (savedProfile) {
-        // Automatically correct old mismatched adminId
         if (String(savedProfile.adminId) !== currentAdminId) {
           await axios.patch(
             `${PROFILE_API}/${savedProfile.id}`,
@@ -150,7 +146,7 @@ function MyProfile() {
   };
 
   // =====================================
-  // PROFILE PHOTO UPLOAD AND COMPRESS
+  // PHOTO UPLOAD AND COMPRESS
   // =====================================
 
   const handlePhoto = (e) => {
@@ -277,7 +273,6 @@ function MyProfile() {
 
       let recordId = profileRecordId;
 
-      // If record ID is not known, search existing profile
       if (!recordId) {
         const response = await axios.get(PROFILE_API);
 
@@ -292,24 +287,39 @@ function MyProfile() {
         }
       }
 
+      let savedData;
+
       if (recordId) {
         const updateResponse = await axios.patch(
           `${PROFILE_API}/${recordId}`,
           profileData
         );
 
-        setProfileRecordId(updateResponse.data.id);
+        savedData = updateResponse.data;
+        setProfileRecordId(savedData.id);
       } else {
         const saveResponse = await axios.post(
           PROFILE_API,
           profileData
         );
 
-        setProfileRecordId(saveResponse.data.id);
+        savedData = saveResponse.data;
+        setProfileRecordId(savedData.id);
       }
+
+      // Updated profile data
+      setPhoto(savedData.profileImage || "");
+
+      // Dashboard ko turant update notification
+      window.dispatchEvent(
+        new CustomEvent("adminProfileUpdated", {
+          detail: savedData
+        })
+      );
 
       setEditMode(false);
       setSuccess("Profile successfully save ho gayi!");
+
     } catch (err) {
       console.error("PROFILE SAVE ERROR:", err);
       console.error("SERVER RESPONSE:", err.response?.data);
@@ -375,7 +385,9 @@ function MyProfile() {
       const admin = response.data;
 
       if (!admin.pass) {
-        setError("Is admin account ke liye password field available nahi hai.");
+        setError(
+          "Is admin account ke liye password field available nahi hai."
+        );
         return;
       }
 
@@ -403,6 +415,7 @@ function MyProfile() {
       setShowConfirmPassword(false);
 
       setSuccess("Password successfully update ho gaya!");
+
     } catch (err) {
       console.error("PASSWORD ERROR:", err);
       setError("Password update nahi hua.");
@@ -790,8 +803,6 @@ function MyProfile() {
                     className="mt-4"
                   >
 
-                    {/* CURRENT PASSWORD */}
-
                     <div className="mb-3">
                       <label className="form-label fw-semibold">
                         Current Password
@@ -824,8 +835,6 @@ function MyProfile() {
                       </div>
                     </div>
 
-                    {/* NEW PASSWORD */}
-
                     <div className="mb-3">
                       <label className="form-label fw-semibold">
                         New Password
@@ -857,8 +866,6 @@ function MyProfile() {
                         </button>
                       </div>
                     </div>
-
-                    {/* CONFIRM PASSWORD */}
 
                     <div className="mb-3">
                       <label className="form-label fw-semibold">
