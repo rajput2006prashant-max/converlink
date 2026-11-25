@@ -143,7 +143,7 @@ export default function Sidebar() {
                 <li><Link to="pendingorders" style={linkStyle}>{text.pending}</Link></li>
                 <li><Link to="inprogress" style={linkStyle}>{text.progress}</Link></li>
                 <li><Link to="completedproject" style={linkStyle}>{text.completed}</Link></li>
-                <li><Link to="*" style={linkStyle}>{text.cancelled}</Link></li>
+                <li><Link to="cancelledproject" style={linkStyle}>{text.cancelled}</Link></li>
               </ul>
             </div>
           </li>

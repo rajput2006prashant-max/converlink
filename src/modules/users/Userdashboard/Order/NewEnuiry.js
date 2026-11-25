@@ -340,162 +340,146 @@ function NewEnquiry() {
               }}
             >
 
-              <table
-                className="table table-hover align-middle mb-0"
-                style={{
-                  width: "100%",
-                  tableLayout: "fixed"
-                }}
+           <table
+  className="table table-hover table-bordered align-middle mb-0"
+  style={{
+    width: "100%",
+    tableLayout: "fixed",
+    border: "1px solid #cbd5e1"
+  }}
+>
+  <thead className="table-blue">
+    <tr>
+      <th style={{ border: "1px solid #cbd5e1", background: "#102D4F",color: "#fff" }}>S.No</th>
+      <th style={{ border: "1px solid #cbd5e1", background: "#102D4F",color: "#fff" }}>Client Name</th>
+      <th style={{ border: "1px solid #cbd5e1", background: "#102D4F",color: "#fff" }}>Email</th>
+      <th style={{ border: "1px solid #cbd5e1", background: "#102D4F",color: "#fff" }}>Mobile</th>
+      <th style={{ border: "1px solid #cbd5e1", background: "#102D4F",color: "#fff" }}>Service</th>
+      <th style={{ border: "1px solid #cbd5e1", background: "#102D4F",color: "#fff" }}>Date</th>
+      <th style={{ border: "1px solid #cbd5e1", background: "#102D4F",color: "#fff" }}>Requirements</th>
+      <th style={{ border: "1px solid #cbd5e1", background: "#102D4F",color: "#fff" }}>Price (₹)</th>
+      <th style={{ border: "1px solid #cbd5e1", background: "#102D4F",color: "#fff" }}>Status</th>
+      <th style={{ border: "1px solid #cbd5e1", background: "#102D4F",color: "#fff" }}>Action</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {filteredEnquiries.length > 0 ? (
+      filteredEnquiries.map((enquiry, index) => {
+        const status = (enquiry.status || "New").toLowerCase();
+
+        return (
+          <tr key={enquiry.id}>
+            <td style={{ border: "1px solid #cbd5e1" }}>
+              {index + 1}
+            </td>
+
+            <td
+              className="fw-semibold"
+              style={{
+                border: "1px solid #cbd5e1",
+                whiteSpace: "normal",
+                overflowWrap: "anywhere"
+              }}
+            >
+              {enquiry.clientName || "-"}
+            </td>
+
+            <td
+              style={{
+                border: "1px solid #cbd5e1",
+                whiteSpace: "normal",
+                overflowWrap: "anywhere"
+              }}
+            >
+              {enquiry.email || "-"}
+            </td>
+
+            <td style={{ border: "1px solid #cbd5e1" }}>
+              {enquiry.mobile || "-"}
+            </td>
+
+            <td
+              style={{
+                border: "1px solid #cbd5e1",
+                whiteSpace: "normal",
+                overflowWrap: "anywhere"
+              }}
+            >
+              {enquiry.service || "-"}
+            </td>
+
+            <td style={{ border: "1px solid #cbd5e1" }}>
+              {enquiry.date || "-"}
+            </td>
+
+            <td
+              style={{
+                border: "1px solid #cbd5e1",
+                whiteSpace: "normal",
+                overflowWrap: "anywhere"
+              }}
+            >
+              {enquiry.message || "-"}
+            </td>
+
+            <td style={{ border: "1px solid #cbd5e1" }}>
+              <span className="fw-bold text-success">
+                {formatAmount(enquiry.amount)}
+              </span>
+            </td>
+
+            <td style={{ border: "1px solid #cbd5e1" }}>
+              <span
+                className={`badge ${
+                  status === "approved"
+                    ? "bg-success"
+                    : status === "cancelled" || status === "rejected"
+                    ? "bg-danger"
+                    : status === "completed"
+                    ? "bg-info"
+                    : status === "in progress"
+                    ? "bg-warning text-dark"
+                    : "bg-primary"
+                }`}
               >
+                {enquiry.status || "New"}
+              </span>
+            </td>
 
-                <thead className="table-blue ">
-                  <tr>
-                    <th >S.No</th>
-                    <th >Client Name</th>
-                    <th >Email</th>
-                    <th>Mobile</th>
-                    <th >Service</th>
-                    <th >Date</th>
-                    <th >Requirements</th>
-                    <th >Price (₹)</th>
-                    <th >Status</th>
-                    <th >Action</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-
-                  {filteredEnquiries.length > 0 ? (
-
-                    filteredEnquiries.map((enquiry, index) => (
-
-                      <tr key={enquiry.id}>
-
-                        {/* S.No */}
-                        <td>
-                          {index + 1}
-                        </td>
-
-                        {/* Client Name */}
-                        <td
-                          className="fw-semibold"
-                          style={{
-                            whiteSpace: "normal",
-                            overflowWrap: "anywhere"
-                          }}
-                        >
-                          {enquiry.clientName || "-"}
-                        </td>
-
-                        {/* Email */}
-                        <td
-                          style={{
-                            whiteSpace: "normal",
-                            overflowWrap: "anywhere"
-                          }}
-                        >
-                          {enquiry.email || "-"}
-                        </td>
-
-                        {/* Mobile */}
-                        <td>
-                          {enquiry.mobile || "-"}
-                        </td>
-
-                        {/* Service */}
-                        <td
-                          style={{
-                            whiteSpace: "normal",
-                            overflowWrap: "anywhere"
-                          }}
-                        >
-                          {enquiry.service || "-"}
-                        </td>
-
-                        {/* Date */}
-                        <td>
-                          {enquiry.date || "-"}
-                        </td>
-
-                        {/* Requirements */}
-                        <td
-                          style={{
-                            whiteSpace: "normal",
-                            overflowWrap: "anywhere"
-                          }}
-                        >
-                          {enquiry.message || "-"}
-                        </td>
-
-                        {/* Amount */}
-                        <td>
-                          <span className="fw-bold text-success">
-                            {formatAmount(enquiry.amount)}
-                          </span>
-                        </td>
-
-                        {/* Status */}
-                        <td>
-                          <span
-                            className={`badge ${
-                              (enquiry.status || "New").toLowerCase() === "approved"
-                                ? "bg-success"
-                                : (enquiry.status || "New").toLowerCase() === "rejected"
-                                ? "bg-danger"
-                                : "bg-primary"
-                            }`}
-                          >
-                            {enquiry.status || "New"}
-                          </span>
-                        </td>
-
-                        {/* Action */}
-                        <td>
-
-                          {(enquiry.status || "New").toLowerCase() === "new" ? (
-
-                            <button
-                              className="btn btn-sm btn-success"
-                              onClick={() =>
-                                approveEnquiry(enquiry.id)
-                              }
-                            >
-                              <i className="bi bi-check-circle me-1"></i>
-                              Approve
-                            </button>
-
-                          ) : (
-
-                            <span className="text-success fw-semibold">
-                              <i className="bi bi-check-circle-fill me-1"></i>
-                              Approved
-                            </span>
-
-                          )}
-
-                        </td>
-
-                      </tr>
-
-                    ))
-
-                  ) : (
-
-                    <tr>
-                      <td
-                        colSpan="10"
-                        className="text-center text-secondary py-5"
-                      >
-                        <i className="bi bi-inbox fs-2 d-block mb-2"></i>
-                        No enquiry found
-                      </td>
-                    </tr>
-
-                  )}
-
-                </tbody>
-
-              </table>
+            <td style={{ border: "1px solid #cbd5e1" }}>
+              {status === "new" ? (
+                <button
+                  className="btn btn-sm btn-success"
+                  onClick={() => approveEnquiry(enquiry.id)}
+                >
+                  <i className="bi bi-check-circle me-1"></i>
+                  Approve
+                </button>
+              ) : (
+                <span className="text-success fw-semibold">
+                  <i className="bi bi-check-circle-fill me-1"></i>
+                  {enquiry.status}
+                </span>
+              )}
+            </td>
+          </tr>
+        );
+      })
+    ) : (
+      <tr>
+        <td
+          colSpan="10"
+          className="text-center text-secondary py-5"
+          style={{ border: "1px solid #cbd5e1" }}
+        >
+          <i className="bi bi-inbox fs-2 d-block mb-2"></i>
+          No enquiry found
+        </td>
+      </tr>
+    )}
+  </tbody>
+</table>
 
             </div>
 

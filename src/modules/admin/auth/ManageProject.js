@@ -11,7 +11,7 @@ function ManageProjects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Fetch all enquiries
+  // FETCH ALL ENQUIRIES
   const getProjects = useCallback(async () => {
     try {
       setLoading(true);
@@ -19,7 +19,6 @@ function ManageProjects() {
 
       const response = await axios.get(API);
 
-      // Remove duplicate records using ID
       const uniqueProjects = response.data.filter(
         (project, index, self) =>
           index === self.findIndex(
@@ -40,11 +39,11 @@ function ManageProjects() {
     getProjects();
   }, [getProjects]);
 
-  // Update enquiry status
+  // UPDATE ENQUIRY STATUS
   const handleStatusChange = async (id, status) => {
     try {
       const response = await axios.patch(`${API}/${id}`, {
-        status,
+        status: status
       });
 
       setProjects((prev) =>
@@ -55,14 +54,14 @@ function ManageProjects() {
         )
       );
 
-      alert("Project status successfully updated!");
+      alert(`Project status successfully changed to ${status}!`);
     } catch (err) {
       console.error("Status Error:", err);
       alert("Status update nahi ho paya.");
     }
   };
 
-  // Delete enquiry
+  // DELETE ENQUIRY
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
       "Kya aap is enquiry ko delete karna chahte hain?"
@@ -74,9 +73,7 @@ function ManageProjects() {
       await axios.delete(`${API}/${id}`);
 
       setProjects((prev) =>
-        prev.filter(
-          (project) => String(project.id) !== String(id)
-        )
+        prev.filter((project) => String(project.id) !== String(id))
       );
 
       alert("Enquiry deleted successfully!");
@@ -86,7 +83,7 @@ function ManageProjects() {
     }
   };
 
-  // Search
+  // SEARCH
   const filteredProjects = projects.filter((project) =>
     `
       ${project.id || ""}
@@ -102,7 +99,7 @@ function ManageProjects() {
       .includes(search.toLowerCase())
   );
 
-  // Status counts
+  // STATUS COUNTS
   const newCount = projects.filter(
     (p) => (p.status || "New") === "New"
   ).length;
@@ -119,11 +116,14 @@ function ManageProjects() {
     (p) => p.status === "Completed"
   ).length;
 
-  const rejectedCount = projects.filter(
-    (p) => p.status === "Rejected"
+  const cancelledCount = projects.filter(
+    (p) =>
+      ["Cancelled", "Rejected"].includes(
+        String(p.status || "").trim()
+      )
   ).length;
 
-  // Format amount
+  // FORMAT AMOUNT
   const formatAmount = (amount) => {
     if (
       amount === undefined ||
@@ -142,19 +142,25 @@ function ManageProjects() {
     return `₹${value.toLocaleString("en-IN")}`;
   };
 
-  // Status badge
+  // STATUS BADGE
   const getStatusClass = (status) => {
     switch (status) {
       case "Approved":
         return "bg-success";
+
       case "In Progress":
         return "bg-primary";
+
       case "Completed":
         return "bg-info text-dark";
+
+      case "Cancelled":
       case "Rejected":
         return "bg-danger";
+
       case "New":
         return "bg-warning text-dark";
+
       default:
         return "bg-secondary";
     }
@@ -163,19 +169,21 @@ function ManageProjects() {
   return (
     <div className="container-fluid manage-projects-page">
 
-      {/* Heading */}
+      {/* HEADING */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
           <h2 className="fw-bold mb-1">
             Manage Projects
           </h2>
 
-          <p className="text-muted mb-0"style={{
-               
-                backgroundColor: " #087FC4",
-                padding: "10px",
-                 borderRadius: "5px",
-              }}>
+          <p
+            className="text-white mb-0"
+            style={{
+              backgroundColor: "#087FC4",
+              padding: "10px",
+              borderRadius: "5px"
+            }}
+          >
             View and manage all customer enquiries and projects.
           </p>
         </div>
@@ -190,19 +198,21 @@ function ManageProjects() {
         </button>
       </div>
 
-      {/* Summary Cards */}
+      {/* SUMMARY CARDS */}
       <div className="row g-3 mb-4">
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body"style={{
-               
-                backgroundColor: " #087FC4",
+            <div
+              className="card-body"
+              style={{
+                backgroundColor: "#087FC4",
                 padding: "10px",
-                 borderRadius: "5px",
-              }}>
-              <p className="text-muted mb-2">Total Enquiries</p>
-              <h3 className="fw-bold mb-0">
+                borderRadius: "5px"
+              }}
+            >
+              <p className="text-white mb-2">Total Enquiries</p>
+              <h3 className="fw-bold text-white mb-0">
                 {projects.length}
               </h3>
             </div>
@@ -211,13 +221,15 @@ function ManageProjects() {
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body"style={{
-               
-                backgroundColor: " #087FC4",
+            <div
+              className="card-body"
+              style={{
+                backgroundColor: "#087FC4",
                 padding: "10px",
-                 borderRadius: "5px",
-              }}>
-              <p className="text-muted mb-2">New</p>
+                borderRadius: "5px"
+              }}
+            >
+              <p className="text-white mb-2">New</p>
               <h3 className="fw-bold text-warning mb-0">
                 {newCount}
               </h3>
@@ -227,13 +239,15 @@ function ManageProjects() {
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body"style={{
-               
-                backgroundColor: " #087FC4",
+            <div
+              className="card-body"
+              style={{
+                backgroundColor: "#087FC4",
                 padding: "10px",
-                 borderRadius: "5px",
-              }}>
-              <p className="text-muted mb-2">Approved</p>
+                borderRadius: "5px"
+              }}
+            >
+              <p className="text-white mb-2">Approved</p>
               <h3 className="fw-bold text-success mb-0">
                 {approvedCount}
               </h3>
@@ -243,14 +257,16 @@ function ManageProjects() {
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body"style={{
-               
-                backgroundColor: " #087FC4",
+            <div
+              className="card-body"
+              style={{
+                backgroundColor: "#087FC4",
                 padding: "10px",
-                 borderRadius: "5px",
-              }}>
-              <p className="text-muted mb-2">In Progress</p>
-              <h3 className="fw-bold text-primary mb-0">
+                borderRadius: "5px"
+              }}
+            >
+              <p className="text-white mb-2">In Progress</p>
+              <h3 className="fw-bold text-white mb-0">
                 {progressCount}
               </h3>
             </div>
@@ -259,13 +275,15 @@ function ManageProjects() {
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body"style={{
-               
-                backgroundColor: " #087FC4",
+            <div
+              className="card-body"
+              style={{
+                backgroundColor: "#087FC4",
                 padding: "10px",
-                 borderRadius: "5px",
-              }}>
-              <p className="text-muted mb-2">Completed</p>
+                borderRadius: "5px"
+              }}
+            >
+              <p className="text-white mb-2">Completed</p>
               <h3 className="fw-bold text-info mb-0">
                 {completedCount}
               </h3>
@@ -275,15 +293,17 @@ function ManageProjects() {
 
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-body"style={{
-               
-                backgroundColor: " #087FC4",
+            <div
+              className="card-body"
+              style={{
+                backgroundColor: "#087FC4",
                 padding: "10px",
-                 borderRadius: "5px",
-              }}>
-              <p className="text-muted mb-2">Rejected</p>
+                borderRadius: "5px"
+              }}
+            >
+              <p className="text-white mb-2">Cancelled</p>
               <h3 className="fw-bold text-danger mb-0">
-                {rejectedCount}
+                {cancelledCount}
               </h3>
             </div>
           </div>
@@ -291,10 +311,9 @@ function ManageProjects() {
 
       </div>
 
-      {/* Projects Table */}
+      {/* PROJECTS TABLE */}
       <div className="card shadow-sm border-0">
 
-        {/* Table Header */}
         <div className="card-header bg-white py-3">
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
 
@@ -322,7 +341,6 @@ function ManageProjects() {
           </div>
         </div>
 
-        {/* Table Body */}
         <div className="card-body p-0">
 
           {loading ? (
@@ -341,16 +359,16 @@ function ManageProjects() {
               className="table-responsive"
               style={{
                 width: "100%",
-                overflowX: "auto",
+                overflowX: "auto"
               }}
             >
 
               <table
-                className="table table-hover align-middle mb-0"
+                className="table table-hover table-bordered align-middle mb-0"
                 style={{
                   width: "max-content",
                   minWidth: "100%",
-                  tableLayout: "auto",
+                  tableLayout: "auto"
                 }}
               >
 
@@ -372,14 +390,12 @@ function ManageProjects() {
                     filteredProjects.map((project, index) => (
                       <tr key={project.id}>
 
-                        {/* Serial Number ID */}
                         <td>
                           <span className="fw-semibold">
                             {index + 1}
                           </span>
                         </td>
 
-                        {/* Client Details */}
                         <td>
                           <div className="fw-semibold">
                             {project.clientName || "N/A"}
@@ -394,14 +410,12 @@ function ManageProjects() {
                           </small>
                         </td>
 
-                        {/* Service */}
                         <td>
                           <span className="fw-semibold">
                             {project.service || "N/A"}
                           </span>
                         </td>
 
-                        {/* Amount */}
                         <td>
                           <span
                             className={
@@ -416,24 +430,21 @@ function ManageProjects() {
                           </span>
                         </td>
 
-                        {/* Message */}
                         <td
                           style={{
                             minWidth: "180px",
                             maxWidth: "280px",
                             whiteSpace: "normal",
-                            overflowWrap: "anywhere",
+                            overflowWrap: "anywhere"
                           }}
                         >
                           {project.message || "No message"}
                         </td>
 
-                        {/* Date */}
                         <td>
                           {project.date || "N/A"}
                         </td>
 
-                        {/* Status */}
                         <td>
                           <select
                             className={`form-select form-select-sm ${getStatusClass(
@@ -445,7 +456,7 @@ function ManageProjects() {
                                 project.status === "Completed" ||
                                 project.status === "New"
                                   ? "#212529"
-                                  : "#fff",
+                                  : "#fff"
                             }}
                             value={project.status || "New"}
                             onChange={(e) =>
@@ -459,18 +470,15 @@ function ManageProjects() {
                             <option value="Approved">Approved</option>
                             <option value="In Progress">In Progress</option>
                             <option value="Completed">Completed</option>
-                            <option value="Rejected">Rejected</option>
+                            <option value="Cancelled">Cancelled</option>
                           </select>
                         </td>
 
-                        {/* Action */}
                         <td>
                           <button
                             className="btn btn-sm btn-outline-danger"
                             title="Delete"
-                            onClick={() =>
-                              handleDelete(project.id)
-                            }
+                            onClick={() => handleDelete(project.id)}
                           >
                             <MdDelete size={18} />
                           </button>
@@ -496,7 +504,6 @@ function ManageProjects() {
           )}
         </div>
 
-        {/* Footer */}
         {!loading && !error && (
           <div className="card-footer bg-white text-muted">
             Showing {filteredProjects.length} of {projects.length} records

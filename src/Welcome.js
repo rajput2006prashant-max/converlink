@@ -99,14 +99,89 @@ function Welcome() {
         <div className="container">
 
           <Link to="/" className="navbar-brand d-flex align-items-center">
-            <div className="brand-icon">
-              <FaBuilding />
-            </div>
+          <div
+  className="company-logo"
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "8px 5px"
+  }}
+>
+  {/* LOGO ICON */}
+  <div
+    style={{
+      width: "58px",
+      height: "58px",
+      borderRadius: "14px",
+      background: "linear-gradient(135deg, #102D4F, #087FC4)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "column",
+      boxShadow: "0 4px 12px rgba(16,45,79,0.25)"
+    }}
+  >
+    <span
+      style={{
+        fontSize: "38px",
+        fontWeight: "900",
+        color: "#FFFFFF",
+        lineHeight: "1"
+      }}
+    >
+      C
+    </span>
 
-            <div className="ms-2">
-              <h5 className="mb-0 fw-bold">CONVERLINK</h5>
-              <small>ENGINEERING PVT. LTD.</small>
-            </div>
+    <div
+      style={{
+        width: "23px",
+        height: "3px",
+        background: "#38C8F5",
+        borderRadius: "5px"
+      }}
+    />
+  </div>
+
+  {/* COMPANY NAME */}
+  <div style={{ lineHeight: "1.2" }}>
+    <h3
+      style={{
+        margin: 0,
+        fontSize: "25px",
+        fontWeight: "900",
+        letterSpacing: "1px",
+        color: "white"
+      }}
+    >
+      CONVER<span style={{ color: "#087FC4" }}>LINK</span>
+    </h3>
+
+    <div
+      style={{
+        fontSize: "10px",
+        fontWeight: "800",
+        letterSpacing: "3px",
+        color: "#102D4F",
+        marginTop: "5px"
+      }}
+    >
+      PRIVATE LIMITED
+    </div>
+
+    <div
+      style={{
+        fontSize: "9px",
+        fontWeight: "600",
+        letterSpacing: "1px",
+        color: "#087FC4",
+        marginTop: "5px"
+      }}
+    >
+      BUILD • INNOVATE • CONNECT
+    </div>
+  </div>
+</div>
           </Link>
 
           <button

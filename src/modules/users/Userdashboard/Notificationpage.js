@@ -207,7 +207,7 @@ function Notificationpage() {
               All Notifications
             </h5>
 
-            <span className="text-muted">
+            <span className="text-primary">
               Total: {notifications.length} |
               Unread: {unreadCount}
             </span>
@@ -238,7 +238,7 @@ function Notificationpage() {
       ) : notifications.length === 0 ? (
         <div className="card border-0 shadow-sm">
           <div className="card-body text-center py-5">
-            <FaBell size={40} className="text-muted mb-3" />
+            <FaBell size={40} className="text-primary mb-3" />
 
             <h5>No Notifications Found</h5>
 

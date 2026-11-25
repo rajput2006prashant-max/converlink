@@ -356,7 +356,7 @@ function ServiceDetails() {
 
       {/* SERVICE HIGHLIGHTS */}
       <section className="container py-4">
-        <div className="row g-3 text-center">
+        <div className="row g-3 text-center color-dark">
           {[
             { icon: "✓", title: "Quality Focused", text: "Attention to detail" },
             { icon: "⚙", title: "Professional Work", text: "Planned solutions" },
@@ -366,7 +366,7 @@ function ServiceDetails() {
               <div className="bg-white rounded-4 shadow-sm p-4 h-100">
                 <h2 className="text-info">{item.icon}</h2>
                 <h5 className="fw-bold">{item.title}</h5>
-                <p className="text-secondary mb-0">{item.text}</p>
+                <p className="text-dark mb-0">{item.text}</p>
               </div>
             </div>
           ))}
@@ -398,7 +398,7 @@ function ServiceDetails() {
               Professional {service.title} Solutions
             </h2>
 
-            <p className="text-secondary lh-lg">
+            <p className="text-primary lh-lg ">
               {service.description}
             </p>
 
@@ -408,14 +408,14 @@ function ServiceDetails() {
 
             {(Array.isArray(service.benefits) ? service.benefits : []).map(
               (benefit, index) => (
-                <div key={index} className="d-flex align-items-center mb-3">
+                <div key={index} className="d-flex align-items-center mb-3 ">
                   <span
-                    className="rounded-circle bg-info text-white d-flex align-items-center justify-content-center me-3"
+                    className="rounded-circle bg-info text-primary d-flex align-items-center justify-content-center me-3"
                     style={{ width: "28px", height: "28px", flexShrink: 0 }}
                   >
                     ✓
                   </span>
-                  <span className="text-secondary">{benefit}</span>
+                  <span className="text-primary">{benefit}</span>
                 </div>
               )
             )}
@@ -436,7 +436,7 @@ function ServiceDetails() {
           <div className="text-center mb-5">
             <p className="text-primary fw-bold">OUR EXPERTISE</p>
             <h2 className="fw-bold">What We Offer</h2>
-            <p className="text-secondary">
+            <p className="text-primary">
               Explore the work included in this service.
             </p>
           </div>
@@ -448,7 +448,7 @@ function ServiceDetails() {
                   <div className="border rounded-4 p-4 h-100 shadow-sm">
                     <div className="text-info fs-3 mb-2">✦</div>
                     <h5 className="fw-bold">{work}</h5>
-                    <p className="text-secondary small mb-0">
+                    <p className="text-primary small mb-0">
                       Planned according to your project requirements.
                     </p>
                   </div>
@@ -464,7 +464,7 @@ function ServiceDetails() {
         <div className="text-center mb-5">
           <p className="text-primary fw-bold">OUR PROJECT GALLERY</p>
           <h2 className="fw-bold">Work & Inspiration</h2>
-          <p className="text-secondary">
+          <p className="text-primary">
             A visual look at {service.title.toLowerCase()}.
           </p>
         </div>
@@ -521,7 +521,7 @@ function ServiceDetails() {
         <div className="text-center mb-5">
           <p className="text-primary fw-bold">CUSTOMER FEEDBACK</p>
           <h2 className="fw-bold">What People Say</h2>
-          <p className="text-secondary">
+          <p className="text-primary">
             Sample reviews for design preview.
           </p>
         </div>
@@ -537,14 +537,14 @@ function ServiceDetails() {
                   </span>
                 </div>
 
-                <p className="text-secondary lh-lg">
+                <p className="text-primary lh-lg">
                   "{review.message}"
                 </p>
 
                 <hr />
 
                 <h6 className="fw-bold mb-1">{review.name}</h6>
-                <small className="text-secondary">{review.role}</small>
+                <small className="text-primary">{review.role}</small>
               </div>
             </div>
           ))}
@@ -584,7 +584,7 @@ function ServiceDetails() {
                   }`}
                   data-bs-parent="#serviceFAQ"
                 >
-                  <div className="accordion-body text-secondary">
+                  <div className="accordion-body text-primary">
                     {faq.answer}
                   </div>
                 </div>
@@ -673,7 +673,7 @@ function ServiceDetails() {
                   <div className="col-lg-7 p-4 p-md-5">
                     <h3 className="fw-bold mb-2">Send an Enquiry</h3>
 
-                    <p className="text-secondary">
+                    <p className="text-black">
                       Fill in your details below.
                     </p>
 
@@ -760,7 +760,7 @@ function ServiceDetails() {
                           />
                         </div>
 
-                        <small className="text-muted">
+                        <small className="text-dark">
                           Enter your estimated project budget.
                         </small>
                       </div>

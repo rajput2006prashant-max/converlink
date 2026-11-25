@@ -345,7 +345,7 @@ function Headerpage() {
                   <Link
                     className="dropdown-item py-2"
                     style={{
-                      color: isDark ? "#ffffff" : "#212529"
+                      color: isDark ? "blue" : "#212529"
                     }}
                     to="/landing/user-login"
                   >
@@ -362,7 +362,7 @@ function Headerpage() {
                   <Link
                     className="dropdown-item py-2"
                     style={{
-                      color: isDark ? "#ffffff" : "#212529"
+                      color: isDark ? "blue" : "#212529"
                     }}
                     to="/landing/profile"
                   >
@@ -374,7 +374,7 @@ function Headerpage() {
                   <Link
                     className="dropdown-item py-2"
                     style={{
-                      color: isDark ? "#ffffff" : "#212529"
+                      color: isDark ? "blue" : "#212529"
                     }}
                     to="/landing"
                   >
@@ -386,7 +386,7 @@ function Headerpage() {
                   <Link
                     className="dropdown-item py-2"
                     style={{
-                      color: isDark ? "#ffffff" : "#212529"
+                      color: isDark ? "blue" : "#212529"
                     }}
                     to="/landing/setting"
                   >
