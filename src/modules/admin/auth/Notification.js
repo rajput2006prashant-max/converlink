@@ -2,6 +2,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
+import { MdDelete } from "react-icons/md";
+
 const API_URL = "http://localhost:8700/notifications";
 const USER_API = "http://localhost:8700/user";
 
@@ -390,8 +392,8 @@ function Notifications() {
                     className="btn btn-sm btn-outline-danger "
                     onClick={() => handleDelete(item.id)}
                   >
-                    Delete
-                  </button>
+                    <MdDelete/>                  
+                    </button>
                 </div>
               </div>
             ))

@@ -24,7 +24,7 @@ function GraphRecentProject() {
 
           <h4 className="fw-bold">Recent Projects</h4>
 
-          <p className="text-muted">
+          <p className="">
             Latest project progress overview
           </p>
 

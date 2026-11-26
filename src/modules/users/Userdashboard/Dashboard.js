@@ -48,7 +48,7 @@ const completedProjects = recentProjectData.filter(
   <div className="col-md-6 col-lg-3">
     <div className="card shadow-sm border-0 rounded-4">
       <div className="card-body">
-        <h6 className="text-muted">Total Projects</h6>
+        <h6 className="">Total Projects</h6>
         <h2 className="fw-bold">{totalProjects}</h2>
       </div>
     </div>
@@ -57,7 +57,7 @@ const completedProjects = recentProjectData.filter(
   <div className="col-md-6 col-lg-3">
     <div className="card shadow-sm border-0 rounded-4">
       <div className="card-body">
-        <h6 className="text-muted">Pending Projects</h6>
+        <h6 className="">Pending Projects</h6>
         <h2 className="fw-bold">{pendingProjects}</h2>
       </div>
     </div>
@@ -66,7 +66,7 @@ const completedProjects = recentProjectData.filter(
   <div className="col-md-6 col-lg-3">
     <div className="card shadow-sm border-0 rounded-4">
       <div className="card-body">
-        <h6 className="text-muted">In Progress</h6>
+        <h6 className="">In Progress</h6>
         <h2 className="fw-bold">{inProgressProjects}</h2>
       </div>
     </div>
@@ -75,7 +75,7 @@ const completedProjects = recentProjectData.filter(
   <div className="col-md-6 col-lg-3">
     <div className="card shadow-sm border-0 rounded-4">
       <div className="card-body">
-        <h6 className="text-muted">Completed</h6>
+        <h6 className="">Completed</h6>
         <h2 className="fw-bold">{completedProjects}</h2>
       </div>
     </div>

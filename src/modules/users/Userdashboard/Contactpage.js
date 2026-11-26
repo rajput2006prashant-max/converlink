@@ -37,13 +37,13 @@ function Contact() {
           GET IN TOUCH
         </span>
 
-        <h2 className="fw-bold" style={{ color: "#102D4F" }}>
+        <h2 className="fw-bold" style={{ color: "#0f498c" }}>
           Contact Us
         </h2>
 
         <p className="text-secondary"style={{
                
-                backgroundColor: " #087FC4",
+                backgroundColor: " #36a0dd",
                 padding: "10px",
                  borderRadius: "5px",
                  width:"440px",
@@ -107,7 +107,7 @@ function Contact() {
         <div className="col-lg-8">
           <div className="card border-0 shadow-sm rounded-4 h-100">
             <div className="card-body p-4 p-md-5">
-              <h4 className="fw-bold mb-2" style={{ color: "#102D4F" }}>
+              <h4 className="fw-bold mb-2" style={{ color: "#0e509b" }}>
                 Send Us a Message
               </h4>
 

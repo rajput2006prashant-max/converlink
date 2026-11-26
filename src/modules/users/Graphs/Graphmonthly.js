@@ -25,7 +25,7 @@ function Graphmonthly() {
             Monthly Projects
           </h4>
 
-          <p className="text-muted">
+          <p className="">
             Converlink monthly project performance
           </p>
 

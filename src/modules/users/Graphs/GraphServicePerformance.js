@@ -24,7 +24,7 @@ function GraphServicePerformance() {
 
           <h4 className="fw-bold">Service Performance</h4>
 
-          <p className="text-muted">
+          <p className="">
             Service-wise project performance
           </p>
 

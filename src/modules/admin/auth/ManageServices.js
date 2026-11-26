@@ -359,7 +359,7 @@ function ManageServices() {
 
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
-                <label className="form-label fw-semibold">Service Title</label>
+                <label className="form-label fw-semibold text-primary">Service Title</label>
                 <input
                   type="text"
                   name="title"
@@ -372,7 +372,7 @@ function ManageServices() {
               </div>
 
               <div className="mb-3">
-                <label className="form-label fw-semibold">Category</label>
+                <label className="form-label fw-semibold text-primary">Category</label>
                 <input
                   type="text"
                   name="category"
@@ -385,7 +385,7 @@ function ManageServices() {
               </div>
 
               <div className="mb-3">
-                <label className="form-label fw-semibold">Image URL</label>
+                <label className="form-label fw-semibold text-primary">Image URL</label>
                 <input
                   type="url"
                   name="image"
@@ -398,7 +398,7 @@ function ManageServices() {
               </div>
 
               <div className="mb-3">
-                <label className="form-label fw-semibold">
+                <label className="form-label fw-semibold text-primary">
                   Short Description
                 </label>
                 <textarea
@@ -412,7 +412,7 @@ function ManageServices() {
               </div>
 
               <div className="mb-3">
-                <label className="form-label fw-semibold">Description</label>
+                <label className="form-label fw-semibold text-primary">Description</label>
                 <textarea
                   name="description"
                   className="form-control"
@@ -424,7 +424,7 @@ function ManageServices() {
               </div>
 
               <div className="mb-3">
-                <label className="form-label fw-semibold">Price</label>
+                <label className="form-label fw-semibold text-primary">Price</label>
                 <input
                   type="text"
                   name="price"
@@ -437,7 +437,7 @@ function ManageServices() {
               </div>
 
               <div className="mb-3">
-                <label className="form-label fw-semibold">
+                <label className="form-label fw-semibold text-primary">
                   Benefits (one per line)
                 </label>
                 <textarea
@@ -451,7 +451,7 @@ function ManageServices() {
               </div>
 
               <div className="mb-3">
-                <label className="form-label fw-semibold">
+                <label className="form-label fw-semibold text-primary">
                   Work Includes (one per line)
                 </label>
                 <textarea
@@ -465,7 +465,7 @@ function ManageServices() {
               </div>
 
               <div className="mb-3">
-                <label className="form-label fw-semibold">
+                <label className="form-label fw-semibold text-primary">
                   Process (one per line)
                 </label>
                 <textarea
@@ -479,7 +479,7 @@ function ManageServices() {
               </div>
 
               <div className="mb-4">
-                <label className="form-label fw-semibold">Status</label>
+                <label className="form-label fw-semibold text-primary">Status</label>
                 <select
                   name="status"
                   className="form-select"

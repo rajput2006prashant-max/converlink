@@ -1,6 +1,8 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { MdDelete } from "react-icons/md";
+import { FaEdit } from "react-icons/fa";
 
 const API_URL = "http://localhost:8700/invoices";
 
@@ -394,13 +396,13 @@ function ManageInvoices() {
                               className="btn btn-sm btn-outline-primary"
                               onClick={() => handleEdit(invoice)}
                             >
-                              Edit
+                             <FaEdit/>
                             </button>
                             <button
                               className="btn btn-sm btn-outline-danger"
                               onClick={() => handleDelete(invoice.id)}
                             >
-                              Delete
+                             <MdDelete/>
                             </button>
                           </div>
                         </td>

@@ -77,7 +77,7 @@ function Project() {
         <div className="col-md-4">
           <div className="card border-0 shadow-sm p-3 h-100">
             <p className="text-secondary mb-1">Total Projects</p>
-            <h3 className="fw-bold mb-0" style={{ color: "#102D4F" }}>
+            <h3 className="fw-bold mb-0" style={{ color: "#0e59ad" }}>
               04
             </h3>
           </div>
@@ -138,7 +138,7 @@ function Project() {
                   {project.category}
                 </p>
 
-                <h5 className="fw-bold" style={{ color: "#102D4F" }}>
+                <h5 className="fw-bold" style={{ color: "#0c57ac" }}>
                   {project.title}
                 </h5>
 

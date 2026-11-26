@@ -28,7 +28,7 @@ function GraphProjectStatus() {
 
           <h4 className="fw-bold">Project Status</h4>
 
-          <p className="text-muted">
+          <p className="">
             Overview of all project statuses
           </p>
 
