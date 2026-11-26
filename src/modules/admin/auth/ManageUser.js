@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { MdDelete, MdVisibility } from "react-icons/md";
@@ -45,7 +44,7 @@ function ManageUsers() {
 
       setUsers(Array.isArray(userResponse.data) ? userResponse.data : []);
       setProfiles(
-        Array.isArray(profileResponse.data) ? profileResponse.data : []
+        Array.isArray(profileResponse.data) ? profileResponse.data : [],
       );
     } catch (err) {
       console.error("GET ERROR:", err);
@@ -62,7 +61,7 @@ function ManageUsers() {
   // FIND USER PROFILE
   const getUserProfile = (userId) => {
     return profiles.find(
-      (profile) => String(profile.userId) === String(userId)
+      (profile) => String(profile.userId) === String(userId),
     );
   };
 
@@ -98,10 +97,7 @@ function ManageUsers() {
       };
 
       if (editId) {
-        await axios.patch(
-          `${API}/${encodeURIComponent(editId)}`,
-          userData
-        );
+        await axios.patch(`${API}/${encodeURIComponent(editId)}`, userData);
       } else {
         const response = await axios.post(API, {
           ...userData,
@@ -124,20 +120,22 @@ function ManageUsers() {
         };
 
         const existingProfile = profiles.find(
-          (profile) => String(profile.userId) === String(userId)
+          (profile) => String(profile.userId) === String(userId),
         );
 
         if (existingProfile) {
           await axios.patch(
             `${PROFILE_API}/${encodeURIComponent(existingProfile.id)}`,
-            profileData
+            profileData,
           );
         } else {
           await axios.post(PROFILE_API, profileData);
         }
       }
 
-      alert(editId ? "User successfully updated!" : "New user successfully added!");
+      alert(
+        editId ? "User successfully updated!" : "New user successfully added!",
+      );
 
       setFormData(initialForm);
       setEditId(null);
@@ -172,7 +170,7 @@ function ManageUsers() {
   // DELETE USER + PROFILE + COMPLETE CHAT
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
-      "Kya aap is user ko delete karna chahte hain? User profile aur user-admin dono ki complete chat bhi delete ho jayegi."
+      "Kya aap is user ko delete karna chahte hain? User profile aur user-admin dono ki complete chat bhi delete ho jayegi.",
     );
 
     if (!confirmDelete) return;
@@ -184,48 +182,41 @@ function ManageUsers() {
       // 2. FIND ALL MESSAGES OF THIS USER
       // Isme sender user aur sender admin dono include hain
       const userMessages = messageResponse.data.filter(
-        (message) => String(message.userId) === String(id)
+        (message) => String(message.userId) === String(id),
       );
 
       // 3. DELETE USER + ADMIN MESSAGES
       await Promise.all(
         userMessages.map((message) =>
-          axios.delete(
-            `${MESSAGE_API}/${encodeURIComponent(message.id)}`
-          )
-        )
+          axios.delete(`${MESSAGE_API}/${encodeURIComponent(message.id)}`),
+        ),
       );
 
       // 4. GET USER PROFILES
       const profileResponse = await axios.get(PROFILE_API);
 
       const userProfiles = profileResponse.data.filter(
-        (profile) => String(profile.userId) === String(id)
+        (profile) => String(profile.userId) === String(id),
       );
 
       // 5. DELETE USER PROFILES
       await Promise.all(
         userProfiles.map((profile) =>
-          axios.delete(
-            `${PROFILE_API}/${encodeURIComponent(profile.id)}`
-          )
-        )
+          axios.delete(`${PROFILE_API}/${encodeURIComponent(profile.id)}`),
+        ),
       );
 
       // 6. DELETE USER ACCOUNT
-      await axios.delete(
-        `${API}/${encodeURIComponent(id)}`
-      );
+      await axios.delete(`${API}/${encodeURIComponent(id)}`);
 
       alert(
-        "User, profile aur user-admin dono ki complete chat successfully delete ho gayi!"
+        "User, profile aur user-admin dono ki complete chat successfully delete ho gayi!",
       );
 
       setSelectedUser(null);
       setShowDetails(false);
 
       await getUsers();
-
     } catch (err) {
       console.error("DELETE ERROR:", err);
       alert("Delete nahi hua. JSON Server aur API check karo.");
@@ -238,12 +229,24 @@ function ManageUsers() {
     const searchValue = search.toLowerCase();
 
     return (
-      String(user.username || "").toLowerCase().includes(searchValue) ||
-      String(user.email || "").toLowerCase().includes(searchValue) ||
-      String(user.phone || "").toLowerCase().includes(searchValue) ||
-      String(user.role || "").toLowerCase().includes(searchValue) ||
-      String(user.id || "").toLowerCase().includes(searchValue) ||
-      String(profile?.address || "").toLowerCase().includes(searchValue)
+      String(user.username || "")
+        .toLowerCase()
+        .includes(searchValue) ||
+      String(user.email || "")
+        .toLowerCase()
+        .includes(searchValue) ||
+      String(user.phone || "")
+        .toLowerCase()
+        .includes(searchValue) ||
+      String(user.role || "")
+        .toLowerCase()
+        .includes(searchValue) ||
+      String(user.id || "")
+        .toLowerCase()
+        .includes(searchValue) ||
+      String(profile?.address || "")
+        .toLowerCase()
+        .includes(searchValue)
     );
   });
 
@@ -308,7 +311,6 @@ function ManageUsers() {
 
   return (
     <div className="container-fluid p-3">
-
       {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center flex-wrap mb-4">
         <div>
@@ -324,9 +326,7 @@ function ManageUsers() {
             Manage Users
           </h3>
 
-          <p className="text-muted mb-0">
-            Manage all registered users
-          </p>
+          <p className="text-primary mb-0">Manage all registered users</p>
         </div>
 
         <button
@@ -343,7 +343,15 @@ function ManageUsers() {
       <div className="row g-3 mb-4">
         <div className="col-md-4">
           <div className="card border-0 shadow-sm">
-            <div className="card-body" style={{ backgroundColor: "#087FC4" }}>
+            <div
+              className="card-body"
+              style={{
+                backgroundColor: "#087FC4",
+                width: "400px",
+                borderRadius: "5px",
+                padding: "10px",
+              }}
+            >
               <p className="text-white mb-1">Total Users</p>
               <h3 className="fw-bold text-white mb-0">{users.length}</h3>
             </div>
@@ -352,7 +360,9 @@ function ManageUsers() {
 
         <div className="col-md-4">
           <div className="card border-0 shadow-sm">
-            <div className="card-body" style={{ backgroundColor: "#087FC4" }}>
+            <div className="card-body" style={{ backgroundColor: "#087FC4", width: "400px",
+                borderRadius: "5px",
+                padding: "10px", }}>
               <p className="text-white mb-1">User Accounts</p>
               <h3 className="fw-bold text-white mb-0">
                 {users.filter((user) => user.role === "user").length}
@@ -363,7 +373,9 @@ function ManageUsers() {
 
         <div className="col-md-4">
           <div className="card border-0 shadow-sm">
-            <div className="card-body" style={{ backgroundColor: "#087FC4" }}>
+            <div className="card-body" style={{ backgroundColor: "#087FC4", width: "400px",
+                borderRadius: "5px",
+                padding: "10px", }}>
               <p className="text-white mb-1">Other Roles</p>
               <h3 className="fw-bold text-white mb-0">
                 {users.filter((user) => user.role !== "user").length}
@@ -451,9 +463,15 @@ function ManageUsers() {
                       return (
                         <tr key={user.id}>
                           <td>{index + 1}</td>
-                          <td><UserAvatar user={user} /></td>
-                          <td><small>{user.id || "-"}</small></td>
-                          <td className="fw-semibold">{user.username || "-"}</td>
+                          <td>
+                            <UserAvatar user={user} />
+                          </td>
+                          <td>
+                            <small>{user.id || "-"}</small>
+                          </td>
+                          <td className="fw-semibold">
+                            {user.username || "-"}
+                          </td>
                           <td>{user.email || "-"}</td>
                           <td>{user.phone || "-"}</td>
                           <td>{user.gender || "-"}</td>
@@ -538,9 +556,7 @@ function ManageUsers() {
               className="card-header text-white d-flex justify-content-between align-items-center"
               style={{ backgroundColor: "#102D4F" }}
             >
-              <h5 className="mb-0">
-                {editId ? "Edit User" : "Add New User"}
-              </h5>
+              <h5 className="mb-0">{editId ? "Edit User" : "Add New User"}</h5>
 
               <button
                 className="btn-close btn-close-white"
@@ -716,22 +732,34 @@ function ManageUsers() {
                 </div>
               )}
 
-              <h4 className="fw-bold mb-1">
-                {selectedUser.username || "-"}
-              </h4>
+              <h4 className="fw-bold mb-1">{selectedUser.username || "-"}</h4>
 
               <span className="badge bg-primary mb-3">
                 {selectedUser.role || "user"}
               </span>
 
               <div className="text-start border rounded p-3">
-                <p><strong>User ID:</strong> {selectedUser.id || "-"}</p>
-                <p><strong>Name:</strong> {selectedUser.username || "-"}</p>
-                <p><strong>Email:</strong> {selectedUser.email || "-"}</p>
-                <p><strong>Phone:</strong> {selectedUser.phone || "-"}</p>
-                <p><strong>Gender:</strong> {selectedUser.gender || "-"}</p>
-                <p><strong>Address:</strong> {selectedUser.address || "-"}</p>
-                <p><strong>Role:</strong> {selectedUser.role || "-"}</p>
+                <p>
+                  <strong>User ID:</strong> {selectedUser.id || "-"}
+                </p>
+                <p>
+                  <strong>Name:</strong> {selectedUser.username || "-"}
+                </p>
+                <p>
+                  <strong>Email:</strong> {selectedUser.email || "-"}
+                </p>
+                <p>
+                  <strong>Phone:</strong> {selectedUser.phone || "-"}
+                </p>
+                <p>
+                  <strong>Gender:</strong> {selectedUser.gender || "-"}
+                </p>
+                <p>
+                  <strong>Address:</strong> {selectedUser.address || "-"}
+                </p>
+                <p>
+                  <strong>Role:</strong> {selectedUser.role || "-"}
+                </p>
                 <p className="mb-0">
                   <strong>Comments:</strong> {selectedUser.comments || "-"}
                 </p>
@@ -749,7 +777,6 @@ function ManageUsers() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

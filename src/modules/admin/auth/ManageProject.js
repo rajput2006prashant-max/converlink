@@ -104,6 +104,10 @@ function ManageProjects() {
     (p) => (p.status || "New") === "New"
   ).length;
 
+  const pendingCount = projects.filter(
+    (p) => p.status === "Pending"
+  ).length;
+
   const approvedCount = projects.filter(
     (p) => p.status === "Approved"
   ).length;
@@ -154,12 +158,13 @@ function ManageProjects() {
       case "Completed":
         return "bg-info text-dark";
 
+      case "Pending":
+      case "New":
+        return "bg-warning text-dark";
+
       case "Cancelled":
       case "Rejected":
         return "bg-danger";
-
-      case "New":
-        return "bg-warning text-dark";
 
       default:
         return "bg-secondary";
@@ -201,6 +206,7 @@ function ManageProjects() {
       {/* SUMMARY CARDS */}
       <div className="row g-3 mb-4">
 
+        {/* TOTAL */}
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
             <div
@@ -219,6 +225,7 @@ function ManageProjects() {
           </div>
         </div>
 
+        {/* NEW */}
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
             <div
@@ -237,6 +244,26 @@ function ManageProjects() {
           </div>
         </div>
 
+        {/* PENDING */}
+        <div className="col-xl-2 col-md-4 col-sm-6">
+          <div className="card shadow-sm border-0 h-100">
+            <div
+              className="card-body"
+              style={{
+                backgroundColor: "#087FC4",
+                padding: "10px",
+                borderRadius: "5px"
+              }}
+            >
+              <p className="text-white mb-2">Pending</p>
+              <h3 className="fw-bold text-warning mb-0">
+                {pendingCount}
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        {/* APPROVED */}
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
             <div
@@ -255,6 +282,7 @@ function ManageProjects() {
           </div>
         </div>
 
+        {/* IN PROGRESS */}
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
             <div
@@ -273,6 +301,7 @@ function ManageProjects() {
           </div>
         </div>
 
+        {/* COMPLETED */}
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
             <div
@@ -291,6 +320,7 @@ function ManageProjects() {
           </div>
         </div>
 
+        {/* CANCELLED */}
         <div className="col-xl-2 col-md-4 col-sm-6">
           <div className="card shadow-sm border-0 h-100">
             <div
@@ -317,7 +347,12 @@ function ManageProjects() {
         <div className="card-header bg-white py-3">
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
 
-            <h5 className="fw-bold mb-0">
+            <h5 className="fw-bold mb-0" style={{
+              background:"#087FC4",
+              width:"240px",
+              borderRadius:"10px",
+              padding:"10px",
+            }}>
               All Projects / Enquiries
             </h5>
 
@@ -401,11 +436,11 @@ function ManageProjects() {
                             {project.clientName || "N/A"}
                           </div>
 
-                          <small className="text-muted d-block">
+                          <small className=" d-block">
                             {project.email || "N/A"}
                           </small>
 
-                          <small className="text-muted">
+                          <small className="">
                             {project.mobile || "N/A"}
                           </small>
                         </td>
@@ -423,7 +458,7 @@ function ManageProjects() {
                               project.amount !== null &&
                               project.amount !== ""
                                 ? "fw-bold text-success"
-                                : "text-muted"
+                                : ""
                             }
                           >
                             {formatAmount(project.amount)}
@@ -445,6 +480,7 @@ function ManageProjects() {
                           {project.date || "N/A"}
                         </td>
 
+                        {/* STATUS DROPDOWN */}
                         <td>
                           <select
                             className={`form-select form-select-sm ${getStatusClass(
@@ -454,7 +490,8 @@ function ManageProjects() {
                               minWidth: "130px",
                               color:
                                 project.status === "Completed" ||
-                                project.status === "New"
+                                project.status === "New" ||
+                                project.status === "Pending"
                                   ? "#212529"
                                   : "#fff"
                             }}
@@ -467,6 +504,7 @@ function ManageProjects() {
                             }
                           >
                             <option value="New">New</option>
+                            <option value="Pending">Pending</option>
                             <option value="Approved">Approved</option>
                             <option value="In Progress">In Progress</option>
                             <option value="Completed">Completed</option>
@@ -474,6 +512,7 @@ function ManageProjects() {
                           </select>
                         </td>
 
+                        {/* DELETE */}
                         <td>
                           <button
                             className="btn btn-sm btn-outline-danger"

@@ -448,7 +448,12 @@ function MyProfile() {
 
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
-          <h3 className="fw-bold mb-1" style={{ color: "#102D4F" }}>
+          <h3 className="fw-bold mb-1" style={{
+              background:"#087FC4",
+              width:"180px",
+              borderRadius:"10px",
+              padding:"10px",
+            }}>
             My Profile
           </h3>
 

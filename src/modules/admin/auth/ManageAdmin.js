@@ -3,6 +3,7 @@ import axios from "axios";
 import { MdDelete } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
 import { CiViewList } from "react-icons/ci";
+import { useGlobalSettings } from "../../../Context/SettingsContext";
 
 const API = "http://localhost:8700/admin";
 
@@ -12,6 +13,7 @@ function ManageAdmins() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { theme } = useGlobalSettings();
 
   const [showForm, setShowForm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -213,9 +215,14 @@ function ManageAdmins() {
       {/* Heading */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
-          <h4 className="fw-bold mb-1">Manage Admins</h4>
+          <h4 className="fw-bold mb-1" style={{
+              background:"#087FC4",
+              width:"210px",
+              borderRadius:"10px",
+              padding:"10px",
+            }}>Manage Admins</h4>
 
-          <p className="fw-bold mb-1" style={{ color: "white" }}>
+          <p className="fw-bold mb-1" style={{ color: "blue" }}>
             Manage company administrator accounts and roles.
           </p>
         </div>
@@ -229,28 +236,38 @@ function ManageAdmins() {
       {/* Summary Cards */}
       <div className="row g-3 mb-4">
         <div className="col-xl-3 col-md-6">
-          <div className="dashboard-card">
+          <div className="dashboard-card" style={{ backgroundColor: "#087FC4",width:"200px",
+            borderRadius:"5px",
+            padding:"10px" }}     >
             <p className="card-label">Total Admins</p>
             <h3>{totalAdmins}</h3>
           </div>
         </div>
 
         <div className="col-xl-3 col-md-6">
-          <div className="dashboard-card">
+          <div className="dashboard-card" style={{ backgroundColor: "#087FC4",width:"200px",
+            borderRadius:"5px",
+            padding:"10px" }}>
             <p className="card-label">Active Admins</p>
             <h3>{activeAdmins}</h3>
           </div>
         </div>
 
         <div className="col-xl-3 col-md-6">
-          <div className="dashboard-card">
+          <div className="dashboard-card" style={{ backgroundColor: "#087FC4",width:"200px",
+            borderRadius:"5px",
+            padding:"10px" }}>
             <p className="card-label">Inactive Admins</p>
             <h3>{inactiveAdmins}</h3>
           </div>
         </div>
 
         <div className="col-xl-3 col-md-6">
-          <div className="dashboard-card">
+          <div className="dashboard-card" style={{ backgroundColor: "#087FC4",
+            width:"200px",
+            borderRadius:"5px",
+            padding:"10px"
+           }}>
             <p className="card-label">Super Admins</p>
             <h3>{superAdmins}</h3>
           </div>
@@ -258,8 +275,15 @@ function ManageAdmins() {
       </div>
 
       {/* Admin Table */}
-      <div className="dashboard-panel">
-        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div
+  className="dashboard-panel"
+  style={{
+    background: theme === "dark" ? "#202C40" : "transparent",
+    color: theme === "dark" ? "#fff" : "#212529",
+    transition: "all 0.3s ease"
+  }}
+>
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 ">
           <h5
             className="mb-0"
             style={{ color: "white", backgroundColor: "#087FC4", width:"190px", borderRadius: "5px", padding:"10px" }}
@@ -381,7 +405,7 @@ function ManageAdmins() {
           </table>
         </div>
 
-        <div className="text-muted small">
+        <div className=" small">
           Showing {filteredAdmins.length} of {admins.length} admins
         </div>
       </div>

@@ -299,7 +299,12 @@ function ManageInvoices() {
         <div className="card-body">
 
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
-            <h5 className="fw-bold mb-0" style={{ color: "#102D4F" }}>
+            <h5 className="fw-bold mb-0"  style={{
+              background:"#087FC4",
+              width:"150px",
+              borderRadius:"10px",
+              padding:"10px",
+            }}>
               Invoice List
             </h5>
 
@@ -348,7 +353,7 @@ function ManageInvoices() {
                           <div className="fw-semibold">
                             {invoice.clientName}
                           </div>
-                          <small className="text-muted">
+                          <small className="">
                             {invoice.email}
                           </small>
                         </td>

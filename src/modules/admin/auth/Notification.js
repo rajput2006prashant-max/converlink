@@ -290,7 +290,12 @@ function Notifications() {
         <div className="card-body">
 
           <div className="d-flex justify-content-between flex-wrap gap-3 mb-3">
-            <h5 className="fw-bold">All Notifications</h5>
+            <h5 className="fw-bold" style={{
+              background:"#087FC4",
+              width:"190px",
+              borderRadius:"10px",
+              padding:"10px",
+            }}>All Notifications</h5>
 
             <div className="d-flex gap-2 flex-wrap">
               <input

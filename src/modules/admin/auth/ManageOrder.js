@@ -291,7 +291,12 @@ function ManageOrders() {
 
         <div className="card-header bg-white py-3">
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h5 className="fw-bold mb-0">Order List</h5>
+            <h5 className="fw-bold mb-0" style={{
+              background:"#087FC4",
+              width:"120px",
+              borderRadius:"10px",
+              padding:"10px",
+            }}>Order List</h5>
 
             <div className="d-flex gap-2">
               <input
@@ -361,7 +366,7 @@ function ManageOrders() {
 
                         <td>
                           <div>{order.email}</div>
-                          <small className="text-muted">
+                          <small className="">
                             {order.mobile}
                           </small>
                         </td>

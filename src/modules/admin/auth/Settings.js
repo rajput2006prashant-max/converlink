@@ -404,7 +404,12 @@ function Settings() {
       <div className="mb-4">
         <h3
           className="fw-bold mb-1"
-          style={{ color: "#102D4F" }}
+          style={{
+              background:"#087FC4",
+              width:"130px",
+              borderRadius:"10px",
+              padding:"10px",
+            }}
         >
           Settings
         </h3>

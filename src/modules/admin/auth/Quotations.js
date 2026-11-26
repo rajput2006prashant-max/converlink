@@ -340,7 +340,12 @@ function ManageQuotations() {
 
         <div className="card-header bg-white py-3">
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h5 className="fw-bold mb-0">Quotation List</h5>
+            <h5 className="fw-bold mb-0" style={{
+              background:"#087FC4",
+              width:"180px",
+              borderRadius:"10px",
+              padding:"10px",
+            }}>Quotation List</h5>
 
             <div className="d-flex gap-2">
               <input
@@ -412,7 +417,7 @@ function ManageQuotations() {
                           <div className="fw-semibold">
                             {item.clientName}
                           </div>
-                          <small className="text-muted">
+                          <small className="">
                             {item.email}
                           </small>
                         </td>

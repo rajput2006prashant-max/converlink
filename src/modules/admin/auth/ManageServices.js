@@ -218,7 +218,12 @@ function ManageServices() {
       <div className="card border-0 shadow-sm">
         <div className="card-header bg-white py-3">
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <h5 className="fw-bold mb-0">Services List</h5>
+            <h5 className="fw-bold mb-0" style={{
+              background:"#087FC4",
+              width:"150px",
+              borderRadius:"10px",
+              padding:"10px",
+            }}>Services List</h5>
 
             <input
               type="text"
